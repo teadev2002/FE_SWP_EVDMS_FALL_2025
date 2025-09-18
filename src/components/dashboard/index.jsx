@@ -18,7 +18,7 @@ function getItem(label, key, icon, children) {
   };
 }
 const items = [
-  getItem('Manage E-Vehicles', 'bike', <PieChartOutlined />),
+  getItem('Manage E-Vehicles', 'vehicle', <PieChartOutlined />),
   getItem('Manage abc', 'category', <DesktopOutlined />),
  
 ];

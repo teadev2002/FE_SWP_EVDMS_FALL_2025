@@ -12,7 +12,7 @@ function App() {
     children: [
       
       {
-        path: "bike",
+        path: "vehicle",
         element: <ManageVehicle />,
       },
       {
