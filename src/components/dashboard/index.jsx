@@ -19,7 +19,7 @@ function getItem(label, key, icon, children) {
 }
 const items = [
   getItem('Manage E-Vehicles', 'bike', <PieChartOutlined />),
-  getItem('Manage category', 'category', <DesktopOutlined />),
+  getItem('Manage abc', 'category', <DesktopOutlined />),
  
 ];
 const Dashboard = () => {
