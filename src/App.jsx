@@ -1,7 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Dashboard from './components/dashboard';
 import ManageCategory from './pages/admin/category/index';
-import ManageVehicle from './pages/admin/vehicles/manageVehicle';
+import ManageVehicle from './pages/admin/vehicles/ManageVehicle.jsx';
 
 function App() {   
  
