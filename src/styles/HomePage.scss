@@ -1,0 +1,76 @@
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Arial', sans-serif;
+}
+.bg-light {
+  background-color: #f8f9fa;
+}
+
+.sidebar {
+  height: 100vh;
+  position: sticky;
+  top: 0;
+
+  .nav-link {
+    border-radius: 4px;
+    &.active {
+      background-color: #007bff;
+    }
+  }
+}
+
+.main-content {
+  .search-bar {
+    .form-control {
+      border-radius: 4px;
+    }
+  }
+
+  .filter-bar {
+    .form-select {
+      border-radius: 4px;
+      width: 150px;
+    }
+  }
+
+  .vehicle-card {
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .stock-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: #28a745;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+
+      &.limited {
+        background-color: #ffc107;
+      }
+    }
+
+    .card-img-top {
+      height: 200px;
+      object-fit: cover;
+    }
+
+    .price {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #007bff;
+      margin: 10px 0;
+    }
+
+    .btn {
+      border-radius: 4px;
+      padding: 4px 10px;
+    }
+  }
+}
