@@ -1,0 +1,33 @@
+// src/pages/HomePage/FilterBar.scss (cập nhật màu)
+.eco-filter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(129, 199, 132, 0.2);
+    /* Secondary shadow */
+
+    .eco-input,
+    .eco-select {
+        border: 2px solid #81c784;
+        /* Secondary */
+        border-radius: 12px;
+        background: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 6px rgba(129, 199, 132, 0.2);
+
+        &:focus {
+            border-color: #4fc3f7;
+            /* Accent */
+            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.2);
+        }
+    }
+
+    .eco-select {
+        width: 180px;
+        padding: 0.5rem 1rem;
+    }
+}

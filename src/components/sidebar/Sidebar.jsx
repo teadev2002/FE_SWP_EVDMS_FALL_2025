@@ -1,31 +1,40 @@
 import React from 'react';
 import { Col } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import '../../styles/HomePage.scss'; // Ensure the same styles are applied
+import '../../styles/HomePage.scss';
 
-const Sidebar = ({ menuItems = [
-  "Vehicle Catalog",
-  "Customers",
-  "Sales & Quotes",
-  "Products",
-  "Orders & Delivery",
-  "Test Drives",
-  "Reports",
-  "Settings"
-], activeItem = "Products" }) => {
+const Sidebar = ({
+  menuItems = [
+    "Vehicle Catalog",
+    "Customers",
+    "Sales & Quotes",
+    "Products",
+    "Orders & Delivery",
+    "Test Drives",
+    "Reports",
+    "Settings"
+  ],
+  activeItem = "Vehicle Catalog"
+}) => {
   return (
-    <Col md={2} className="sidebar bg-dark text-white p-3">
-      <h5 className="mb-4">EV Dealer System</h5>
-      <ul className="nav flex-column">
+    <div className="sidebar">
+      <div className="sidebar-title">
+        EV Dealer System
+      </div>
+      <nav className="nav">
         {menuItems.map((item, index) => (
-          <li key={index} className={`nav-item mb-2 ${activeItem === item ? 'active' : ''}`}>
-            <a href="#" className={`nav-link text-white ${activeItem === item ? 'bg-primary' : ''}`}>
+          <div key={index} className="nav-item">
+            <a
+              href="#"
+              className={`nav-link ${activeItem === item ? 'active' : ''}`}
+              onClick={(e) => e.preventDefault()}
+            >
               {item}
             </a>
-          </li>
+          </div>
         ))}
-      </ul>
-    </Col>
+      </nav>
+    </div>
   );
 };
 

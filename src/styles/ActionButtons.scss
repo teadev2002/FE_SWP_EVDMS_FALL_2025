@@ -1,0 +1,48 @@
+// src/pages/HomePage/ActionButtons.scss (cập nhật màu)
+.eco-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+
+    .btn {
+        border-radius: 12px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border-width: 2px;
+
+        &.btn-outline-eco {
+            color: #000000;
+            /* Accent blue */
+            border-color: #81c784;
+            /* Secondary */
+            background: transparent;
+
+            &:hover {
+                background-color: #e1f5fe;
+                /* Light blue bg */
+                color: #2e7d32;
+                /* Primary text */
+                transform: scale(1.05);
+                box-shadow: 0 4px 8px rgba(79, 195, 247, 0.4);
+                /* Accent */
+            }
+        }
+
+        &.btn-eco-primary {
+            background: linear-gradient(135deg, #2e7d32 0%, #81c784 100%);
+            /* Primary + secondary */
+            border-color: #2e7d32;
+            color: white;
+
+            &:hover {
+                background: linear-gradient(135deg, #81c784 0%, #4fc3f7 100%);
+                /* Secondary + accent */
+                border-color: #81c784;
+                transform: scale(1.05);
+                box-shadow: 0 6px 16px rgba(129, 199, 132, 0.4);
+                /* Secondary */
+            }
+        }
+    }
+}
