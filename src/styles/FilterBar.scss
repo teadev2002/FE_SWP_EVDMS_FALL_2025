@@ -1,33 +1,107 @@
-// src/pages/HomePage/FilterBar.scss (cập nhật màu)
+// src/pages/HomePage/FilterBar.scss
 .eco-filter {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
-    padding: 1rem;
-    background: rgba(255, 255, 255, 0.7);
-    border-radius: 16px;
-    box-shadow: 0 4px 12px rgba(129, 199, 132, 0.2);
-    /* Secondary shadow */
+    gap: 1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 20px;
+    border: 1px solid rgba(46, 125, 50, 0.2);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 2px 8px rgba(129, 199, 132, 0.1);
 
-    .eco-input,
-    .eco-select {
-        border: 2px solid #81c784;
-        /* Secondary */
-        border-radius: 12px;
-        background: white;
-        transition: all 0.3s ease;
-        box-shadow: 0 2px 6px rgba(129, 199, 132, 0.2);
+    &:hover,
+    &:focus-within {
+        border-color: rgb(144, 238, 144);
+        box-shadow: 0 0 0 3px rgba(144, 238, 144, 0.1), 0 4px 12px rgba(129, 199, 132, 0.2);
+        transform: translateY(-1px);
+    }
 
-        &:focus {
-            border-color: #4fc3f7;
-            /* Accent */
-            box-shadow: 0 4px 12px rgba(79, 195, 247, 0.2);
+    .search-wrapper {
+        flex: 0 0 auto;
+        min-width: 250px;
+        display: flex;
+        align-items: center;
+    }
+
+    .eco-search {
+        margin: 0;
+        width: 100%;
+    }
+
+    .filters-right {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-left: auto;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex: 0 0 auto;
+
+        label {
+            font-weight: 500;
+            color: #2e7d32;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .eco-select {
+            padding: 0.5rem;
+            border: none;
+            background: transparent;
+            color: #2e7d32;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border-radius: 8px;
+            min-width: 120px;
+            transition: all 0.3s ease;
+            height: 38px; // Fixed height to match input
+            display: flex;
+            align-items: center;
+
+            &:focus {
+                outline: none;
+                background: rgba(144, 238, 144, 0.1);
+            }
+
+            option {
+                background: white;
+                color: #2e7d32;
+            }
         }
     }
 
-    .eco-select {
-        width: 180px;
-        padding: 0.5rem 1rem;
+    // Override SearchBar input height to match
+    .eco-input {
+        height: 38px !important;
+        padding: 0.5rem 1rem 0.5rem 2.5rem; // Adjust padding to fit icon without extra height
+        line-height: 1.5;
+        display: flex;
+        align-items: center;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .eco-filter {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+
+        .search-wrapper {
+            width: 100%;
+            min-width: auto;
+        }
+
+        .filters-right {
+            margin-left: 0;
+            justify-content: space-between;
+        }
     }
 }

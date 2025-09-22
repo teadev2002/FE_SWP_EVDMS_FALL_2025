@@ -1,4 +1,4 @@
-// src/pages/HomePage/VehicleCard.scss (cập nhật màu)
+// src/pages/HomePage/VehicleCard.scss
 .eco-card {
     border: none;
     border-radius: 20px;
@@ -49,7 +49,7 @@
         z-index: 2;
 
         &.limited {
-            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            background: linear-gradient(135deg, #eef121 0%, #B8860B 100%);
             /* Accent blue cho limited */
             box-shadow: 0 4px 12px rgba(79, 195, 247, 0.4);
         }

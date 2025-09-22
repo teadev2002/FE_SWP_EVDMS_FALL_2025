@@ -1,3 +1,146 @@
+// * {
+//   margin: 0;
+//   padding: 0;
+//   box-sizing: border-box;
+//   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+// }
+
+// .eco-bg {
+//   background: linear-gradient(135deg, #f0f9f0 0%, #e1f5fe 50%, #e8f5e8 100%);
+//   min-height: 100vh;
+// }
+
+// .eco-container {
+//   background-color: rgba(255, 255, 255, 0.95);
+//   backdrop-filter: blur(10px);
+//   border: 1px solid #e1f5fe;
+//   min-height: 100vh;
+// }
+
+// .sidebar {
+//   height: 100vh;
+//   position: sticky;
+//   top: 0;
+//   background: linear-gradient(180deg, #f0f9f0 0%, #e8f5e8 50%, #e1f5fe 100%);
+//   border-right: 2px solid #2e7d32;
+//   padding: 1.5rem;
+//   box-shadow: 2px 0 10px rgba(46, 125, 50, 0.1);
+
+//   .sidebar-title {
+//     font-size: 1.3rem;
+//     font-weight: 700;
+//     color: #2e7d32;
+//     margin-bottom: 2.5rem;
+//     text-align: center;
+//     padding: 0.75rem;
+//     background: rgba(225, 245, 254, 0.5);
+//     border-radius: 12px;
+//     border: 1px solid #e1f5fe;
+//     margin-top: 0;
+//   }
+
+//   .nav {
+//     list-style: none;
+
+//     .nav-item {
+//       margin-bottom: 0.75rem;
+
+//       .nav-link {
+//         display: block;
+//         border-radius: 12px;
+//         transition: all 0.3s ease;
+//         color: #2e7d32;
+//         font-weight: 500;
+//         padding: 1rem 1.25rem;
+//         text-decoration: none;
+//         border: 1px solid rgba(46, 125, 50, 0.2);
+//         background: rgba(225, 245, 254, 0.3);
+
+//         &:hover {
+//           background-color: #4fc3f7;
+//           color: white;
+//           transform: translateX(8px);
+//           border-color: #4fc3f7;
+//           box-shadow: 0 4px 12px rgba(79, 195, 247, 0.3);
+//         }
+
+//         &.active {
+//           background: linear-gradient(135deg, #2e7d32 0%, #4fc3f7 100%);
+//           color: white;
+//           border-color: #2e7d32;
+//           box-shadow: 0 4px 16px rgba(46, 125, 50, 0.4);
+//           font-weight: 600;
+//           transform: translateX(4px);
+//         }
+//       }
+//     }
+//   }
+// }
+
+// .main-content {
+//   width: 100%;
+//   max-width: 100%;
+
+//   .page-header {
+//     margin-bottom: 2rem;
+//     text-align: left;
+
+//     .eco-title {
+//       font-size: 2.5rem;
+//       font-weight: 700;
+//       color: #000000;
+//       margin-bottom: 0.5rem;
+//       text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+//     }
+
+//     .eco-subtitle {
+//       font-size: 1.1rem;
+//       color: #000000;
+//       font-weight: 400;
+//     }
+//   }
+
+//   .vehicle-grid {
+//     width: 100%;
+//     margin: 0;
+
+//     // Đảm bảo các cards có chiều cao đồng đều
+//     [class*="col"] {
+//       display: flex;
+
+//       .vehicle-card,
+//       >* {
+//         width: 100%;
+//         height: 100%;
+//         min-height: 400px; // Đặt chiều cao tối thiểu cho cards
+//       }
+//     }
+//   }
+// }
+
+// // Media queries để responsive
+// @media (max-width: 1199.98px) {
+//   .vehicle-grid [class*="col-xl-4"] {
+//     flex: 0 0 50%;
+//     max-width: 50%;
+//   }
+// }
+
+// @media (max-width: 991.98px) {
+//   .vehicle-grid [class*="col-lg-4"] {
+//     flex: 0 0 50%;
+//     max-width: 50%;
+//   }
+// }
+
+// @media (max-width: 767.98px) {
+//   .vehicle-grid [class*="col-md-6"] {
+//     flex: 0 0 100%;
+//     max-width: 100%;
+//   }
+// }
+
+/// src/pages/HomePage/HomePage.scss
 * {
   margin: 0;
   padding: 0;
@@ -29,11 +172,14 @@
   .sidebar-title {
     font-size: 1.3rem;
     font-weight: 700;
-    color: #2e7d32;
+    background: linear-gradient(to right, rgba(46, 125, 50, 0.9), rgba(79, 195, 247, 0.9));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
     margin-bottom: 2.5rem;
     text-align: center;
     padding: 0.75rem;
-    background: rgba(225, 245, 254, 0.5);
+    background-color: rgba(225, 245, 254, 0.5);
     border-radius: 12px;
     border: 1px solid #e1f5fe;
     margin-top: 0;
@@ -41,12 +187,20 @@
 
   .nav {
     list-style: none;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
 
     .nav-item {
       margin-bottom: 0.75rem;
+      width: 100%;
 
       .nav-link {
-        display: block;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        white-space: nowrap;
+        min-height: 3rem;
         border-radius: 12px;
         transition: all 0.3s ease;
         color: #2e7d32;
@@ -57,11 +211,11 @@
         background: rgba(225, 245, 254, 0.3);
 
         &:hover {
-          background-color: #4fc3f7;
-          color: white;
+          background-color: rgb(144, 238, 144, 0.4); // Light green eco-friendly hover
+          color: #2e7d32;
           transform: translateX(8px);
-          border-color: #4fc3f7;
-          box-shadow: 0 4px 12px rgba(79, 195, 247, 0.3);
+          border-color: rgb(144, 238, 144);
+          box-shadow: 0 4px 12px rgba(144, 238, 144, 0.3);
         }
 
         &.active {

@@ -1,4 +1,4 @@
-// src/pages/HomePage/SearchBar.jsx (giữ nguyên)
+// src/pages/HomePage/SearchBar.jsx
 import React from 'react';
 import { Form } from 'react-bootstrap';
 import '../../../styles/SearchBar.scss';
