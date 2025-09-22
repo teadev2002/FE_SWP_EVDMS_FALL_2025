@@ -3,6 +3,7 @@ import Dashboard from './components/dashboard';
 import ManageCategory from './pages/admin/category/index';
 import ManageVehicle from './pages/admin/vehicles/ManageVehicle.jsx';
 import HomePage from './pages/user/HomePage/HomePage.jsx';
+import ManageAgreements from './pages/admin/agreements/ManageAgreements.jsx';
 
 function App() {   
  
@@ -19,6 +20,10 @@ function App() {
       {
         path: "category",
         element: <ManageCategory />,
+      },
+      {
+        path: "agreements",
+        element: <ManageAgreements />,
       },
     ],
   },

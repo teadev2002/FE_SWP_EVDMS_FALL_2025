@@ -18,9 +18,9 @@ function getItem(label, key, icon, children) {
   };
 }
 const items = [
-  getItem('Manage E-Vehicles', 'vehicle', <PieChartOutlined />),
-  getItem('Manage abc', 'category', <DesktopOutlined />),
- 
+  getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
+  getItem('Agreements', 'agreements', <DesktopOutlined />),
+  
 ];
 const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -36,7 +36,7 @@ const Dashboard = () => {
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: '0 16px' }}>
-          <Breadcrumb style={{ margin: '16px 0' }} items={[{ title: 'User' }, { title: 'Bill' }]} />
+          <Breadcrumb style={{ margin: '16px 0' }} items={[{ title: 'Manage System' },]} />
           <div
             style={{
               padding: 24,
