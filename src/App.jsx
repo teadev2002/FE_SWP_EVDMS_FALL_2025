@@ -1,9 +1,10 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Dashboard from './components/dashboard';
-import ManageCategory from './pages/admin/category/index';
-import ManageVehicle from './pages/admin/vehicles/ManageVehicle.jsx';
+import ManageCategory from './pages/dealerStaffManager/category/index';
+import ManageVehicle from './pages/dealerStaffManager/vehicles/ManageVehicle.jsx';
 import HomePage from './pages/user/HomePage/HomePage.jsx';
-import ManageAgreements from './pages/admin/agreements/ManageAgreements.jsx';
+import ManageAgreements from './pages/dealerStaffManager/agreements/ManageAgreements.jsx';
+import DashboardOverview from './pages/dealerStaffManager/overview/DashboardOverview.jsx';
 
 function App() {   
  
@@ -24,6 +25,10 @@ function App() {
       {
         path: "agreements",
         element: <ManageAgreements />,
+      },
+      {
+        path: "overview",
+        element: <DashboardOverview />,
       },
     ],
   },

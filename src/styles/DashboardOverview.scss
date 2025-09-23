@@ -1,0 +1,247 @@
+
+.dashboard {
+  padding: 24px;
+  background-color: #f0f2f5;
+  min-height: 100vh;
+
+  .dashboard-title {
+    margin-bottom: 24px;
+    color: #262626;
+    text-align: center;
+  }
+
+  // Top Area
+  .dashboard-summary-row {
+    margin-bottom: 24px;
+
+    .dashboard-summary-card {
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      transition: box-shadow 0.3s ease;
+
+      &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .ant-statistic {
+        .ant-statistic-title {
+          font-size: 14px;
+          color: #595959;
+        }
+
+        .ant-statistic-content-value {
+          font-size: 24px;
+          font-weight: 600;
+        }
+      }
+    }
+  }
+
+  // Middle Area
+  .dashboard-middle-row {
+    margin-bottom: 24px;
+
+    .dashboard-table-card,
+    .dashboard-calendar-card,
+    .dashboard-appointments-card {
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      height: 100%;
+
+      .ant-card-body {
+        padding: 16px;
+      }
+    }
+
+    .dashboard-table {
+      margin-bottom: 16px;
+
+      .ant-table-thead > tr > th {
+        background-color: #fafafa;
+        font-weight: 500;
+      }
+
+      .dashboard-status {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        color: #fff;
+      }
+
+      .dashboard-status-sold {
+        background-color: #52c41a;
+      }
+
+      .dashboard-status-pending-delivery {
+        background-color: #faad14;
+      }
+
+      .dashboard-status-promotion {
+        background-color: #1890ff;
+      }
+    }
+
+    .dashboard-view-more-btn {
+      width: 100%;
+      border-radius: 6px;
+    }
+
+    .dashboard-calendar {
+      .ant-picker-calendar {
+        border-radius: 6px;
+
+        .ant-picker-calendar-header {
+          background-color: #1890ff;
+          color: #fff;
+        }
+      }
+
+      .dashboard-calendar-events {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+          font-size: 12px;
+          color: #1890ff;
+          margin-bottom: 4px;
+
+          .anticon {
+            margin-right: 4px;
+            font-size: 10px;
+          }
+        }
+      }
+
+      .dashboard-calendar-month-note {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        background: #1890ff;
+        color: #fff;
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        line-height: 1;
+      }
+    }
+
+    .dashboard-appointments-card {
+      .ant-list-item {
+        padding: 12px 0;
+        border-bottom: 1px solid #f0f0f0;
+
+        &:last-child {
+          border-bottom: none;
+        }
+      }
+
+      .dashboard-avatar {
+        background-color: #1890ff;
+        color: #fff;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .ant-list-item-meta-description {
+        color: #8c8c8c;
+        font-size: 12px;
+      }
+    }
+
+    .dashboard-view-all-btn {
+      padding: 0;
+      height: auto;
+      color: #1890ff;
+      font-size: 14px;
+    }
+  }
+
+  // Bottom Area
+  .dashboard-notifications-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .ant-card-body {
+      padding: 16px;
+    }
+
+    .ant-list-item {
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+
+      &:last-child {
+        border-bottom: none;
+      }
+    }
+
+    .dashboard-notification-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+
+      div:first-child {
+        flex: 1;
+        color: #262626;
+        font-size: 14px;
+      }
+
+      .dashboard-notification-time {
+        color: #8c8c8c;
+        font-size: 12px;
+        margin-left: 16px;
+        white-space: nowrap;
+      }
+    }
+
+    .dashboard-clear-btn {
+      padding: 0;
+      height: auto;
+      color: #ff4d4f;
+      font-size: 14px;
+      margin-top: 8px;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 16px;
+
+    .dashboard-middle-row {
+      .dashboard-table-card,
+      .dashboard-calendar-card,
+      .dashboard-appointments-card {
+        margin-bottom: 16px;
+      }
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard {
+    .dashboard-title {
+      font-size: 20px;
+    }
+
+    .dashboard-summary-row {
+      .dashboard-summary-card {
+        .ant-statistic-content-value {
+          font-size: 20px;
+        }
+      }
+    }
+  }
+}
