@@ -18,10 +18,9 @@ function getItem(label, key, icon, children) {
   };
 }
 const items = [
-   getItem('Overview', 'overview', <UserOutlined />),
+  getItem('Overview', 'overview', <UserOutlined />),
   getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
   getItem('Agreements', 'agreements', <DesktopOutlined />),
- 
   getItem('Categories', 'category', <FileOutlined />),
   
 ];
