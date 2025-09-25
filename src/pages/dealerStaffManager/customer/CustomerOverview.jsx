@@ -3,7 +3,7 @@ import { Row, Col, Card, Statistic, Calendar, List, Button, Typography } from 'a
 import { ClockCircleOutlined, NotificationOutlined } from '@ant-design/icons';
 import CarStatistics from './CarStatistics';
 import UpcomingEventsCalendar from './UpcomingEventsCalendar';
-import '../../../styles/dealerStaffManager/DashboardOverview.scss';
+import '../../../styles/dealerStaffManager/CustomerOverview.scss';
 
 const { Title } = Typography;
 
@@ -27,11 +27,11 @@ const notificationsData = [
   { content: 'Service reminder: Check battery stock levels', datetime: '1 week ago' },
 ];
 
-const DashboardOverview = () => {
+const CustomerOverview = () => {
   return (
     <div className="dashboard">
       <Title level={2} className="dashboard-title">EV Dealer Dashboard</Title>
-
+      
       {/* Top Area: Summary Cards */}
       <Row gutter={[16, 16]} className="dashboard-summary-row">
         {summaryData.map((item, index) => (
@@ -47,54 +47,7 @@ const DashboardOverview = () => {
           </Col>
         ))}
       </Row>
-
-      {/* Middle Area: Side by Side Sections */}
-      <Row gutter={16} className="dashboard-middle-row">
-        {/* Left: Car Statistics */}
-        <Col xs={24} lg={12}>
-          <CarStatistics />
-        </Col>
-
-        {/* Right: Calendar + Appointments List */}
-        <Col xs={24} lg={12}>
-          <Row gutter={[0, 16]}>
-            <Col span={24}>
-              <UpcomingEventsCalendar />
-            </Col>
-            <Col span={24}>
-              <Card
-                title={
-                  <span>
-                    <ClockCircleOutlined /> Upcoming Test Drive Appointments
-                  </span>
-                }
-                className="dashboard-appointments-card"
-              >
-                <List
-                  size="small"
-                  bordered={false}
-                  dataSource={appointmentsData}
-                  renderItem={(item) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={<div className="dashboard-avatar">{item.avatar}</div>}
-                        title={item.title}
-                        description={item.description}
-                      />
-                    </List.Item>
-                  )}
-                />
-                <Button type="link" className="dashboard-view-all-btn">
-                  View All Appointments
-                </Button>
-              </Card>
-            </Col>
-          </Row>
-        </Col>
-      </Row>
-
-      {/* Bottom Area: Notifications List */}
-      <Row>
+      <Row  style={{ marginBottom: 20 }}>
         <Col span={24}>
           <Card
             title={
@@ -121,8 +74,55 @@ const DashboardOverview = () => {
           </Card>
         </Col>
       </Row>
+
+      {/* Middle Area: Side by Side Sections */}
+      <Row gutter={16} className="dashboard-middle-row">
+        
+
+        {/* Right: Calendar + Appointments List */}
+        <Col xs={24} lg={12}>
+          <Row gutter={[0, 16]}>
+            <Col span={24}>
+              <UpcomingEventsCalendar />
+            </Col>
+          </Row>
+        </Col>
+        {/* Left: Appointments List */}
+       
+        <Col xs={24} lg={12}>
+         <Card
+          title={
+                  <span>
+                    <ClockCircleOutlined /> Upcoming Test Drive Appointments
+                  </span>
+                }
+                className="dashboard-appointments-card"
+              >
+                <List
+                  size="small"
+                  bordered={false}
+                  dataSource={appointmentsData}
+                  renderItem={(item) => (
+                    <List.Item>
+                      <List.Item.Meta
+                        avatar={<div className="dashboard-avatar">{item.avatar}</div>}
+                        title={item.title}
+                        description={item.description}
+                      />
+                    </List.Item>
+                  )}
+                />
+                <Button type="link" className="dashboard-view-all-btn">
+                  View All Appointments
+                </Button>
+              </Card>
+        </Col>
+      </Row>
+
+      {/* Bottom Area: Notifications List */}
+      
     </div>
   );
 };
 
-export default DashboardOverview;
+export default CustomerOverview;

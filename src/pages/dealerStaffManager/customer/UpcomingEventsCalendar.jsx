@@ -17,26 +17,6 @@ const UpcomingEventsCalendar = () => {
     return listData || [];
   };
 
-  const dateCellRender = (value) => {
-    const listData = getListData(value);
-    return (
-      <ul className="dashboard-calendar-events">
-        {listData.map((item) => (
-          <li key={item.content}>
-            <ClockCircleOutlined /> {item.content}
-          </li>
-        ))}
-      </ul>
-    );
-  };
-
-  const monthCellRender = (value) => {
-    const num = getMonthData(value.year(), value.month());
-    if (num > 0) {
-      return <div className="dashboard-calendar-month-note">{num}</div>;
-    }
-  };
-
   const getMonthData = (year, month) => {
     if (year === 2023 && month === 9) {
       return 150;
@@ -44,11 +24,33 @@ const UpcomingEventsCalendar = () => {
     return 0;
   };
 
+  // Sử dụng cellRender thay cho dateCellRender và monthCellRender
+  const cellRender = (current, info) => {
+    if (info.type === 'date') {
+      const listData = getListData(current);
+      return (
+        <ul className="dashboard-calendar-events">
+          {listData.map((item) => (
+            <li key={item.content}>
+              <ClockCircleOutlined /> {item.content}
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    if (info.type === 'month') {
+      const num = getMonthData(current.year(), current.month());
+      if (num > 0) {
+        return <div className="dashboard-calendar-month-note">{num}</div>;
+      }
+    }
+    return null;
+  };
+
   return (
     <Card title="Upcoming Events Calendar" className="dashboard-calendar-card">
       <Calendar
-        dateCellRender={dateCellRender}
-        monthCellRender={monthCellRender}
+        cellRender={cellRender}
         className="dashboard-calendar"
       />
     </Card>

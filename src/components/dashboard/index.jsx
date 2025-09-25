@@ -8,6 +8,7 @@ import {
 } from '@ant-design/icons';
 import { Breadcrumb, Layout, Menu, theme } from 'antd';
 import { Link, Outlet } from 'react-router-dom';
+ 
 const { Header, Content, Footer, Sider } = Layout;
 function getItem(label, key, icon, children) {
   return {
@@ -29,8 +30,13 @@ const items = [
   ],
   
 ),
-  getItem('Customer', 'customer', <UserOutlined />),
-  // getItem('Agreements', 'agreements', <DesktopOutlined />),
+  getItem('Customer', 'customer', <UserOutlined />, [
+    getItem('Overview', 'customer-overview', <FileOutlined />),
+   getItem('Profile', 'customer-profile', <FileOutlined />),
+  ]
+ 
+  ),
+  
   getItem('Categories', 'category', <FileOutlined />),
 ];
 const Dashboard = () => {
