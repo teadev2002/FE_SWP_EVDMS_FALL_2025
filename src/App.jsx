@@ -10,6 +10,9 @@ import Promotions from './pages/dealerStaffManager/sale/Promotions.jsx';
 import VehicleDetailPage from './pages/user/HomePage/VehicleDetailPage.jsx';
 import TestDriveHistoryPage from './pages/user/HomePage/TestDriveHistoryPage.jsx'; // New for history
 import TestDriveRegisterPage from './pages/user/HomePage/TestDriveRegisterPage.jsx'; // New for form
+import FactoryOrder from './pages/dealerStaffManager/sale/FactoryOrder.jsx';
+import DeliveryTracking from './pages/dealerStaffManager/sale/DeliveryTracking.jsx';
+import PaymentManagement from './pages/dealerStaffManager/sale/PaymentManagement.jsx';
 
 function App() {
 
@@ -36,6 +39,20 @@ function App() {
           path: "sales/agreements",
           element: <ManageAgreements />,
         },
+        {
+          path: "sales/factory-order",
+          element: <FactoryOrder />,
+        },
+        {
+          path: "sales/delivery-tracking",
+          element: <DeliveryTracking />,
+        },
+        {
+          path: "sales/payment-management",
+          element: <PaymentManagement />,
+        },
+
+
         {
           path: "customer",
           element: <DashboardOverview />,

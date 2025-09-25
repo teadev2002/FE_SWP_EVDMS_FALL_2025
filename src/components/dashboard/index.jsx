@@ -17,19 +17,15 @@ function getItem(label, key, icon, children) {
     label: <Link to={key}>{label}</Link>,
   };
 }
-// const items = [
-//   getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
-//   getItem('Sales', 'sales', <TeamOutlined />),
-//   getItem('Overview', 'overview', <UserOutlined />),
-//   getItem('Agreements', 'agreements', <DesktopOutlined />),
-//   getItem('Categories', 'category', <FileOutlined />),
-// ];
 
 const items = [
   getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
   getItem('Sales', 'sales', <TeamOutlined />, [
     getItem('Promotions', 'sales/promotions', <FileOutlined />),
-    getItem('Agreements', 'sales/agreements', <UserOutlined />)
+    getItem('Agreements', 'sales/agreements', <UserOutlined />),
+    getItem('Factory Orders', 'sales/factory-order', <DesktopOutlined />),
+    getItem('Delivery Tracking', 'sales/delivery-tracking', <DesktopOutlined />),
+     getItem('Payment Management', 'sales/payment-management', <DesktopOutlined />),
   ],
   
 ),

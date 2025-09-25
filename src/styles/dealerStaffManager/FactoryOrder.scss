@@ -1,0 +1,53 @@
+.factory-order-container {
+  padding: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+
+  .order-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+    .ant-card-head {
+      background: #f0f2f5;
+      border-bottom: 1px solid #e8e8e8;
+
+      .ant-card-head-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1f1f1f;
+      }
+    }
+
+    .ant-form-item {
+      margin-bottom: 16px;
+
+      .ant-form-item-label {
+        font-weight: 500;
+      }
+    }
+
+    .ant-btn-primary {
+      background: #1677ff;
+      border-color: #1677ff;
+      height: 40px;
+      font-size: 16px;
+      font-weight: 500;
+
+      &:hover {
+        background: #40a9ff;
+        border-color: #40a9ff;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .factory-order-container {
+    padding: 16px;
+
+    .order-card {
+      box-shadow: none;
+    }
+  }
+}
