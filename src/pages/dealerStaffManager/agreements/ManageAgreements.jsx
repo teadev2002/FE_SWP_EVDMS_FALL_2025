@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Table } from 'antd'; // Giả sử bạn sử dụng antd để render bảng
 import ManageServiceAgreements from '../../../services/ManageAgreements/ManageServiceAgreements'; // Đường dẫn đến file chứa service
+import Quotation from './Quotation';
+import Orders from './Orders';
+import { Tabs } from 'antd';
+const { TabPane } = Tabs;
 
 const ManageAgreements = () => {
   const [agreements, setAgreements] = useState([]);
   const [loading, setLoading] = useState(false); // State để xử lý trạng thái loading
-
+const [activeTab, setActiveTab] = useState('agreements');
   // Sử dụng useEffect để gọi API khi component mount
   useEffect(() => {
     const fetchAgreements = async () => {
@@ -52,12 +56,22 @@ const ManageAgreements = () => {
   return (
     <div>
       <h2>Manage Agreements</h2>
-      <Table
-        columns={columns}
-        dataSource={agreements}
-        loading={loading} // Hiển thị loading khi đang fetch dữ liệu
-        rowKey="key" // Sử dụng agreementId làm key
-      />
+     <Tabs activeKey={activeTab} onChange={setActiveTab}>
+        <TabPane tab="Agreements" key="agreements">
+          <Table
+             columns={columns}
+            dataSource={agreements}
+            loading={loading}
+            rowKey="key"
+          />
+        </TabPane>
+        <TabPane tab="Quotations" key="quotations">
+          <Quotation />
+        </TabPane>
+        <TabPane tab="Orders" key="orders">
+          <Orders />
+        </TabPane>
+      </Tabs>
     </div>
   );
 };
