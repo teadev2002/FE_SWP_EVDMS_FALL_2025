@@ -7,8 +7,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Table, Card, Statistic, Button, Calendar, List, Modal, Input, Select, Checkbox, Upload, Slider, Row, Col, Tag, Image } from 'antd';
 import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import '../../../styles/dealerStaffManager/ManageVehicle.scss';
-import dayjs from 'dayjs';
-
+ 
 const { Search } = Input;
 const { Option } = Select;
 
@@ -101,24 +100,24 @@ const mockVehicles = [
 ];
 
 // Mock promotions
-const mockPromotions = [
-  {
-    id: 1,
-    title: 'Tesla Model 3 10% Discount',
-    description: 'Special holiday offer',
-    validFrom: '2023-10-01',
-    validTo: '2023-12-31',
-    cta: 'Apply Now',
-  },
-  {
-    id: 2,
-    title: 'Nissan Leaf Cashback',
-    description: '$2000 off select models',
-    validFrom: '2023-11-01',
-    validTo: '2023-11-30',
-    cta: 'Claim',
-  },
-];
+// const mockPromotions = [
+//   {
+//     id: 1,
+//     title: 'Tesla Model 3 10% Discount',
+//     description: 'Special holiday offer',
+//     validFrom: '2023-10-01',
+//     validTo: '2023-12-31',
+//     cta: 'Apply Now',
+//   },
+//   {
+//     id: 2,
+//     title: 'Nissan Leaf Cashback',
+//     description: '$2000 off select models',
+//     validFrom: '2023-11-01',
+//     validTo: '2023-11-30',
+//     cta: 'Claim',
+//   },
+// ];
 
 const ManageVehicle = () => {
   // States
@@ -130,7 +129,7 @@ const ManageVehicle = () => {
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isCompareModalVisible, setIsCompareModalVisible] = useState(false);
   const [sortConfig, setSortConfig] = useState({ field: null, order: null });
-  const [promotions] = useState(mockPromotions);
+ // const [promotions] = useState(mockPromotions);
 
   // Filter states
   const [brandFilter, setBrandFilter] = useState([]);
@@ -307,27 +306,27 @@ console.log( filteredVehicles);
   };
 
   // Calendar date cell render for promotions
-  const getListData = useCallback((value) => {
-    const currentDate = dayjs(value.format('YYYY-MM-DD'));
-    return promotions
-      .filter(p => {
-        const from = dayjs(p.validFrom);
-        const to = dayjs(p.validTo);
-        return currentDate.isAfter(from) && currentDate.isBefore(to);
-      })
-      .map(p => ({ content: p.title }));
-  }, [promotions]);
+  // const getListData = useCallback((value) => {
+  //   const currentDate = dayjs(value.format('YYYY-MM-DD'));
+  //   return promotions
+  //     .filter(p => {
+  //       const from = dayjs(p.validFrom);
+  //       const to = dayjs(p.validTo);
+  //       return currentDate.isAfter(from) && currentDate.isBefore(to);
+  //     })
+  //     .map(p => ({ content: p.title }));
+  // }, [promotions]);
 
-  const dateCellRender = useCallback((value) => {
-    const listData = getListData(value);
-    return (
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-        {listData.map((item, idx) => (
-          <li key={idx} style={{ margin: '4px 0', color: '#1890ff' }}>{item.content}</li>
-        ))}
-      </ul>
-    );
-  }, [getListData]);
+  // const dateCellRender = useCallback((value) => {
+  //   const listData = getListData(value);
+  //   return (
+  //     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+  //       {listData.map((item, idx) => (
+  //         <li key={idx} style={{ margin: '4px 0', color: '#1890ff' }}>{item.content}</li>
+  //       ))}
+  //     </ul>
+  //   );
+  // }, [getListData]);
 
   // Detail modal content
   const detailContent = selectedVehicle ? (
@@ -379,7 +378,7 @@ console.log( filteredVehicles);
 
       <Row gutter={16}>
         {/* Main content: Filters, Search, Table */}
-        <Col xs={24} lg={16}>
+        <Col xs={24} lg={24}>
           <Card title="Vehicle Catalog" className="main-card">
             {/* Global Search */}
             <Search
@@ -481,7 +480,7 @@ console.log( filteredVehicles);
         </Col>
 
         {/* Sidebar: Promotions and Calendar */}
-        <Col xs={24} lg={8}>
+        {/* <Col xs={24} lg={8}>
           <Card title="Promotions" className="sidebar-card" style={{ marginBottom: 16 }}>
             <List
               dataSource={promotions}
@@ -508,7 +507,7 @@ console.log( filteredVehicles);
               aria-label="Promotion calendar"
             />
           </Card>
-        </Col>
+        </Col> */}
       </Row>
 
       {/* Detail Modal */}

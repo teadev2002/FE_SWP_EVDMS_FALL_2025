@@ -17,12 +17,25 @@ function getItem(label, key, icon, children) {
     label: <Link to={key}>{label}</Link>,
   };
 }
+// const items = [
+//   getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
+//   getItem('Sales', 'sales', <TeamOutlined />),
+//   getItem('Overview', 'overview', <UserOutlined />),
+//   getItem('Agreements', 'agreements', <DesktopOutlined />),
+//   getItem('Categories', 'category', <FileOutlined />),
+// ];
+
 const items = [
-  getItem('Overview', 'overview', <UserOutlined />),
   getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
-  getItem('Agreements', 'agreements', <DesktopOutlined />),
-  getItem('Categories', 'category', <FileOutlined />),
+  getItem('Sales', 'sales', <TeamOutlined />, [
+    getItem('Promotions', 'sales/promotions', <FileOutlined />),
+    getItem('Agreements', 'sales/agreements', <UserOutlined />)
+  ],
   
+),
+  getItem('Customer', 'customer', <UserOutlined />),
+  // getItem('Agreements', 'agreements', <DesktopOutlined />),
+  getItem('Categories', 'category', <FileOutlined />),
 ];
 const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -38,10 +51,10 @@ const Dashboard = () => {
       <Layout>
         <Header style={{ padding: 0, background: colorBgContainer }} />
         <Content style={{ margin: '0 16px' }}>
-          <Breadcrumb style={{ margin: '16px 0' }} items={[{ title: 'Manage System' },]} />
+          
           <div
             style={{
-              padding: 24,
+              padding: 0,
               minHeight: 360,
               background: colorBgContainer,
               borderRadius: borderRadiusLG,
@@ -51,7 +64,7 @@ const Dashboard = () => {
           </div>
         </Content>
         <Footer style={{ textAlign: 'center' }}>
-          Ant Design ©{new Date().getFullYear()} Created by Ant UED
+        Project EVDMS ©{new Date().getFullYear()}
         </Footer>
       </Layout>
     </Layout>
