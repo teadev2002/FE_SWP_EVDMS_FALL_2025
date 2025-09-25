@@ -1,11 +1,11 @@
-// src/pages/user/HomePage/VehicleCard.jsx (updated to use images[0] for image)
+// src/pages/user/HomePage/VehicleCard.jsx (updated to pass props for compare)
 import React from 'react';
 import { Card } from 'react-bootstrap';
 import ActionButtons from './ActionButtons';
 import '../../../styles/VehicleCard.scss';
 
-const VehicleCard = ({ vehicle }) => {
-    const imageSrc = vehicle.images ? vehicle.images[0] : vehicle.image || 'https://via.placeholder.com/300x220?text=No+Image'; // Fallback nếu không có images
+const VehicleCard = ({ vehicle, selectedVehicles, selectedCount, onToggleCompare }) => {
+    const imageSrc = vehicle.images ? vehicle.images[0] : vehicle.image || 'https://via.placeholder.com/300x220?text=No+Image';
 
     return (
         <Card className="vehicle-card eco-card">
@@ -15,7 +15,7 @@ const VehicleCard = ({ vehicle }) => {
                     src={imageSrc}
                     alt={vehicle.title}
                     className="eco-card-img"
-                    onError={(e) => { // Fallback nếu load lỗi
+                    onError={(e) => {
                         e.target.src = 'https://via.placeholder.com/300x220?text=No+Image';
                     }}
                 />
@@ -31,7 +31,12 @@ const VehicleCard = ({ vehicle }) => {
                     <div>Category: {vehicle.specs.category}</div>
                 </Card.Text>
                 <Card.Text className="eco-price">{vehicle.price}</Card.Text>
-                <ActionButtons vehicleId={vehicle.id} />
+                <ActionButtons
+                    vehicleId={vehicle.id}
+                    selectedVehicles={selectedVehicles}
+                    selectedCount={selectedCount}
+                    onToggleCompare={onToggleCompare}
+                />
             </Card.Body>
         </Card>
     );

@@ -100,10 +100,9 @@
 
 // export default HomePage;
 
-// src/pages/HomePage/HomePage.jsx
-// src/pages/user/HomePage/HomePage.jsx (added more images to vehicles data)
-import React from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+// src/pages/user/HomePage/HomePage.jsx (updated modal with vehicle images and improved styles)
+import React, { useState } from 'react';
+import { Container, Row, Col, Modal, Table, Card, Badge, Button } from 'react-bootstrap';
 import '../../../styles/HomePage.scss';
 import Sidebar from '../../../components/sidebar/Sidebar';
 import SearchBar from './SearchBar';
@@ -111,6 +110,9 @@ import FilterBar from './FilterBar';
 import VehicleCard from './VehicleCard';
 
 const HomePage = () => {
+  const [selectedVehicles, setSelectedVehicles] = useState([]);
+  const [showCompareModal, setShowCompareModal] = useState(false);
+
   const vehicles = [
     {
       id: 1,
@@ -124,17 +126,15 @@ const HomePage = () => {
       specs: {
         range: '405 miles',
         acceleration: '3.1s',
-        category: 'Luxury Sedan'
-      },
-      price: '$89,900',
-      stock: '5 Available',
-      stockType: 'available',
-      description: 'The Tesla Model S is a premium electric sedan offering unparalleled performance and range.',
-      additionalSpecs: {
+        category: 'Luxury Sedan',
         battery: '100 kWh',
         topSpeed: '200 mph',
-        seating: '5 seats'
-      }
+        seating: '5 seats',
+        price: '$89,900'
+      },
+      stock: '5 Available',
+      stockType: 'available',
+      description: 'The Tesla Model S is a premium electric sedan offering unparalleled performance and range.'
     },
     {
       id: 2,
@@ -148,17 +148,15 @@ const HomePage = () => {
       specs: {
         range: '324 miles',
         acceleration: '4.6s',
-        category: 'Luxury SUV'
-      },
-      price: '$83,200',
-      stock: '3 Available',
-      stockType: 'available',
-      description: 'The BMW iX combines luxury with sustainable electric power in an SUV form.',
-      additionalSpecs: {
+        category: 'Luxury SUV',
         battery: '111 kWh',
         topSpeed: '124 mph',
-        seating: '5 seats'
-      }
+        seating: '5 seats',
+        price: '$83,200'
+      },
+      stock: '3 Available',
+      stockType: 'available',
+      description: 'The BMW iX combines luxury with sustainable electric power in an SUV form.'
     },
     {
       id: 3,
@@ -172,19 +170,62 @@ const HomePage = () => {
       specs: {
         range: '238 miles',
         acceleration: '3.9s',
-        category: 'Sports Car'
-      },
-      price: '$102,400',
-      stock: '1 Available',
-      stockType: 'limited',
-      description: 'The Audi e-tron GT delivers thrilling performance in a sleek electric sports car design.',
-      additionalSpecs: {
+        category: 'Sports Car',
         battery: '93 kWh',
         topSpeed: '155 mph',
-        seating: '4 seats'
-      }
+        seating: '4 seats',
+        price: '$102,400'
+      },
+      stock: '1 Available',
+      stockType: 'limited',
+      description: 'The Audi e-tron GT delivers thrilling performance in a sleek electric sports car design.'
     }
   ];
+
+  const handleToggleCompare = (vehicleId) => {
+    setSelectedVehicles(prev => {
+      const isSelected = prev.some(v => v.id === vehicleId);
+      let updated;
+      if (isSelected) {
+        updated = prev.filter(v => v.id !== vehicleId);
+        setShowCompareModal(false);
+      } else if (prev.length < 2) {
+        const vehicle = vehicles.find(v => v.id === vehicleId);
+        updated = [...prev, vehicle];
+        if (updated.length === 2) {
+          setShowCompareModal(true);
+        }
+      } else {
+        return prev;
+      }
+      return updated;
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedVehicles([]);
+    setShowCompareModal(false);
+  };
+
+  const getWinner = (key) => {
+    if (selectedVehicles.length < 2) return null;
+    const values = selectedVehicles.map(v => v.specs[key]);
+    const parsedValues = values.map(val => {
+      if (key === 'price') return parseFloat(val.replace(/[$,]/g, ''));
+      if (key.includes('miles') || key.includes('kWh') || key.includes('mph') || key.includes('seats')) return parseFloat(val.replace(/[^0-9.]/g, ''));
+      if (key === 'acceleration') return parseFloat(val.replace('s', ''));
+      return 0;
+    });
+    let bestIndex;
+    if (key === 'price' || key === 'acceleration') {
+      bestIndex = parsedValues.indexOf(Math.min(...parsedValues));
+    } else {
+      bestIndex = parsedValues.indexOf(Math.max(...parsedValues));
+    }
+    return bestIndex;
+  };
+
+  const specsKeys = ['range', 'acceleration', 'category', 'battery', 'topSpeed', 'seating', 'price'];
 
   return (
     <div className="min-h-screen eco-bg">
@@ -217,7 +258,12 @@ const HomePage = () => {
               <Row className="vehicle-grid g-3">
                 {vehicles.map((vehicle) => (
                   <Col xl={4} lg={4} md={6} sm={12} key={vehicle.id}>
-                    <VehicleCard vehicle={vehicle} />
+                    <VehicleCard
+                      vehicle={vehicle}
+                      selectedVehicles={selectedVehicles}
+                      selectedCount={selectedVehicles.length}
+                      onToggleCompare={handleToggleCompare}
+                    />
                   </Col>
                 ))}
               </Row>
@@ -225,6 +271,66 @@ const HomePage = () => {
           </Col>
         </Row>
       </Container>
+
+      {/* Compare Modal */}
+      <Modal show={showCompareModal} onHide={clearSelection} size="xl" centered className="compare-modal">
+        <Modal.Header closeButton className="eco-modal-header">
+          <Modal.Title>Vehicle Comparison</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          <Row className="g-3 mb-3">
+            {selectedVehicles.map((vehicle, index) => (
+              <Col md={6} key={vehicle.id}>
+                <Card className={`compare-card eco-card ${index === 0 ? 'left' : 'right'}`}>
+                  <Card.Img variant="top" src={vehicle.images[0]} className="compare-card-img" />
+                  <Card.Body>
+                    <Card.Title className="eco-card-title">{vehicle.title}</Card.Title>
+                    <Card.Text className="eco-price">{vehicle.specs.price}</Card.Text>
+                    <Badge bg={vehicle.stockType === 'available' ? "success" : "warning"} className="mb-2">
+                      {vehicle.stock}
+                    </Badge>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+          <Table responsive className="compare-table">
+            <thead>
+              <tr>
+                <th>Specification</th>
+                {selectedVehicles.map((vehicle) => (
+                  <th key={vehicle.id} className="text-center">
+                    {vehicle.title}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {specsKeys.map((key) => {
+                const winnerIndex = getWinner(key);
+                return (
+                  <tr key={key}>
+                    <td><strong>{key.charAt(0).toUpperCase() + key.slice(1)}</strong></td>
+                    {selectedVehicles.map((vehicle, index) => (
+                      <td key={vehicle.id} className={`text-center ${winnerIndex === index ? 'winner-cell' : ''}`}>
+                        {vehicle.specs[key]}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
+        </Modal.Body>
+        <Modal.Footer className="eco-modal-footer">
+          <Button variant="outline-eco" onClick={clearSelection}>
+            Clear Selection
+          </Button>
+          <Button variant="eco-primary">
+            Download Comparison
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 };
