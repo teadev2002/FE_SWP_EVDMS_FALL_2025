@@ -15,7 +15,7 @@ function getItem(label, key, icon, children) {
     key,
     icon,
     children,
-    label: <Link to={key}>{label}</Link>,
+    label: <Link to={key} style={{ color: '#fff',textDecoration: 'none'  }}>{label}</Link>, // Thêm style màu trắng
   };
 }
 
@@ -37,7 +37,10 @@ const items = [
  
   ),
   
-  getItem('Categories', 'category', <FileOutlined />),
+  getItem('Report', 'report',  <FileOutlined />,[
+    getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),
+    getItem('Customer Debt Report', 'report/customer-debt-report', <FileOutlined />),
+  ]),
 ];
 const Dashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
@@ -46,7 +49,7 @@ const Dashboard = () => {
   } = theme.useToken();
   return (
     <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible collapsed={collapsed} onCollapse={value => setCollapsed(value)}>
+      <Sider width={250}  collapsible collapsed={collapsed} onCollapse={value => setCollapsed(value)}>
         <div className="demo-logo-vertical" />
         <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
       </Sider>

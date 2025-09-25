@@ -1,11 +1,9 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Dashboard from './components/dashboard';
-import ManageCategory from './pages/dealerStaffManager/category/index';
 import ManageVehicle from './pages/dealerStaffManager/vehicles/ManageVehicle.jsx';
 import HomePage from './pages/user/HomePage/HomePage.jsx';
 import ManageAgreements from './pages/dealerStaffManager/agreements/ManageAgreements.jsx';
 import CustomerOverview from './pages/dealerStaffManager/customer/CustomerOverview.jsx';
-import ManageSale from './pages/dealerStaffManager/sale/ManageSale.jsx';
 import Promotions from './pages/dealerStaffManager/sale/Promotions.jsx';
 import VehicleDetailPage from './pages/user/HomePage/VehicleDetailPage.jsx';
 import TestDriveHistoryPage from './pages/user/HomePage/TestDriveHistoryPage.jsx'; // New for history
@@ -14,7 +12,8 @@ import FactoryOrder from './pages/dealerStaffManager/sale/FactoryOrder.jsx';
 import DeliveryTracking from './pages/dealerStaffManager/sale/DeliveryTracking.jsx';
 import PaymentManagement from './pages/dealerStaffManager/sale/PaymentManagement.jsx';
 import CustomerProfile from './pages/dealerStaffManager/customer/CustomerProfile.jsx';
-
+import StaffSalesReport from './pages/dealerStaffManager/Report/StaffSalesReport.jsx';
+import DebtReports from './pages/dealerStaffManager/Report/DebtReports.jsx';
 function App() {
 
   const router = createBrowserRouter([
@@ -67,8 +66,16 @@ function App() {
           element: <CustomerProfile />,
         },
         {
-          path: "category",
-          element: <ManageCategory />,
+          path: "report",
+          element: <StaffSalesReport />,
+        },
+        {
+          path: "report/staff-sales-report",
+          element: <StaffSalesReport />,
+        },
+        {
+          path: "report/customer-debt-report",
+          element: <DebtReports />,
         },
 
       ],
