@@ -1,11 +1,10 @@
-// src/pages/HomePage/VehicleCard.scss
+// src/pages/user/HomePage/VehicleCard.scss (updated with loading/error styles)
 .eco-card {
     border: none;
     border-radius: 20px;
     overflow: hidden;
     background: white;
     box-shadow: 0 8px 24px rgba(129, 199, 132, 0.3);
-    /* Secondary */
     transition: all 0.4s ease;
     position: relative;
     height: 100%;
@@ -13,13 +12,13 @@
     &:hover {
         transform: translateY(-8px);
         box-shadow: 0 16px 32px rgba(79, 195, 247, 0.2);
-        /* Accent shadow */
     }
 
     .card-image-wrapper {
         position: relative;
         height: 220px;
         overflow: hidden;
+        background: linear-gradient(135deg, #f0f9f0 0%, #e8f5e8 100%); // Fallback background nếu hình trắng
 
         .eco-card-img {
             width: 100%;
@@ -30,27 +29,31 @@
             &:hover {
                 transform: scale(1.05);
             }
+
+            // Style nếu load lỗi (trắng)
+            &:error {
+                opacity: 0.5;
+                background: #f0f9f0;
+            }
         }
     }
 
+    // Các style khác giữ nguyên...
     .eco-badge {
         position: absolute;
         top: 12px;
         left: 12px;
         background: linear-gradient(135deg, #2e7d32 0%, #81c784 100%);
-        /* Primary + secondary */
         color: white;
         padding: 0.4rem 0.8rem;
         border-radius: 20px;
         font-size: 0.85rem;
         font-weight: 600;
         box-shadow: 0 4px 12px rgba(129, 199, 132, 0.4);
-        /* Secondary */
         z-index: 2;
 
         &.limited {
             background: linear-gradient(135deg, #eef121 0%, #B8860B 100%);
-            /* Accent blue cho limited */
             box-shadow: 0 4px 12px rgba(79, 195, 247, 0.4);
         }
     }
@@ -63,14 +66,12 @@
         font-size: 1.4rem;
         font-weight: 700;
         color: #2e7d32;
-        /* Primary */
         margin-bottom: 0.8rem;
         text-align: center;
     }
 
     .eco-card-text {
         color: #000000;
-        /* Secondary cho text */
         font-size: 0.95rem;
         line-height: 1.6;
         margin-bottom: 1rem;
@@ -84,7 +85,6 @@
         font-size: 1.4rem;
         font-weight: 800;
         color: #2e7d32;
-        /* Primary */
         text-align: center;
         margin-bottom: 1.2rem;
         text-shadow: 0 1px 2px rgba(46, 125, 50, 0.2);
