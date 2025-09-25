@@ -31,7 +31,7 @@ const ActionButtons = ({ vehicleId, selectedVehicles, selectedCount, onToggleCom
                         '2 vehicles selected. Click to toggle or open comparison modal.'}
                 {selectedCount > 0 && (
                     <Button variant="link" size="sm" className="p-0 mt-2 text-decoration-none" onClick={clearSelection}>
-                        Clear All Selections
+
                     </Button>
                 )}
             </Popover.Body>

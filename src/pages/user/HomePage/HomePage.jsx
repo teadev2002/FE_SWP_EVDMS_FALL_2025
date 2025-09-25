@@ -245,7 +245,6 @@ const HomePage = () => {
           {/* Main Content */}
           <Col md={10} className="p-4">
             <div className="main-content">
-              <SearchBar placeholder="Search vehicles, customers, or orders..." />
               <div className="page-header">
                 <h1 className="eco-title">Electric Vehicle Rental Catalog</h1>
                 <p className="eco-subtitle">
