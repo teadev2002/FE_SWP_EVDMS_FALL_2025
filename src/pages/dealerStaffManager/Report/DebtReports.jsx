@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs } from 'antd';
- 
- 
-import CustomerDebtReport from './customerDebtReport';
+import CustomerDebtReport from './CustomerDebtReport';
 import FactoryDebtReport from './FactoryDebtReport';
 
 const { TabPane } = Tabs;
