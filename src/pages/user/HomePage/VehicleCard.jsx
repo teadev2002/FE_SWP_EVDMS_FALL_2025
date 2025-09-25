@@ -1,18 +1,23 @@
-// src/pages/HomePage/VehicleCard.jsx
+// src/pages/user/HomePage/VehicleCard.jsx (updated to use images[0] for image)
 import React from 'react';
 import { Card } from 'react-bootstrap';
 import ActionButtons from './ActionButtons';
 import '../../../styles/VehicleCard.scss';
 
 const VehicleCard = ({ vehicle }) => {
+    const imageSrc = vehicle.images ? vehicle.images[0] : vehicle.image || 'https://via.placeholder.com/300x220?text=No+Image'; // Fallback nếu không có images
+
     return (
         <Card className="vehicle-card eco-card">
             <div className="card-image-wrapper">
                 <Card.Img
                     variant="top"
-                    src={vehicle.image}
+                    src={imageSrc}
                     alt={vehicle.title}
                     className="eco-card-img"
+                    onError={(e) => { // Fallback nếu load lỗi
+                        e.target.src = 'https://via.placeholder.com/300x220?text=No+Image';
+                    }}
                 />
                 <div className={`stock-badge eco-badge ${vehicle.stockType}`}>
                     {vehicle.stock}
@@ -26,7 +31,7 @@ const VehicleCard = ({ vehicle }) => {
                     <div>Category: {vehicle.specs.category}</div>
                 </Card.Text>
                 <Card.Text className="eco-price">{vehicle.price}</Card.Text>
-                <ActionButtons />
+                <ActionButtons vehicleId={vehicle.id} />
             </Card.Body>
         </Card>
     );

@@ -1,0 +1,140 @@
+// src/pages/user/VehicleDetailPage/VehicleDetailPage.scss (updated with highlights and carousel styles)
+.eco-detail-card {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 8px 24px rgba(129, 199, 132, 0.3);
+    transition: all 0.3s ease;
+
+    &:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 16px 32px rgba(79, 195, 247, 0.2);
+    }
+
+    .carousel {
+        .carousel-item {
+            .eco-detail-img {
+                height: 400px;
+                object-fit: cover;
+                border-radius: 20px 20px 0 0;
+            }
+        }
+
+        .carousel-control-prev,
+        .carousel-control-next {
+            width: 5%;
+            opacity: 0.5;
+
+            &:hover {
+                opacity: 0.8;
+            }
+        }
+    }
+
+    .highlight-price {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #2e7d32;
+        text-align: center;
+        position: relative;
+
+        .highlight-badge {
+            position: absolute;
+            top: -10px;
+            right: 0;
+            background: linear-gradient(135deg, #4fc3f7 0%, #81c784 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(79, 195, 247, 0.3);
+        }
+    }
+
+    .list-group-item {
+        border: none;
+        padding: 1rem 0;
+        color: #000000;
+        border-bottom: 1px solid rgba(46, 125, 50, 0.1);
+
+        &:last-child {
+            border-bottom: none;
+        }
+
+        &.highlight-spec {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(144, 238, 144, 0.1);
+            margin-bottom: 0.5rem;
+            padding: 1rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+
+            &:hover {
+                background: rgba(144, 238, 144, 0.2);
+                transform: translateX(5px);
+            }
+
+            strong {
+                color: #2e7d32;
+                font-weight: 700;
+            }
+
+            .highlight-value {
+                color: #4fc3f7;
+                font-weight: 600;
+                font-size: 1.1rem;
+            }
+
+            .stock-badge {
+                background: linear-gradient(135deg, #2e7d32 0%, #81c784 100%);
+                color: white;
+                padding: 0.25rem 0.75rem;
+                border-radius: 15px;
+                font-size: 0.85rem;
+                font-weight: 600;
+
+                &.limited {
+                    background: linear-gradient(135deg, #eef121 0%, #B8860B 100%);
+                }
+            }
+        }
+    }
+
+    .detail-actions {
+        display: flex;
+        gap: 1rem;
+
+        .btn {
+            border-radius: 12px;
+            padding: 0.75rem 1.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            flex: 1;
+
+            &.btn-eco-primary {
+                background: linear-gradient(135deg, #2e7d32 0%, #81c784 100%);
+                border-color: #2e7d32;
+                color: white;
+
+                &:hover {
+                    background: linear-gradient(135deg, #81c784 0%, #4fc3f7 100%);
+                    transform: scale(1.05);
+                }
+            }
+
+            &.btn-outline-eco {
+                color: #2e7d32;
+                border-color: #81c784;
+
+                &:hover {
+                    background-color: #e1f5fe;
+                    transform: scale(1.05);
+                }
+            }
+        }
+    }
+}
