@@ -1,7 +1,9 @@
 import React, { useCallback } from 'react';
 import { Card, List, Button, Calendar } from 'antd';
 import dayjs from 'dayjs';
-
+ 
+import { Typography } from 'antd';
+const { Title} = Typography;
 // Mock promotions data
 const mockPromotions = [
   {
@@ -48,7 +50,8 @@ const Promotions = () => {
 
   return (
     <>
-      <Card title="Promotions" className="sidebar-card" style={{ marginBottom: 16 }}>
+    <Title level={2}>Delivery Tracking</Title>
+      <Card  className="sidebar-card" style={{ marginBottom: 16 }}>
         <List
           dataSource={mockPromotions}
           renderItem={promo => (
