@@ -29,10 +29,12 @@ const items = [
 ),
   getItem('Price Promotion', 'price-promotion-manage', <UserOutlined />),
   
-  getItem('Report', 'report',  <FileOutlined />,[
-    getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),
-    getItem('Customer Debt Report', 'report/customer-debt-report', <FileOutlined />),
+  getItem('Agency Management', 'agency-management',  <FileOutlined />,[
+    getItem('Agreements', 'agency-management/agreements-management', <FileOutlined />),
+    getItem('Sales', 'agency-management/sales-management', <FileOutlined />),
+    getItem('Debt', 'agency-management/debt-management', <FileOutlined />),
   ]),
+  getItem('Account Management', 'account-management', <DesktopOutlined />),
 ];
 const AdminDashboard = () => {
   const [collapsed, setCollapsed] = useState(false);

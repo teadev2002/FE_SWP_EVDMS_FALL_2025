@@ -19,6 +19,10 @@ import VehicleCatalog from './pages/evmStaffAdmin/ProductNDistribution/VehicleCa
 import InventoryManage from './pages/evmStaffAdmin/ProductNDistribution/InventoryNAllocation/InventoryManagement/InventoryManage.jsx';
 import VehicleAllocationManage from './pages/evmStaffAdmin/ProductNDistribution/InventoryNAllocation/VehicleAllocation/VehicleAllocationManage.jsx';
 import PricePromotionManage from './pages/evmStaffAdmin/ProductNDistribution/PricePromotionManage/PricePromotionManage.jsx';
+import AgreementsManagement from './pages/evmStaffAdmin/Agency/AgreementsManagement/AgreementsManagement.jsx';
+import SalesManagement from './pages/evmStaffAdmin/Agency/SalesManagement/SalesManagement.jsx';
+import DebtManagement from './pages/evmStaffAdmin/Agency/DebtManagement/DebtManagement.jsx';
+import AccountManagement from './pages/evmStaffAdmin/Agency/AccountManagement/AccountManagement.jsx';
 function App() {
 
   const router = createBrowserRouter([
@@ -108,7 +112,27 @@ function App() {
         {
           path: "price-promotion-manage",
           element: <PricePromotionManage />,
-        }
+        },
+        {
+          path: "agency-management",
+          element: <AgreementsManagement />,
+        },
+        {
+          path: "agency-management/agreements-management",
+         element: <AgreementsManagement />,
+        },
+        {
+          path: "agency-management/sales-management",
+          element: <SalesManagement />,
+        },
+        {
+          path: "agency-management/debt-management",
+          element: <DebtManagement />,
+        },
+        {
+          path: "account-management",
+          element: <AccountManagement />,
+        },
 
 
 
