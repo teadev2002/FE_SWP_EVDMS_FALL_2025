@@ -35,7 +35,10 @@ const items = [
     getItem('Debt', 'agency-management/debt-management', <FileOutlined />),
   ]),
   getItem('Account Management', 'account-management', <DesktopOutlined />),
-];
+  getItem('Reports & Analysis', 'reports-analysis', <PieChartOutlined /> ),
+  getItem('Inventory & Consumtion', 'inventory-&-consumtion-report', <DesktopOutlined />),
+  ] 
+
 const AdminDashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
   const {

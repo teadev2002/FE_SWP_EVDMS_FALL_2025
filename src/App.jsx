@@ -23,6 +23,10 @@ import AgreementsManagement from './pages/evmStaffAdmin/Agency/AgreementsManagem
 import SalesManagement from './pages/evmStaffAdmin/Agency/SalesManagement/SalesManagement.jsx';
 import DebtManagement from './pages/evmStaffAdmin/Agency/DebtManagement/DebtManagement.jsx';
 import AccountManagement from './pages/evmStaffAdmin/Agency/AccountManagement/AccountManagement.jsx';
+import SalesByDealer from './pages/evmStaffAdmin/ReportNAnalysis/SalesReport/SalesByDealer/SalesByDealer.jsx';
+import SalesByRegion from './pages/evmStaffAdmin/ReportNAnalysis/SalesReport/SalesByRegion/SalesByRegion.jsx';
+import SalesOverview from './pages/evmStaffAdmin/ReportNAnalysis/SalesReport/SalesOverview.jsx';
+import InventoryAndConsumtionReport from './pages/evmStaffAdmin/ReportNAnalysis/InventoryNConsumtionReport/InventoryAndConsumtionReport.jsx';
 function App() {
 
   const router = createBrowserRouter([
@@ -133,9 +137,14 @@ function App() {
           path: "account-management",
           element: <AccountManagement />,
         },
-
-
-
+        {
+          path: "reports-analysis",
+          element: <SalesOverview />,
+        },
+        {
+          path: "inventory-&-consumtion-report",
+          element: <InventoryAndConsumtionReport />,
+        },
 
       ],
     },
@@ -156,6 +165,7 @@ function App() {
       path: "/test-drive-register",
       element: <TestDriveRegisterPage />, // Separate route for form
     },
+    
 
   ]);
   return (

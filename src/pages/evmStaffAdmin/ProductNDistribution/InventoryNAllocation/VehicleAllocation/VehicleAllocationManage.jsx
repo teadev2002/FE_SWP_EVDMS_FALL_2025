@@ -192,7 +192,7 @@ const VehicleAllocationManage = () => {
       <Title level={2}>Vehicle Dispatch Management</Title>
       <Card
         title="Dispatch List"
-        bordered={false}
+          variant='borderless'
         style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
         extra={
           <Space>
@@ -237,7 +237,7 @@ const VehicleAllocationManage = () => {
 
       <Modal
         title={editingKey ? 'Edit Dispatch' : 'Add Dispatch'}
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >

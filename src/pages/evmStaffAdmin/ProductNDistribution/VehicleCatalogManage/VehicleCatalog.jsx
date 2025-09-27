@@ -131,7 +131,7 @@ const VehicleCatalog = () => {
       <Title level={2}>Electric Vehicle Catalog Management</Title>
       <Card
         title="Vehicle Models"
-        bordered={false}
+          variant='borderless'
         style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
         extra={
           <Button
@@ -154,7 +154,7 @@ const VehicleCatalog = () => {
 
       <Modal
         title={editingKey ? 'Edit Vehicle Model' : 'Add Vehicle Model'}
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >

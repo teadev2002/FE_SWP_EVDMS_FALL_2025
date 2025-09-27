@@ -127,7 +127,7 @@ const WholesalePrice = () => {
       />
       <Modal
         title={editingKey ? 'Edit Wholesale Price' : 'Add Wholesale Price'}
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >
