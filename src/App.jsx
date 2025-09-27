@@ -18,6 +18,7 @@ import AdminDashboard from './components/dashboard/AdminDashboard.jsx';
 import VehicleCatalog from './pages/evmStaffAdmin/ProductNDistribution/VehicleCatalogManage/VehicleCatalog.jsx';
 import InventoryManage from './pages/evmStaffAdmin/ProductNDistribution/InventoryNAllocation/InventoryManagement/InventoryManage.jsx';
 import VehicleAllocationManage from './pages/evmStaffAdmin/ProductNDistribution/InventoryNAllocation/VehicleAllocation/VehicleAllocationManage.jsx';
+import PricePromotionManage from './pages/evmStaffAdmin/ProductNDistribution/PricePromotionManage/PricePromotionManage.jsx';
 function App() {
 
   const router = createBrowserRouter([
@@ -104,6 +105,10 @@ function App() {
           path: "inventory-allocation/vehicle-allocation",
           element: <VehicleAllocationManage />,
         },
+        {
+          path: "price-promotion-manage",
+          element: <PricePromotionManage />,
+        }
 
 
 

@@ -27,12 +27,7 @@ const items = [
   ],
   
 ),
-  getItem('Customer', 'customer', <UserOutlined />, [
-    getItem('Overview', 'customer-overview', <FileOutlined />),
-  
-  ]
- 
-  ),
+  getItem('Price Promotion', 'price-promotion-manage', <UserOutlined />),
   
   getItem('Report', 'report',  <FileOutlined />,[
     getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),
