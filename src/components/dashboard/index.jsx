@@ -23,7 +23,7 @@ const items = [
   getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
   getItem('Sales', 'sales', <TeamOutlined />, [
     getItem('Promotions', 'sales/promotions', <FileOutlined />),
-    getItem('Agreements', 'sales/agreements', <UserOutlined />),
+    getItem('Sale Agreements', 'sales/agreements', <UserOutlined />),
     getItem('Factory Orders', 'sales/factory-order', <DesktopOutlined />),
     getItem('Delivery Tracking', 'sales/delivery-tracking', <DesktopOutlined />),
      getItem('Payment Management', 'sales/payment-management', <DesktopOutlined />),

@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { Table } from 'antd'; // Giả sử bạn sử dụng antd để render bảng
-import ManageServiceAgreements from '../../../services/ManageAgreements/ManageServiceAgreements'; // Đường dẫn đến file chứa service
+import ManageServiceSaleAgreements from '../../../services/ManageAgreements/ManageServiceSaleAgreements'; // Đường dẫn đến file chứa service
 import Quotation from './Quotation';
 import Orders from './Orders';
 import { Tabs } from 'antd';
 const { TabPane } = Tabs;
 
-const ManageAgreements = () => {
-  const [agreements, setAgreements] = useState([]);
+const ManageSaleAgreements = () => {
+  const [agreements, setSaleAgreements] = useState([]);
   const [loading, setLoading] = useState(false); // State để xử lý trạng thái loading
 const [activeTab, setActiveTab] = useState('agreements');
   // Sử dụng useEffect để gọi API khi component mount
   useEffect(() => {
-    const fetchAgreements = async () => {
+    const fetchSaleAgreements = async () => {
       setLoading(true); // Bắt đầu loading
       try {
-        const data = await ManageServiceAgreements.getAllAgreements();
+        const data = await ManageServiceSaleAgreements.getAllSaleAgreements();
         // Chuyển đổi dữ liệu để khớp với key của columns
         const formattedData = data.map(item => ({
           key: item.agreementId, // Key cho bảng
@@ -23,7 +23,7 @@ const [activeTab, setActiveTab] = useState('agreements');
           agreementDate: item.agreementDate,
           status: item.status || 'N/A', // Nếu status là null thì hiển thị 'N/A'
         }));
-        setAgreements(formattedData);
+        setSaleAgreements(formattedData);
       } catch (error) {
         console.error('Failed to fetch agreements:', error);
       } finally {
@@ -31,7 +31,7 @@ const [activeTab, setActiveTab] = useState('agreements');
       }
     };
 
-    fetchAgreements();
+    fetchSaleAgreements();
   }, []); // Dependency array rỗng để chỉ gọi API một lần khi component mount
 
   // Định nghĩa columns cho bảng
@@ -55,7 +55,7 @@ const [activeTab, setActiveTab] = useState('agreements');
 
   return (
     <div>
-      <h2>Manage Agreements</h2>
+      <h2>Manage Sale Agreements</h2>
      <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <TabPane tab="Agreements" key="agreements">
           <Table
@@ -76,4 +76,4 @@ const [activeTab, setActiveTab] = useState('agreements');
   );
 };
 
-export default ManageAgreements;
+export default ManageSaleAgreements;

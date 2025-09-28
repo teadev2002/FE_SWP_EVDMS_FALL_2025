@@ -2,7 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Dashboard from './components/dashboard';
 import ManageVehicle from './pages/dealerStaffManager/vehicles/ManageVehicle.jsx';
 import HomePage from './pages/user/HomePage/HomePage.jsx';
-import ManageAgreements from './pages/dealerStaffManager/agreements/ManageAgreements.jsx';
+import ManageSaleAgreements from './pages/dealerStaffManager/agreements/ManageSaleAgreements.jsx';
 import CustomerOverview from './pages/dealerStaffManager/customer/CustomerOverview.jsx';
 import Promotions from './pages/dealerStaffManager/sale/Promotions.jsx';
 import VehicleDetailPage from './pages/user/HomePage/VehicleDetailPage.jsx';
@@ -23,8 +23,6 @@ import AgreementsManagement from './pages/evmStaffAdmin/Agency/AgreementsManagem
 import SalesManagement from './pages/evmStaffAdmin/Agency/SalesManagement/SalesManagement.jsx';
 import DebtManagement from './pages/evmStaffAdmin/Agency/DebtManagement/DebtManagement.jsx';
 import AccountManagement from './pages/evmStaffAdmin/Agency/AccountManagement/AccountManagement.jsx';
-import SalesByDealer from './pages/evmStaffAdmin/ReportNAnalysis/SalesReport/SalesByDealer/SalesByDealer.jsx';
-import SalesByRegion from './pages/evmStaffAdmin/ReportNAnalysis/SalesReport/SalesByRegion/SalesByRegion.jsx';
 import SalesOverview from './pages/evmStaffAdmin/ReportNAnalysis/SalesReport/SalesOverview.jsx';
 import InventoryAndConsumtionReport from './pages/evmStaffAdmin/ReportNAnalysis/InventoryNConsumtionReport/InventoryAndConsumtionReport.jsx';
 function App() {
@@ -50,7 +48,7 @@ function App() {
 
         {
           path: "sales/agreements",
-          element: <ManageAgreements />,
+          element: <ManageSaleAgreements />,
         },
         {
           path: "sales/factory-order",

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Table } from 'antd';
-import ManageServiceAgreements from '../../../services/ManageAgreements/ManageServiceAgreements';
+import ManageServiceAgreements from '../../../services/ManageAgreements/ManageServiceSaleAgreements';
 
 const Quotation = () => {
   const [quotations, setQuotations] = useState([]);

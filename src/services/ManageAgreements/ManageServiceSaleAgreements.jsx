@@ -1,7 +1,7 @@
 import { apiClient } from "../../api/apiClient";
 
-const ManageServiceAgreements =  {
-  getAllAgreements: async () => {
+const ManageServiceSaleAgreements =  {
+  getAllSaleAgreements: async () => {
     try {
       const response = await apiClient.get("Agreements");
       return response.data;
@@ -13,4 +13,4 @@ const ManageServiceAgreements =  {
     
 }
 
-export default ManageServiceAgreements
+export default ManageServiceSaleAgreements
