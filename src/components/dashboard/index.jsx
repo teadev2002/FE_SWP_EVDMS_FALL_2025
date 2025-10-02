@@ -51,6 +51,7 @@ const Dashboard = () => {
     <Layout style={{ minHeight: '100vh' }}>
       <Sider width={250}  collapsible collapsed={collapsed} onCollapse={value => setCollapsed(value)}>
         <div className="demo-logo-vertical" />
+         <h4 style={{color:"white",textAlign:"center", marginTop:"10px", marginBottom:"10px", fontWeight:"bold"}}>Dealer</h4 >
         <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
       </Sider>
       <Layout>

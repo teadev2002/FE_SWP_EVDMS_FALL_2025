@@ -1,42 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, InputNumber, Space, message, DatePicker } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
-
+import ManageServicePromotions from '../../../../services/ManagePromotions/ManageServicePromotions';
 const { RangePicker } = DatePicker;
 
 const Promotion = () => {
-  // Sample promotion data
-  const [promotionData, setPromotionData] = useState([
-    {
-      key: '1',
-      campaignName: 'Winter EV Sale',
-      model: 'EcoVolt X1',
-      discountAmount: 5000.00,
-      validFrom: '2025-12-01',
-      validTo: '2025-12-31',
-    },
-    {
-      key: '2',
-      campaignName: 'Summer Clearance',
-      model: 'EcoVolt S2',
-      discountAmount: 3000.00,
-      validFrom: '2025-06-01',
-      validTo: '2025-08-31',
-    },
-  ]);
-
-  // State for modal and form
+  const [promotionData, setPromotionData] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingKey, setEditingKey] = useState(null);
   const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+
+  // Fetch promotions using useEffect
+  useEffect(() => {
+    const fetchPromotions = async () => {
+      setLoading(true);
+      try {
+        const data = await ManageServicePromotions.getAllPromotions();
+        const formattedData = data.map((item) => ({
+          key: item.promotionId.toString(),
+          title: item.title,
+          description: item.description,
+          discountPercent: item.discountPercent,
+          startDate: dayjs(item.startDate).format('DD/MM/YYYY'),
+          endDate: dayjs(item.endDate).format('DD/MM/YYYY'),
+        }));
+        setPromotionData(formattedData);
+      } catch (error) {
+        message.error('Failed to fetch promotions', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPromotions();
+  }, []);
 
   // Show modal for adding or editing
   const showModal = (record = null) => {
     if (record) {
       form.setFieldsValue({
-        ...record,
-        dateRange: [dayjs(record.validFrom), dayjs(record.validTo)],
+        title: record.title,
+        description: record.description,
+        discountPercent: record.discountPercent,
+        dateRange: [dayjs(record.startDate, 'DD/MM/YYYY'), dayjs(record.endDate, 'DD/MM/YYYY')],
       });
       setEditingKey(record.key);
     } else {
@@ -46,70 +53,112 @@ const Promotion = () => {
     setIsModalVisible(true);
   };
 
-  // Handle form submission
-  const handleSubmit = (values) => {
+  // Handle form submission for add or edit
+  const handleSubmit = async (values) => {
     const { dateRange, ...rest } = values;
-    const formattedValues = {
+    const apiFormattedValues = {
       ...rest,
-      validFrom: dateRange ? dateRange[0].format('YYYY-MM-DD') : null,
-      validTo: dateRange ? dateRange[1].format('YYYY-MM-DD') : null,
+      startDate: dateRange ? dateRange[0].format('YYYY-MM-DD') : null,
+      endDate: dateRange ? dateRange[1].format('YYYY-MM-DD') : null,
     };
-    if (editingKey) {
-      setPromotionData((prev) =>
-        prev.map((item) =>
-          item.key === editingKey ? { ...item, ...formattedValues } : item
-        )
-      );
-      message.success('Promotion updated successfully');
-    } else {
-      setPromotionData((prev) => [
-        ...prev,
-        { key: `${prev.length + 1}`, ...formattedValues },
-      ]);
-      message.success('Promotion added successfully');
+    const uiFormattedValues = {
+      ...rest,
+      startDate: dateRange ? dateRange[0].format('DD/MM/YYYY') : null,
+      endDate: dateRange ? dateRange[1].format('DD/MM/YYYY') : null,
+    };
+    console.log(uiFormattedValues);
+
+    setLoading(true);
+    try {
+      if (editingKey) {
+        // Edit promotion via API
+        const response = await ManageServicePromotions.editPromotion(editingKey, apiFormattedValues);
+        setPromotionData((prev) =>
+          prev.map((item) =>
+            item.key === editingKey
+              ? {
+                  key: editingKey,
+                  title: response.title,
+                  description: response.description,
+                  discountPercent: response.discountPercent,
+                  startDate: dayjs(response.startDate).format('DD/MM/YYYY'),
+                  endDate: dayjs(response.endDate).format('DD/MM/YYYY'),
+                }
+              : item
+          )
+        );
+        message.success('Promotion updated successfully');
+      } else {
+        // Add new promotion via API
+        const response = await ManageServicePromotions.AddPromotion(apiFormattedValues);
+        setPromotionData((prev) => [
+          ...prev,
+          {
+            key: response.promotionId.toString(),
+            title: response.title,
+            description: response.description,
+            discountPercent: response.discountPercent,
+            startDate: dayjs(response.startDate).format('DD/MM/YYYY'),
+            endDate: dayjs(response.endDate).format('DD/MM/YYYY'),
+          },
+        ]);
+        message.success('Promotion added successfully');
+      }
+      setIsModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      message.error(editingKey ? 'Failed to update promotion' : 'Failed to add promotion', error);
+    } finally {
+      setLoading(false);
     }
-    setIsModalVisible(false);
-    form.resetFields();
   };
 
   // Handle delete
-  const handleDelete = (key) => {
-    setPromotionData((prev) => prev.filter((item) => item.key !== key));
-    message.success('Promotion deleted successfully');
+  const handleDelete = async (key) => {
+    setLoading(true);
+    try {
+      await ManageServicePromotions.deletePromotion(key);
+      setPromotionData((prev) => prev.filter((item) => item.key !== key));
+      message.success('Promotion deleted successfully');
+    } catch (error) {
+      message.error('Failed to delete promotion', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Table columns
   const columns = [
     {
-      title: 'Campaign Name',
-      dataIndex: 'campaignName',
-      key: 'campaignName',
-      sorter: (a, b) => a.campaignName.localeCompare(b.campaignName),
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+      sorter: (a, b) => a.title.localeCompare(b.title),
     },
     {
-      title: 'Model',
-      dataIndex: 'model',
-      key: 'model',
-      sorter: (a, b) => a.model.localeCompare(b.model),
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+      sorter: (a, b) => a.description.localeCompare(b.description),
     },
     {
-      title: 'Discount Amount (USD)',
-      dataIndex: 'discountAmount',
-      key: 'discountAmount',
-      sorter: (a, b) => a.discountAmount - b.discountAmount,
-      render: (value) => `$${value.toFixed(2)}`,
+      title: 'Discount (%)',
+      dataIndex: 'discountPercent',
+      key: 'discountPercent',
+      sorter: (a, b) => a.discountPercent - b.discountPercent,
+      render: (value) => `${value}%`,
     },
     {
-      title: 'Valid From',
-      dataIndex: 'validFrom',
-      key: 'validFrom',
-      sorter: (a, b) => dayjs(a.validFrom).unix() - dayjs(b.validFrom).unix(),
+      title: 'Start Date',
+      dataIndex: 'startDate',
+      key: 'startDate',
+      sorter: (a, b) => dayjs(a.startDate, 'DD/MM/YYYY').unix() - dayjs(b.startDate, 'DD/MM/YYYY').unix(),
     },
     {
-      title: 'Valid To',
-      dataIndex: 'validTo',
-      key: 'validTo',
-      sorter: (a, b) => dayjs(a.validTo).unix() - dayjs(b.validTo).unix(),
+      title: 'End Date',
+      dataIndex: 'endDate',
+      key: 'endDate',
+      sorter: (a, b) => dayjs(a.endDate, 'DD/MM/YYYY').unix() - dayjs(b.endDate, 'DD/MM/YYYY').unix(),
     },
     {
       title: 'Actions',
@@ -143,6 +192,7 @@ const Promotion = () => {
         dataSource={promotionData}
         rowKey="key"
         pagination={{ pageSize: 10 }}
+        loading={loading}
         style={{ marginTop: 16 }}
         title={() => (
           <Button
@@ -156,7 +206,7 @@ const Promotion = () => {
       />
       <Modal
         title={editingKey ? 'Edit Promotion' : 'Add Promotion'}
-        visible={isModalVisible}
+        open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >
@@ -166,29 +216,30 @@ const Promotion = () => {
           onFinish={handleSubmit}
         >
           <Form.Item
-            label="Campaign Name"
-            name="campaignName"
-            rules={[{ required: true, message: 'Please enter the campaign name' }]}
+            label="Title"
+            name="title"
+            rules={[{ required: true, message: 'Please enter the promotion title' }]}
           >
-            <Input placeholder="e.g., Winter EV Sale" />
+            <Input placeholder="e.g., Summer Sale" />
           </Form.Item>
           <Form.Item
-            label="Model"
-            name="model"
-            rules={[{ required: true, message: 'Please enter the vehicle model' }]}
+            label="Description"
+            name="description"
+            rules={[{ required: true, message: 'Please enter the promotion description' }]}
           >
-            <Input placeholder="e.g., EcoVolt X1" />
+            <Input placeholder="e.g., 10% discount on all vehicles" />
           </Form.Item>
           <Form.Item
-            label="Discount Amount (USD)"
-            name="discountAmount"
-            rules={[{ required: true, message: 'Please enter the discount amount' }]}
+            label="Discount (%)"
+            name="discountPercent"
+            rules={[{ required: true, message: 'Please enter the discount percentage' }]}
           >
             <InputNumber
               min={0}
-              step={100}
-              formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
+              max={100}
+              step={1}
+              formatter={(value) => `${value}%`}
+              parser={(value) => value.replace('%', '')}
               style={{ width: '100%' }}
             />
           </Form.Item>
@@ -197,7 +248,10 @@ const Promotion = () => {
             name="dateRange"
             rules={[{ required: true, message: 'Please select the valid period' }]}
           >
-            <RangePicker style={{ width: '100%' }} />
+            <RangePicker
+              style={{ width: '100%' }}
+              format="DD/MM/YYYY"
+            />
           </Form.Item>
           <Form.Item>
             <Space>
