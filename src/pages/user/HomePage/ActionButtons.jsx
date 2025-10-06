@@ -1,10 +1,10 @@
-// src/pages/user/HomePage/ActionButtons.jsx (updated for modal toggle and popover)
+// src/pages/user/HomePage/ActionButtons.jsx (updated - always navigate to detail page)
 import React from 'react';
 import { Button, Badge, OverlayTrigger, Popover } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import '../../../styles/ActionButtons.scss';
 
-const ActionButtons = ({ vehicleId, selectedVehicles, selectedCount, onToggleCompare }) => {
+const ActionButtons = ({ vehicle, vehicleId, selectedVehicles, selectedCount, onToggleCompare }) => {
     const navigate = useNavigate();
 
     const handleDetailsClick = () => {
@@ -31,7 +31,7 @@ const ActionButtons = ({ vehicleId, selectedVehicles, selectedCount, onToggleCom
                         '2 vehicles selected. Click to toggle or open comparison modal.'}
                 {selectedCount > 0 && (
                     <Button variant="link" size="sm" className="p-0 mt-2 text-decoration-none" onClick={clearSelection}>
-
+                        Clear Selection
                     </Button>
                 )}
             </Popover.Body>
