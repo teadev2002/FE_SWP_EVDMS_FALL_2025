@@ -8,6 +8,7 @@ import {
 } from '@ant-design/icons';
 import { Breadcrumb, Layout, Menu, theme } from 'antd';
 import { Link, Outlet } from 'react-router-dom';
+import DashboardHeader from '../DashboardHeader';
  
 const { Header, Content, Footer, Sider } = Layout;
 function getItem(label, key, icon, children) {
@@ -52,7 +53,9 @@ const AdminDashboard = () => {
         <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
       </Sider>
       <Layout>
-        <Header style={{ padding: 0, background: colorBgContainer }} />
+        <Header style={{ padding: 0, background: '#2d5016' }}>
+          <DashboardHeader />
+        </Header>
         <Content style={{ margin: '0 16px' }}>
           
           <div
