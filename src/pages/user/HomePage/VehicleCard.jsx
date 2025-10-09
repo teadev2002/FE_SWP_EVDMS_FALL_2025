@@ -1,4 +1,4 @@
-// src/pages/user/HomePage/VehicleCard.jsx (updated to pass props for compare)
+// src/pages/user/HomePage/VehicleCard.jsx (updated - remove onShowDetail)
 import React from 'react';
 import { Card } from 'react-bootstrap';
 import ActionButtons from './ActionButtons';
@@ -26,12 +26,15 @@ const VehicleCard = ({ vehicle, selectedVehicles, selectedCount, onToggleCompare
             <Card.Body className="eco-card-body">
                 <Card.Title className="eco-card-title">{vehicle.title}</Card.Title>
                 <Card.Text className="eco-card-text">
-                    <div>Range: {vehicle.specs.range}</div>
-                    <div>0-60 mph: {vehicle.specs.acceleration}</div>
-                    <div>Category: {vehicle.specs.category}</div>
+                    <div>Brand: {vehicle.specs.brand}</div>
+                    <div>Version: {vehicle.specs.version}</div>
+                    <div>Color: {vehicle.specs.color}</div>
+                    <div>Battery: {vehicle.specs.battery}</div>
+
                 </Card.Text>
-                <Card.Text className="eco-price">{vehicle.price}</Card.Text>
+                <Card.Text className="eco-price">{vehicle.specs.price}</Card.Text>
                 <ActionButtons
+                    vehicle={vehicle}
                     vehicleId={vehicle.id}
                     selectedVehicles={selectedVehicles}
                     selectedCount={selectedCount}

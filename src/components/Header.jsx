@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dropdown } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { User } from 'lucide-react';
 import '../styles/Header.scss';
@@ -8,6 +8,7 @@ import '../styles/Header.scss';
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogin = () => {
     navigate('/login');
@@ -18,12 +19,35 @@ const Header = () => {
     navigate('/login');
   };
 
+  const navTabs = [
+    { name: 'Products', path: '/' },
+    { name: 'Test Drive History', path: '/test-drives' }
+  ];
+
+  const isActiveTab = (path) => {
+    return location.pathname === path;
+  };
+
   return (
     <header className="app-header">
       <div className="header-content">
         <div className="header-left">
           <h3 className="header-title">EV Dealer Management System</h3>
         </div>
+        
+        {/* Navigation Tabs */}
+        <nav className="header-nav">
+          {navTabs.map((tab) => (
+            <Link
+              key={tab.path}
+              to={tab.path}
+              className={`nav-tab ${isActiveTab(tab.path) ? 'active' : ''}`}
+            >
+              {tab.name}
+            </Link>
+          ))}
+        </nav>
+
         <div className="header-right">
           <Dropdown align="end">
             <Dropdown.Toggle variant="eco-header" id="dropdown-user" className="user-dropdown-toggle">

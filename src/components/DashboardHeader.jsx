@@ -58,7 +58,7 @@ const DashboardHeader = () => {
         alignItems: 'center',
         padding: '0 24px',
         height: '100%',
-        background: 'linear-gradient(135deg, #2d5016 0%, #4a7c2c 100%)',
+        background: '#001529',
       }}
     >
       <h3 style={{ color: '#fff', margin: 0, fontSize: '1.1rem', fontWeight: 600 }}>

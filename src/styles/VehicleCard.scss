@@ -1,4 +1,4 @@
-// src/pages/user/HomePage/VehicleCard.scss (updated with loading/error styles)
+// src/pages/user/HomePage/VehicleCard.scss (updated with out-of-stock style)
 .eco-card {
     border: none;
     border-radius: 20px;
@@ -55,6 +55,11 @@
         &.limited {
             background: linear-gradient(135deg, #eef121 0%, #B8860B 100%);
             box-shadow: 0 4px 12px rgba(79, 195, 247, 0.4);
+        }
+
+        &.out-of-stock {
+            background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.4);
         }
     }
 

@@ -53,7 +53,7 @@ const AdminDashboard = () => {
         <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
       </Sider>
       <Layout>
-        <Header style={{ padding: 0, background: '#2d5016' }}>
+        <Header style={{ padding: 0, background: '#001529' }}>
           <DashboardHeader />
         </Header>
         <Content style={{ margin: '0 16px' }}>
