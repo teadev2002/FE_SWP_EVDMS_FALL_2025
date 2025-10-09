@@ -104,7 +104,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Modal, Table, Card, Badge, Button } from 'react-bootstrap';
 import '../../../styles/HomePage.scss';
-import Sidebar from '../../../components/sidebar/Sidebar';
 import SearchBar from './SearchBar';
 import FilterBar from './FilterBar';
 import VehicleCard from './VehicleCard';
@@ -262,51 +261,37 @@ const HomePage = () => {
   return (
     <div className="min-h-screen eco-bg">
       <Container fluid className="eco-container">
-        <Row className="g-0">
-          {/* Sidebar */}
-          <Col md={2} className="p-0">
-            <Sidebar
-              menuItems={[
-                'Products',
-                'Test Drives'
-              ]}
-              activeItem="Products"
-            />
-          </Col>
-
-          {/* Main Content */}
-          <Col md={10} className="p-4">
-            <div className="main-content">
-              <div className="page-header">
-                <h1 className="eco-title">Electric Vehicle Rental Catalog</h1>
-                <p className="eco-subtitle">
-                  Browse and manage your eco-friendly EV rental inventory with detailed specifications and pricing
-                </p>
-              </div>
-              <FilterBar />
-
-              {/* Vehicle Grid - Fixed layout */}
-              <Row className="vehicle-grid g-3">
-                {loading ? (
-                  <Col xs={12} className="text-center">
-                    <p>Loading vehicles...</p>
-                  </Col>
-                ) : (
-                  vehicles.map((vehicle) => (
-                    <Col xl={4} lg={4} md={6} sm={12} key={vehicle.id}>
-                      <VehicleCard
-                        vehicle={vehicle}
-                        selectedVehicles={selectedVehicles}
-                        selectedCount={selectedVehicles.length}
-                        onToggleCompare={handleToggleCompare}
-                      />
-                    </Col>
-                  ))
-                )}
-              </Row>
+        <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '2rem 3rem' }}>
+          <div className="main-content">
+            <div className="page-header">
+              <h1 className="eco-title">Electric Vehicle Rental Catalog</h1>
+              <p className="eco-subtitle">
+                Browse and manage your eco-friendly EV rental inventory with detailed specifications and pricing
+              </p>
             </div>
-          </Col>
-        </Row>
+            <FilterBar />
+
+            {/* Vehicle Grid - Fixed layout */}
+            <Row className="vehicle-grid g-3">
+              {loading ? (
+                <Col xs={12} className="text-center">
+                  <p>Loading vehicles...</p>
+                </Col>
+              ) : (
+                vehicles.map((vehicle) => (
+                  <Col xl={4} lg={4} md={6} sm={12} key={vehicle.id}>
+                    <VehicleCard
+                      vehicle={vehicle}
+                      selectedVehicles={selectedVehicles}
+                      selectedCount={selectedVehicles.length}
+                      onToggleCompare={handleToggleCompare}
+                    />
+                  </Col>
+                ))
+              )}
+            </Row>
+          </div>
+        </div>
       </Container>
 
       {/* Compare Modal */}

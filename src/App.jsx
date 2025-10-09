@@ -1,5 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
 import Dashboard from './components/dashboard';
+import UserLayout from './components/UserLayout';
 import ManageVehicle from './pages/dealerStaffManager/vehicles/ManageVehicle.jsx';
 import HomePage from './pages/user/HomePage/HomePage.jsx';
 import ManageSaleAgreements from './pages/dealerStaffManager/agreements/ManageSaleAgreements.jsx';
@@ -25,6 +27,8 @@ import DebtManagement from './pages/evmStaffAdmin/Agency/DebtManagement/DebtMana
 import AccountManagement from './pages/evmStaffAdmin/Agency/AccountManagement/AccountManagement.jsx';
 import SalesOverview from './pages/evmStaffAdmin/ReportNAnalysis/SalesReport/SalesOverview.jsx';
 import InventoryAndConsumtionReport from './pages/evmStaffAdmin/ReportNAnalysis/InventoryNConsumtionReport/InventoryAndConsumtionReport.jsx';
+import Login from './pages/Login.jsx';
+
 function App() {
 
   const router = createBrowserRouter([
@@ -149,25 +153,36 @@ function App() {
     
     {
       path: "/",
-      element: <HomePage />,
+      element: <UserLayout />,
+      children: [
+        {
+          index: true,
+          element: <HomePage />,
+        },
+        {
+          path: "vehicles/:id",
+          element: <VehicleDetailPage />,
+        },
+        {
+          path: "test-drives",
+          element: <TestDriveHistoryPage />,
+        },
+        {
+          path: "test-drive-register",
+          element: <TestDriveRegisterPage />,
+        },
+      ],
     },
     {
-      path: "/vehicles/:id",
-      element: <VehicleDetailPage />, // New dynamic route for details
+      path: "/login",
+      element: <Login />,
     },
-    {
-      path: "/test-drives",
-      element: <TestDriveHistoryPage />, // Now history page
-    },
-    {
-      path: "/test-drive-register",
-      element: <TestDriveRegisterPage />, // Separate route for form
-    },
-    
 
   ]);
   return (
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   )
 }
 export default App

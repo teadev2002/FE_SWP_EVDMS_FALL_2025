@@ -4,7 +4,6 @@ import { Container, Row, Col, Button, Card, ListGroup, Carousel } from 'react-bo
 import { useParams, useNavigate } from 'react-router-dom';
 import '../../../styles/HomePage.scss';
 import '../../../styles/VehicleDetailPage.scss';
-import Sidebar from '../../../components/sidebar/Sidebar';
 import ManageHomePageService from '../../../services/ManageHomePageService/ManageHomePageService'; // Service cho detail
 
 const VehicleDetailPage = () => {
@@ -90,16 +89,11 @@ const VehicleDetailPage = () => {
         return (
             <div className="min-h-screen eco-bg">
                 <Container fluid className="eco-container">
-                    <Row className="g-0">
-                        <Col md={2} className="p-0">
-                            <Sidebar activeItem="Products" />
-                        </Col>
-                        <Col md={10} className="p-4">
-                            <div className="main-content">
-                                <h1 className="eco-title">Loading...</h1>
-                            </div>
-                        </Col>
-                    </Row>
+                    <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '2rem 3rem' }}>
+                        <div className="main-content">
+                            <h1 className="eco-title">Loading...</h1>
+                        </div>
+                    </div>
                 </Container>
             </div>
         );
@@ -109,16 +103,11 @@ const VehicleDetailPage = () => {
         return (
             <div className="min-h-screen eco-bg">
                 <Container fluid className="eco-container">
-                    <Row className="g-0">
-                        <Col md={2} className="p-0">
-                            <Sidebar activeItem="Products" />
-                        </Col>
-                        <Col md={10} className="p-4">
-                            <div className="main-content">
-                                <h1 className="eco-title">Vehicle Not Found</h1>
-                            </div>
-                        </Col>
-                    </Row>
+                    <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '2rem 3rem' }}>
+                        <div className="main-content">
+                            <h1 className="eco-title">Vehicle Not Found</h1>
+                        </div>
+                    </div>
                 </Container>
             </div>
         );
@@ -131,17 +120,13 @@ const VehicleDetailPage = () => {
     return (
         <div className="min-h-screen eco-bg">
             <Container fluid className="eco-container">
-                <Row className="g-0">
-                    <Col md={2} className="p-0">
-                        <Sidebar activeItem="Products" />
-                    </Col>
-                    <Col md={10} className="p-4">
-                        <div className="main-content">
-                            <div className="page-header">
-                                <h1 className="eco-title">{vehicleData.title}</h1>
-                                <p className="eco-subtitle">{vehicleData.description}</p>
-                            </div>
-                            <Row className="g-4">
+                <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '2rem 3rem' }}>
+                    <div className="main-content">
+                        <div className="page-header">
+                            <h1 className="eco-title">{vehicleData.title}</h1>
+                            <p className="eco-subtitle">{vehicleData.description}</p>
+                        </div>
+                        <Row className="g-4">
                                 <Col md={6}>
                                     <Card className="eco-detail-card">
                                         <Carousel>
@@ -222,10 +207,9 @@ const VehicleDetailPage = () => {
                                 </Col>
                             </Row>
                         </div>
-                    </Col>
-                </Row>
-            </Container>
-        </div>
+                    </div>
+                </Container>
+            </div>
     );
 };
 
