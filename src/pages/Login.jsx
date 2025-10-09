@@ -13,7 +13,6 @@ const Login = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (username && password) {
-      // Mặc định login với role User, có thể thay đổi sau khi tích hợp backend
       login('User', username);
       navigate('/');
     }
@@ -22,8 +21,8 @@ const Login = () => {
   return (
     <div className="login-page">
       <Container>
-        <Row className="justify-content-center align-items-center min-vh-100">
-          <Col md={6} lg={5}>
+        <Row className="justify-content-center">
+          <Col md={6} lg={5} xl={4}>
             <Card className="login-card shadow-lg">
               <Card.Body className="p-5">
                 <div className="text-center mb-4">
