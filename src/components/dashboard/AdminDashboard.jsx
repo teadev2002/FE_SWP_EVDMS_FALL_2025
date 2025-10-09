@@ -43,7 +43,9 @@ const items = [
 const AdminDashboard = () => {
   const [collapsed, setCollapsed] = useState(false);
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    // token: { colorBgContainer, borderRadiusLG },
+    token: { borderRadiusLG },
+
   } = theme.useToken();
   return (
     <Layout style={{ minHeight: '100vh' }}>
