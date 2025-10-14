@@ -264,9 +264,9 @@ const HomePage = () => {
         <div style={{ maxWidth: '1600px', margin: '0 auto', padding: '2rem 3rem' }}>
           <div className="main-content">
             <div className="page-header">
-              <h1 className="eco-title">Electric Vehicle Rental Catalog</h1>
+              <h1 className="eco-title">Electric Vehicle Catalog</h1>
               <p className="eco-subtitle">
-                Browse and manage your eco-friendly EV rental inventory with detailed specifications and pricing
+                Browse and manage your eco-friendly EV inventory with detailed specifications and pricing
               </p>
             </div>
             <FilterBar />
