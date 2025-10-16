@@ -1,3 +1,4 @@
+  import { ToastContainer } from 'react-toastify';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Dashboard from './components/dashboard';
@@ -182,6 +183,7 @@ function App() {
   return (
     <AuthProvider>
       <RouterProvider router={router} />
+        <ToastContainer />
     </AuthProvider>
   )
 }
