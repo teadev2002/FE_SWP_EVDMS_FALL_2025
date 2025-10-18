@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table } from 'antd'; // Giả sử bạn sử dụng antd để render bảng
+import { Table } from 'antd';  
 import ManageServiceSaleAgreements from '../../../services/ManageAgreements/ManageServiceSaleAgreements'; // Đường dẫn đến file chứa service
 import Quotation from './Quotation';
 import Orders from './Orders';
