@@ -1,8 +1,7 @@
-import {   toast } from 'react-toastify';
-import React, { useCallback, useEffect, useState } from 'react';
-import { Card, List, Button, Calendar, Modal, Form, Input, DatePicker } from 'antd';
+import { toast } from 'react-toastify';
+import React, { useEffect, useState } from 'react';
+import { Table, Button, Modal, Form, Input, DatePicker, Typography } from 'antd';
 import dayjs from 'dayjs';
-import { Typography } from 'antd';
 import ManageServicePromotions from '../../../services/ManagePromotions/ManageServicePromotions.jsx';
 const { Title } = Typography;
 
@@ -67,7 +66,6 @@ const Promotions = () => {
       };
 
       if (editingPromo) {
-        // Edit promotion
         const response = await ManageServicePromotions.editPromotion(editingPromo.id, promoData);
         setPromotions(promotions.map(p => 
           p.id === editingPromo.id 
@@ -83,8 +81,7 @@ const Promotions = () => {
             : p
         ));
         toast.success('Promotion updated successfully');
-       } else {
-        // Add new promotion
+      } else {
         const response = await ManageServicePromotions.AddPromotion(promoData);
         setPromotions([
           ...promotions,
@@ -119,28 +116,43 @@ const Promotions = () => {
     }
   };
 
-  const getListData = useCallback((value) => {
-    const currentDate = dayjs(value.format('DD-MM-YYYY'), 'DD-MM-YYYY');
-    return promotions
-      .filter(p => !p.hidden)
-      .filter(p => {
-        const from = dayjs(p.validFrom, 'DD-MM-YYYY');
-        const to = dayjs(p.validTo, 'DD-MM-YYYY');
-        return currentDate.isSame(from) || currentDate.isSame(to) || (currentDate.isAfter(from) && currentDate.isBefore(to));
-      })
-      .map(p => ({ content: p.title }));
-  }, [promotions]);
-
-  const dateCellRender = useCallback((value) => {
-    const listData = getListData(value);
-    return (
-      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-        {listData.map((item, idx) => (
-          <li key={idx} style={{ margin: '4px 0', color: '#1890ff' }}>{item.content}</li>
-        ))}
-      </ul>
-    );
-  }, [getListData]);
+  const columns = [
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
+    },
+    {
+      title: 'Valid From',
+      dataIndex: 'validFrom',
+      key: 'validFrom',
+    },
+    {
+      title: 'Valid To',
+      dataIndex: 'validTo',
+      key: 'validTo',
+    },
+    {
+      title: 'Discount',
+      dataIndex: 'cta',
+      key: 'cta',
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => (
+        <>
+          <Button type="link" onClick={() => showModal(record)}>Edit</Button>
+          <Button type="link" onClick={() => deletePromotion(record.id)}>Delete</Button>
+        </>
+      ),
+    },
+  ];
 
   return (
     <>
@@ -152,40 +164,13 @@ const Promotions = () => {
       >
         Add Promotion
       </Button>
-      <Card className="sidebar-card" style={{ marginBottom: 16 }}>
-        <List
-          loading={loading}
-          dataSource={promotions.filter(p => !p.hidden)}
-          renderItem={promo => (
-            <List.Item
-              key={promo.id}
-              actions={[
-                <Button type="link" onClick={() => showModal(promo)}>Edit</Button>,
-                <Button type="link" onClick={() => deletePromotion(promo.id)}>Delete</Button>,
-              ]}
-            >
-              <List.Item.Meta
-                title={promo.title}
-                description={promo.description}
-              />
-              <div>
-                <span>Valid: {promo.validFrom} - {promo.validTo}</span>
-                <Button size="small" type="link">{promo.cta}</Button>
-              </div>
-            </List.Item>
-          )}
-          aria-label="Current promotions"
-        />
-      </Card>
-
-      <Card title="Promotion Calendar" className="calendar-card">
-        <Calendar
-          fullscreen={false}
-          dateCellRender={dateCellRender}
-          aria-label="Promotion calendar"
-        />
-      </Card>
-
+      <Table
+        columns={columns}
+        dataSource={promotions.filter(p => !p.hidden)}
+        rowKey="id"
+        loading={loading}
+        aria-label="Current promotions"
+      />
       <Modal
         title={editingPromo ? 'Edit Promotion' : 'Add Promotion'}
         open={isModalOpen}
@@ -196,7 +181,7 @@ const Promotions = () => {
           <Form.Item
             name="title"
             label="Title"
-            rules={[{ required: true, toast: 'Please enter promotion title' }]}
+            rules={[{ required: true, message: 'Please enter promotion title' }]}
           >
             <Input />
           </Form.Item>
@@ -207,13 +192,15 @@ const Promotions = () => {
           >
             <Input />
           </Form.Item>
+        
           <Form.Item
             name="discountPercent"
             label="Discount Percent"
           >
             <Input type="number" min={0} step={1} />
           </Form.Item>
-          <Form.Item
+            <div style={{display: "flex", justifyContent: "space-between"}}>
+   <Form.Item
             name="validFrom"
             label="Valid From"
             rules={[{ required: true, message: 'Please select start date' }]}
@@ -237,6 +224,8 @@ const Promotions = () => {
           >
             <DatePicker format="DD-MM-YYYY" />
           </Form.Item>
+          </div>
+       
         </Form>
       </Modal>
     </>
