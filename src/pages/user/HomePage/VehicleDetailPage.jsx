@@ -335,8 +335,8 @@ const VehicleDetailPage = () => {
                 const exteriorSpecs = {
                     'Dimensions': `${getValueOrNoData(vehicle.lengthMm)} x ${getValueOrNoData(vehicle.widthMm)} x ${getValueOrNoData(vehicle.heightMm)} mm`,
                     'Wheels': getValueOrNoData(vehicle.wheels),
-                    'Headlights': getValueOrNoData(vehicle.headlights),
-                    'Taillights': getValueOrNoData(vehicle.taillights),
+                    'Head lights': getValueOrNoData(vehicle.headlights),
+                    'Tail lights': getValueOrNoData(vehicle.taillights),
                     'Frame/Chassis': getValueOrNoData(vehicle.frameChassis),
                     'Door Count': `${getValueOrNoData(vehicle.doorCount)} Doors`,
                     'Glass Windows': getValueOrNoData(vehicle.glassWindows),
