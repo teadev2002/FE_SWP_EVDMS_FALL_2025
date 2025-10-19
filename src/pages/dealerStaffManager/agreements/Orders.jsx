@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Table } from 'antd';
-import ManageServiceAgreements from '../../../services/ManageAgreements/ManageServiceSaleAgreements';
+import { Table, Typography } from 'antd';
+import ManageOrdersService from '../../../services/ManageOrders/ManageOrdersService';
+import { toast } from 'react-toastify';
+
+const { Title } = Typography;
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -10,17 +13,21 @@ const Orders = () => {
     const fetchOrders = async () => {
       setLoading(true);
       try {
-        const data = await ManageServiceAgreements.getAllOrders(); // Assuming this service method exists
+        const data = await ManageOrdersService.getAllOrder();
         const formattedData = data.map(item => ({
           key: item.orderId,
-          customerName: item.customerName,
+          orderId: item.orderId,
+          customerId: item.customerId,
+          dealerId: item.dealerId,
           orderDate: item.orderDate,
-          totalAmount: item.totalAmount || 'N/A',
+          quantity: item.quantity,
+          totalAmount: item.totalPrice || 'N/A',
           status: item.status || 'N/A',
+          note: item.note || 'None',
         }));
         setOrders(formattedData);
       } catch (error) {
-        console.error('Failed to fetch orders:', error);
+        toast.error('Failed to fetch orders', error);
       } finally {
         setLoading(false);
       }
@@ -31,14 +38,30 @@ const Orders = () => {
 
   const columns = [
     {
-      title: 'Customer Name',
-      dataIndex: 'customerName',
-      key: 'customerName',
+      title: 'Order ID',
+      dataIndex: 'orderId',
+      key: 'orderId',
+      sorter: (a, b) => a.orderId - b.orderId,
+    },
+    {
+      title: 'Customer ID',
+      dataIndex: 'customerId',
+      key: 'customerId',
+    },
+    {
+      title: 'Dealer ID',
+      dataIndex: 'dealerId',
+      key: 'dealerId',
     },
     {
       title: 'Order Date',
       dataIndex: 'orderDate',
       key: 'orderDate',
+    },
+    {
+      title: 'Quantity',
+      dataIndex: 'quantity',
+      key: 'quantity',
     },
     {
       title: 'Total Amount',
@@ -50,16 +73,26 @@ const Orders = () => {
       dataIndex: 'status',
       key: 'status',
     },
+    {
+      title: 'Note',
+      dataIndex: 'note',
+      key: 'note',
+    },
   ];
 
   return (
-    <div>
-      <h3>Orders</h3>
+    <div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
+      <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
+        Order Management
+      </Title>
       <Table
         columns={columns}
         dataSource={orders}
         loading={loading}
         rowKey="key"
+        pagination={{ pageSize: 5 }}
+        bordered
+        style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' }}
       />
     </div>
   );

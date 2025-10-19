@@ -6,36 +6,9 @@ import {
   MailOutlined, PlusOutlined, EditOutlined, DeleteOutlined, ShopOutlined,
 } from '@ant-design/icons';
 import { toast } from 'react-toastify';
+import ManageStoreService from '../../../services/ManageStore/ManageStoreService';
 
 const { Title } = Typography;
-
-// Mock data for stores based on provided JSON structure
-const mockStores = [
-  {
-    id: 1,
-    storeId: 1,
-    storeName: 'ABC Store',
-    address: '123 Main St, Springfield, USA',
-    email: 'abc@store.com',
-    promotionId: null,
-  },
-  {
-    id: 2,
-    storeId: 2,
-    storeName: 'XYZ Outlet',
-    address: '456 Elm St, Rivertown, USA',
-    email: 'xyz@store.com',
-    promotionId: 101,
-  },
-  {
-    id: 3,
-    storeId: 3,
-    storeName: 'City Mart',
-    address: '789 Oak St, Metropolis, USA',
-    email: 'citymart@store.com',
-    promotionId: 102,
-  },
-];
 
 const StoreManage = () => {
   const [stores, setStores] = useState([]);
@@ -44,9 +17,24 @@ const StoreManage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  // Initialize with mock data
+  // Fetch stores using ManageStoreService
   useEffect(() => {
-    setStores(mockStores);
+    const fetchStores = async () => {
+      setLoading(true);
+      try {
+        const data = await ManageStoreService.getAllStores();
+        // Map storeId to id for frontend consistency
+        const mappedData = data.map(store => ({
+          ...store,
+          id: store.storeId,
+        }));
+        setStores(mappedData);
+      } catch (error) {
+        toast.error('Failed to load stores', error);
+      }
+      setLoading(false);
+    };
+    fetchStores();
   }, []);
 
   // Styles
@@ -89,7 +77,7 @@ const StoreManage = () => {
       setEditingStore(null);
       form.resetFields();
     } catch (error) {
-      toast.error('Failed to save store',error);
+      toast.error('Failed to save store', error);
     }
     setLoading(false);
   };
@@ -138,6 +126,11 @@ const StoreManage = () => {
 
   // Table columns
   const columns = [
+     {
+      title: 'Store ID',
+      dataIndex: 'storeId',
+      key: 'storeId',
+    },
     {
       title: 'Store Name',
       dataIndex: 'storeName',

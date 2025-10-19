@@ -7,42 +7,9 @@ import {
   EditOutlined, DeleteOutlined, IdcardOutlined,
 } from '@ant-design/icons';
 import { toast } from 'react-toastify';
+import ManageDealerService from '../../../services/ManageDealer/ManageDealerService';
 
 const { Title } = Typography;
-
-// Mock data for dealers based on provided JSON structure
-const mockDealers = [
-  {
-    id: 1,
-    dealerId: 1,
-    fullName: 'TheAnh',
-    role: 'Dealer_staff',
-    phone: '0123123321',
-    email: 'anhhoanggg855@gmail.com',
-    address: '6b5 HHG',
-    storeId: 3,
-  },
-  {
-    id: 2,
-    dealerId: 2,
-    fullName: 'Minh Nguyen',
-    role: 'Dealer_manager',
-    phone: '0987654321',
-    email: 'minh.nguyen@gmail.com',
-    address: '123 Tran Phu, Hanoi',
-    storeId: 5,
-  },
-  {
-    id: 3,
-    dealerId: 3,
-    fullName: 'Lan Hoang',
-    role: 'Dealer_staff',
-    phone: '0912345678',
-    email: 'lan.hoang@gmail.com',
-    address: '456 Le Loi, HCMC',
-    storeId: 7,
-  },
-];
 
 const DealerManage = () => {
   const [dealers, setDealers] = useState([]);
@@ -51,9 +18,24 @@ const DealerManage = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  // Initialize with mock data
+  // Fetch dealers using ManageDealerService
   useEffect(() => {
-    setDealers(mockDealers);
+    const fetchDealers = async () => {
+      setLoading(true);
+      try {
+        const data = await ManageDealerService.getAllDealers();
+        // Map dealerId to id for frontend consistency
+        const mappedData = data.map(dealer => ({
+          ...dealer,
+          id: dealer.dealerId,
+        }));
+        setDealers(mappedData);
+      } catch (error) {
+        toast.error('Failed to load dealers', error);
+      }
+      setLoading(false);
+    };
+    fetchDealers();
   }, []);
 
   // Styles
