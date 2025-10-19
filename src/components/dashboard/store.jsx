@@ -21,26 +21,29 @@ function getItem(label, key, icon, children) {
 }
 
 const items = [
-  getItem('Vehicle Catalog', 'vehicle-catalog', <PieChartOutlined />), // ('TÊN HIỂN THỊ RA', 'ĐƯỜNG DẪN KHI CLICK VÀO', <ICON>)
-  getItem('Inventory & Allocation', 'inventory-allocation', <TeamOutlined />, [
-    getItem('Inventory Management', 'inventory-allocation/inventory', <FileOutlined />),
-    getItem('Vehicle Allocation', 'inventory-allocation/vehicle-allocation', <FileOutlined />),
+  getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
+  getItem('Sales', 'sales', <TeamOutlined />, [
+    getItem('Promotions', 'sales/promotions', <FileOutlined />),
+    getItem('Sale Agreements', 'sales/agreements', <UserOutlined />),
+    getItem('Factory Orders', 'sales/factory-order', <DesktopOutlined />),
+    getItem('Delivery Tracking', 'sales/delivery-tracking', <DesktopOutlined />),
+     getItem('Payment Management', 'sales/payment-management', <DesktopOutlined />),
   ],
   
 ),
-  getItem('Price Promotion', 'price-promotion-manage', <UserOutlined />),
+  getItem('Customer', 'customer', <UserOutlined />, [
+    getItem('Overview', 'customer-overview', <FileOutlined />),
+   getItem('Profile', 'customer-profile', <FileOutlined />),
+  ]
+ 
+  ),
   
-  getItem('Agency Management', 'agency-management',  <FileOutlined />,[
-    getItem('Agreements', 'agency-management/agreements-management', <FileOutlined />),
-    getItem('Sales', 'agency-management/sales-management', <FileOutlined />),
-    getItem('Debt', 'agency-management/debt-management', <FileOutlined />),
+  getItem('Report', 'report',  <FileOutlined />,[
+    getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),
+    getItem('Customer Debt Report', 'report/customer-debt-report', <FileOutlined />),
   ]),
-  getItem('Account Management', 'account-management', <DesktopOutlined />),
-  getItem('Reports & Analysis', 'reports-analysis', <PieChartOutlined /> ),
-  getItem('Inventory & Consumtion', 'inventory-&-consumtion-report', <DesktopOutlined />),
-  ] 
-
-const AdminDashboard = () => {
+];
+const Store = () => {
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -53,7 +56,7 @@ const AdminDashboard = () => {
       <Layout>
         <Sider width={250} collapsible collapsed={collapsed} onCollapse={value => setCollapsed(value)}>
           <div className="demo-logo-vertical" />
-          <h4 style={{color:"white",textAlign:"center", marginTop:"10px", marginBottom:"10px", fontWeight:"bold"}}>Dashboard</h4>
+          <h4 style={{color:"white",textAlign:"center", marginTop:"10px", marginBottom:"10px", fontWeight:"bold"}}>Dealer</h4>
           <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
         </Sider>
         <Layout style={{ padding: '0 16px' }}>
@@ -77,4 +80,4 @@ const AdminDashboard = () => {
     </Layout>
   );
 };
-export default AdminDashboard;
+export default Store;

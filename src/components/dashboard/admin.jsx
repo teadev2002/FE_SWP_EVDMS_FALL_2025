@@ -21,29 +21,13 @@ function getItem(label, key, icon, children) {
 }
 
 const items = [
-  getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
-  getItem('Sales', 'sales', <TeamOutlined />, [
-    getItem('Promotions', 'sales/promotions', <FileOutlined />),
-    getItem('Sale Agreements', 'sales/agreements', <UserOutlined />),
-    getItem('Factory Orders', 'sales/factory-order', <DesktopOutlined />),
-    getItem('Delivery Tracking', 'sales/delivery-tracking', <DesktopOutlined />),
-     getItem('Payment Management', 'sales/payment-management', <DesktopOutlined />),
-  ],
   
-),
-  getItem('Customer', 'customer', <UserOutlined />, [
-    getItem('Overview', 'customer-overview', <FileOutlined />),
-   getItem('Profile', 'customer-profile', <FileOutlined />),
-  ]
- 
-  ),
-  
-  getItem('Report', 'report',  <FileOutlined />,[
-    getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),
-    getItem('Customer Debt Report', 'report/customer-debt-report', <FileOutlined />),
-  ]),
-];
-const Dashboard = () => {
+  getItem('Account Management', 'account-management', <DesktopOutlined />),
+  getItem('Reports & Analysis', 'reports-analysis', <PieChartOutlined /> ),
+  getItem('Inventory & Consumtion', 'inventory-&-consumtion-report', <DesktopOutlined />),
+  ] 
+
+const Admin = () => {
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -56,7 +40,7 @@ const Dashboard = () => {
       <Layout>
         <Sider width={250} collapsible collapsed={collapsed} onCollapse={value => setCollapsed(value)}>
           <div className="demo-logo-vertical" />
-          <h4 style={{color:"white",textAlign:"center", marginTop:"10px", marginBottom:"10px", fontWeight:"bold"}}>Dealer</h4>
+          <h4 style={{color:"white",textAlign:"center", marginTop:"10px", marginBottom:"10px", fontWeight:"bold"}}>DASHBOARD</h4>
           <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
         </Sider>
         <Layout style={{ padding: '0 16px' }}>
@@ -80,4 +64,4 @@ const Dashboard = () => {
     </Layout>
   );
 };
-export default Dashboard;
+export default Admin;

@@ -1,7 +1,7 @@
   import { ToastContainer } from 'react-toastify';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
-import Dashboard from './components/dashboard';
+import Store from './components/dashboard/store.jsx';
 import UserLayout from './components/UserLayout';
 import ManageVehicle from './pages/dealerStaffManager/vehicles/ManageVehicle.jsx';
 import HomePage from './pages/user/HomePage/HomePage.jsx';
@@ -17,7 +17,7 @@ import PaymentManagement from './pages/dealerStaffManager/sale/PaymentManagement
 import CustomerProfile from './pages/dealerStaffManager/customer/CustomerProfile.jsx';
 import StaffSalesReport from './pages/dealerStaffManager/Report/StaffSalesReport.jsx';
 import DebtReports from './pages/dealerStaffManager/Report/DebtReports.jsx';
-import AdminDashboard from './components/dashboard/AdminDashboard.jsx';
+import Brands from './components/dashboard/brands.jsx';
 import VehicleCatalog from './pages/evmStaffAdmin/ProductNDistribution/VehicleCatalogManage/VehicleCatalog.jsx';
 import InventoryManage from './pages/evmStaffAdmin/ProductNDistribution/InventoryNAllocation/InventoryManagement/InventoryManage.jsx';
 import VehicleAllocationManage from './pages/evmStaffAdmin/ProductNDistribution/InventoryNAllocation/VehicleAllocation/VehicleAllocationManage.jsx';
@@ -29,13 +29,14 @@ import AccountManagement from './pages/evmStaffAdmin/Agency/AccountManagement/Ac
 import SalesOverview from './pages/evmStaffAdmin/ReportNAnalysis/SalesReport/SalesOverview.jsx';
 import InventoryAndConsumtionReport from './pages/evmStaffAdmin/ReportNAnalysis/InventoryNConsumtionReport/InventoryAndConsumtionReport.jsx';
 import Login from './pages/Login.jsx';
+import Admin from './components/dashboard/admin.jsx';
 
 function App() {
 
   const router = createBrowserRouter([
     {
-      path: "/agency",
-      element: <Dashboard />,
+      path: "/store",
+      element: <Store />,
       children: [
 
         {
@@ -97,8 +98,8 @@ function App() {
       ],
     },
     {
-      path: "/dashboard",
-      element: <AdminDashboard />,
+      path: "/brands",
+      element: <Brands />,
       children: [
         {
           path: "vehicle-catalog",
@@ -150,6 +151,24 @@ function App() {
         },
 
       ],
+    },
+    {
+      path: "/admin",
+      element: <Admin />,
+      children: [
+     {
+          path: "account-management",
+          element: <AccountManagement />,
+        },
+        {
+          path: "reports-analysis",
+          element: <SalesOverview />,
+        },
+        {
+          path: "inventory-&-consumtion-report",
+          element: <InventoryAndConsumtionReport />,
+        },
+      ]
     },
     
     {
