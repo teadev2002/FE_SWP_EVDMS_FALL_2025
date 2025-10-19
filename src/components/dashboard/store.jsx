@@ -22,6 +22,7 @@ function getItem(label, key, icon, children) {
 
 const items = [
   getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
+  
   getItem('Sales', 'sales', <TeamOutlined />, [
     getItem('Promotions', 'sales/promotions', <FileOutlined />),
     getItem('Sale Agreements', 'sales/agreements', <UserOutlined />),
@@ -37,6 +38,7 @@ const items = [
   ]
  
   ),
+   getItem('Dealer', 'dealer-management',  <UserOutlined />),
   
   getItem('Report', 'report',  <FileOutlined />,[
     getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),
@@ -56,7 +58,7 @@ const Store = () => {
       <Layout>
         <Sider width={250} collapsible collapsed={collapsed} onCollapse={value => setCollapsed(value)}>
           <div className="demo-logo-vertical" />
-          <h4 style={{color:"white",textAlign:"center", marginTop:"10px", marginBottom:"10px", fontWeight:"bold"}}>Dealer</h4>
+          <h4 style={{color:"white",textAlign:"center", marginTop:"10px", marginBottom:"10px", fontWeight:"bold"}}>Store</h4>
           <Menu theme="dark" defaultSelectedKeys={['1']} mode="inline" items={items} />
         </Sider>
         <Layout style={{ padding: '0 16px' }}>

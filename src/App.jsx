@@ -30,6 +30,8 @@ import SalesOverview from './pages/evmStaffAdmin/ReportNAnalysis/SalesReport/Sal
 import InventoryAndConsumtionReport from './pages/evmStaffAdmin/ReportNAnalysis/InventoryNConsumtionReport/InventoryAndConsumtionReport.jsx';
 import Login from './pages/Login.jsx';
 import Admin from './components/dashboard/admin.jsx';
+import DealerManage from './pages/dealerStaffManager/DealerManagement/DealerManage.jsx';
+import StoreManage from './pages/evmStaffAdmin/StoreManage/StoreManage.jsx';
 
 function App() {
 
@@ -94,6 +96,10 @@ function App() {
           path: "report/customer-debt-report",
           element: <DebtReports />,
         },
+      {
+        path: "dealer-management",
+        element: <DealerManage />,
+      }
 
       ],
     },
@@ -148,6 +154,10 @@ function App() {
         {
           path: "inventory-&-consumtion-report",
           element: <InventoryAndConsumtionReport />,
+        },
+        {
+          path: "store-management",
+          element: <StoreManage />,
         },
 
       ],
