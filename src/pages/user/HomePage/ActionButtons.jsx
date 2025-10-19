@@ -1,4 +1,4 @@
-// src/pages/user/HomePage/ActionButtons.jsx (updated - always navigate to detail page)
+// src/pages/user/HomePage/ActionButtons.jsx (updated: always show badge with color based on count)
 import React from 'react';
 import { Button, Badge, OverlayTrigger, Popover } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +21,8 @@ const ActionButtons = ({ vehicle, vehicleId, selectedVehicles, selectedCount, on
         // Trigger parent's clear via custom event or prop callback
         window.dispatchEvent(new CustomEvent('clearCompareSelection'));
     };
+
+    const compareType = selectedCount === 0 ? 'out-of-stock' : selectedCount === 1 ? 'limited' : 'available';
 
     const popoverContent = (
         <Popover id="compare-popover">
@@ -50,7 +52,7 @@ const ActionButtons = ({ vehicle, vehicleId, selectedVehicles, selectedCount, on
                     className="me-2 position-relative"
                     onClick={handleCompareClick}
                 >
-                    Compare {selectedCount > 0 && <Badge bg="secondary" className="ms-1">{selectedCount}</Badge>}
+                    Compare <Badge className={`ms-1 compare-badge ${compareType}`}>{selectedCount}</Badge>
                     {isSelected && <span className="selected-indicator">✓</span>}
                 </Button>
             </OverlayTrigger>

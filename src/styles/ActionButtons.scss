@@ -1,4 +1,4 @@
-// src/pages/HomePage/ActionButtons.scss
+// src/pages/HomePage/ActionButtons.scss (updated: add styles for compare-badge)
 .eco-buttons {
     display: flex;
     justify-content: space-between;
@@ -44,5 +44,43 @@
                 /* Secondary */
             }
         }
+    }
+
+    .compare-badge {
+        background: linear-gradient(135deg, #2e7d32 0%, #81c784 100%);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        box-shadow: 0 2px 4px rgba(129, 199, 132, 0.3);
+
+        &.limited {
+            background: linear-gradient(135deg, #eef121 0%, #B8860B 100%);
+            box-shadow: 0 2px 4px rgba(184, 134, 11, 0.3);
+            color: #000;
+        }
+
+        &.out-of-stock {
+            background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);
+            box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+        }
+    }
+
+    .selected-indicator {
+        position: absolute;
+        top: 50%;
+        right: 8px;
+        transform: translateY(-50%);
+        background: rgba(46, 125, 50, 0.2);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        color: #2e7d32;
+        font-weight: bold;
     }
 }

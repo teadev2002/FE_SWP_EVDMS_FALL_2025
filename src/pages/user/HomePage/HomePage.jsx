@@ -141,11 +141,14 @@ const HomePage = () => {
             stockType = 'limited';
           }
 
+          const brandName = brand.brandName || 'Unknown';
+          const title = vehicle.modelName.startsWith(brandName) ? vehicle.modelName : `${brandName} ${vehicle.modelName}`;
+
           // Format specs cho VehicleCard (thay đổi labels và fields)
           const specs = {
             range: `${vehicle.rangePerCharge}`, // e.g., "650 km"
             version: vehicle.version, // Thay thế acceleration
-            brand: brand.brandName || 'Unknown',
+            brand: brandName,
             color: vehicle.color,
             battery: vehicle.batteryCapacity,
             topSpeed: 'N/A',
@@ -154,11 +157,10 @@ const HomePage = () => {
           };
 
           // Title và description
-          const title = `${brand.brandName || 'Unknown'} ${vehicle.modelName}`;
-          const description = `The ${title} ${vehicle.version} offers premium electric performance with a ${vehicle.color} finish.`;
+          const description = `The ${vehicle.modelName} ${vehicle.version} offers premium electric performance with a ${vehicle.color} finish.`;
 
           // Slug generate đơn giản
-          const slug = `${brand.brandName?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}-${vehicle.modelName.toLowerCase().replace(/\s+/g, '-')}`;
+          const slug = `${brandName?.toLowerCase().replace(/\s+/g, '-') || 'unknown'}-${vehicle.modelName.toLowerCase().replace(/\s+/g, '-')}`;
 
           // Images: Hardcode sample, có thể thay bằng API nếu có
           const images = [
@@ -180,7 +182,7 @@ const HomePage = () => {
             fullData: {
               ...vehicle,
               brand: {
-                name: brand.brandName,
+                name: brandName,
                 country: brand.country,
                 website: brand.website,
                 founderYear: brand.founderYear
@@ -308,10 +310,7 @@ const HomePage = () => {
                   <Card.Body>
                     <Card.Title className="eco-card-title">{vehicle.title}</Card.Title>
                     <Card.Text className="eco-price">{vehicle.specs.price}</Card.Text>
-                    <Badge
-                      bg={vehicle.stockType === 'available' ? "success" : vehicle.stockType === 'limited' ? "warning" : "danger"}
-                      className="mb-2"
-                    >
+                    <Badge className={`mb-2 stock-badge ${vehicle.stockType}`}>
                       {vehicle.stock}
                     </Badge>
                   </Card.Body>
