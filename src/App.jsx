@@ -32,6 +32,7 @@ import Login from './pages/Login.jsx';
 import Admin from './components/dashboard/admin.jsx';
 import DealerManage from './pages/dealerStaffManager/DealerManagement/DealerManage.jsx';
 import StoreManage from './pages/evmStaffAdmin/StoreManage/StoreManage.jsx';
+import TestAppointment from './pages/dealerStaffManager/TestAppointment/TestAppointment.jsx';
 
 function App() {
 
@@ -44,6 +45,10 @@ function App() {
         {
           path: "vehicle",
           element: <ManageVehicle />,
+        },
+        {
+          path: "testappointment",
+          element: <TestAppointment />,
         },
         {
           path: "sales",
