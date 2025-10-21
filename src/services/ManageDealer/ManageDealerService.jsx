@@ -9,6 +9,16 @@ const ManageDealerService =  {
       throw error;
     }
   },        
+  GetDealerById: async (id) => {
+    try {
+const response = await apiClient.get(`Dealers/{id}?id=${id}`);  
+    return response.data;
+    } catch (error) {
+      console.error("Error fetching dealer by ID:", error);
+      throw error;
+    }
+  },
+
 }
 
 export default ManageDealerService;

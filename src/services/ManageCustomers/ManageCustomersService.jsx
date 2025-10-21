@@ -10,6 +10,15 @@ const ManageCustomersService =  {
       throw error;
     }
   },
+  GetCustomerById: async (id) => {
+    try {
+      const response = await apiClient.get(`Customer/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching vehicle by ID:", error);
+      throw error;
+    }
+  },
   AddCustomer: async (customer) => {
     try {
       const response = await apiClient.post("Customer", customer);

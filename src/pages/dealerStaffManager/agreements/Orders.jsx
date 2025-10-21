@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { Table, Typography, Form, Input, Button, InputNumber, Select, Modal } from 'antd';
+// thay thế DealerId bằng dealer name trong FORM
+ import React, { useState, useEffect } from 'react';
+import { Table, Typography, Form, Button, Input, InputNumber, Select, Modal } from 'antd';
 import ManageOrdersService from '../../../services/ManageOrders/ManageOrdersService';
+import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
+import ManageDealerService from '../../../services/ManageDealer/ManageDealerService';
 import { toast } from 'react-toastify';
 
 const { Title } = Typography;
@@ -10,33 +13,61 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [dealers, setDealers] = useState([]);
   const [form] = Form.useForm();
 
   useEffect(() => {
-    const fetchOrders = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
-        const data = await ManageOrdersService.getAllOrder();
-        const formattedData = data.map(item => ({
-          key: item.orderId,
-          orderId: item.orderId,
-          customerId: item.customerId,
-          dealerId: item.dealerId,
-          orderDate: item.orderDate,
-          quantity: item.quantity,
-          totalAmount: item.totalPrice || 'N/A',
-          status: item.status || 'N/A',
-          note: item.note || 'None',
-        }));
+        // Fetch orders
+        const orderData = await ManageOrdersService.getAllOrder();
+        // Fetch customer and dealer fullName for each order
+        const formattedData = await Promise.all(
+          orderData.map(async (item) => {
+            let customerName = 'Unknown';
+            let dealerName = 'Unknown';
+            try {
+              const customer = await ManageCustomersService.GetCustomerById(item.customerId);
+              customerName = customer.fullName || 'Unknown';
+            } catch (error) {
+              console.error(`Error fetching customer ${item.customerId}:`, error);
+            }
+            try {
+              const dealer = await ManageDealerService.GetDealerById(item.dealerId);
+              dealerName = dealer.fullName || 'Unknown';
+            } catch (error) {
+              console.error(`Error fetching dealer ${item.dealerId}:`, error);
+            }
+            return {
+              key: item.orderId,
+              orderId: item.orderId,
+              customerName,
+              dealerName,
+              orderDate: item.orderDate,
+              quantity: item.quantity,
+              totalAmount: item.totalPrice || 'N/A',
+              status: item.status || 'N/A',
+              note: item.note || 'None',
+            };
+          })
+        );
         setOrders(formattedData);
+
+        // Fetch customers and dealers for the form
+        const customerData = await ManageCustomersService.getAllCustomers();
+        const dealerData = await ManageDealerService.getAllDealers();
+        setCustomers(customerData);
+        setDealers(dealerData);
       } catch (error) {
-        toast.error('Failed to fetch orders', error);
+        toast.error('Failed to fetch data', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchOrders();
+    fetchData();
   }, []);
 
   const showModal = () => {
@@ -63,22 +94,40 @@ const Orders = () => {
       toast.success('Order added successfully');
       // Refresh the orders list
       const data = await ManageOrdersService.getAllOrder();
-      const formattedData = data.map(item => ({
-        key: item.orderId,
-        orderId: item.orderId,
-        customerId: item.customerId,
-        dealerId: item.dealerId,
-        orderDate: item.orderDate,
-        quantity: item.quantity,
-        totalAmount: item.totalPrice || 'N/A',
-        status: item.status || 'N/A',
-        note: item.note || 'None',
-      }));
+      const formattedData = await Promise.all(
+        data.map(async (item) => {
+          let customerName = 'Unknown';
+          let dealerName = 'Unknown';
+          try {
+            const customer = await ManageCustomersService.GetCustomerById(item.customerId);
+            customerName = customer.fullName || 'Unknown';
+          } catch (error) {
+            console.error(`Error fetching customer ${item.customerId}:`, error);
+          }
+          try {
+            const dealer = await ManageDealerService.GetDealerById(item.dealerId);
+            dealerName = dealer.fullName || 'Unknown';
+          } catch (error) {
+            console.error(`Error fetching dealer ${item.dealerId}:`, error);
+          }
+          return {
+            key: item.orderId,
+            orderId: item.orderId,
+            customerName,
+            dealerName,
+            orderDate: item.orderDate,
+            quantity: item.quantity,
+            totalAmount: item.totalPrice || 'N/A',
+            status: item.status || 'N/A',
+            note: item.note || 'None',
+          };
+        })
+      );
       setOrders(formattedData);
       setIsModalVisible(false);
       form.resetFields();
     } catch (error) {
-      toast.error('Failed to add order',error);
+      toast.error('Failed to add order', error);
     } finally {
       setLoading(false);
     }
@@ -92,14 +141,14 @@ const Orders = () => {
       sorter: (a, b) => a.orderId - b.orderId,
     },
     {
-      title: 'Customer ID',
-      dataIndex: 'customerId',
-      key: 'customerId',
+      title: 'Customer Name',
+      dataIndex: 'customerName',
+      key: 'customerName',
     },
     {
-      title: 'Dealer ID',
-      dataIndex: 'dealerId',
-      key: 'dealerId',
+      title: 'Dealer Name',
+      dataIndex: 'dealerName',
+      key: 'dealerName',
     },
     {
       title: 'Order Date',
@@ -152,18 +201,44 @@ const Orders = () => {
           onFinish={handleAddOrder}
         >
           <Form.Item
-            label="Customer ID"
+            label="Customer"
             name="customerId"
-            rules={[{ required: true, message: 'Please input Customer ID!' }]}
+            rules={[{ required: true, message: 'Please select a Customer!' }]}
           >
-            <InputNumber min={1} style={{ width: '100%' }} />
+            <Select
+              showSearch
+              placeholder="Select a customer"
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {customers.map((customer) => (
+                <Option key={customer.customerId} value={customer.customerId}>
+                  {customer.fullName}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item
-            label="Dealer ID"
+            label="Dealer"
             name="dealerId"
-            rules={[{ required: true, message: 'Please input Dealer ID!' }]}
+            rules={[{ required: true, message: 'Please select a Dealer!' }]}
           >
-            <InputNumber min={1} style={{ width: '100%' }} />
+            <Select
+              showSearch
+              placeholder="Select a dealer"
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {dealers.map((dealer) => (
+                <Option key={dealer.dealerId} value={dealer.dealerId}>
+                  {dealer.fullName}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item
             label="Quantity"
@@ -186,6 +261,7 @@ const Orders = () => {
           >
             <Select>
               <Option value="Pending">Pending</Option>
+              <Option value="Processing">Processing</Option>
               <Option value="Completed">Completed</Option>
               <Option value="Cancelled">Cancelled</Option>
             </Select>
