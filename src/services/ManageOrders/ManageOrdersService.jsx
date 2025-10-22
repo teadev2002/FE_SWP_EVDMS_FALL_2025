@@ -35,7 +35,17 @@ const ManageOrdersService =  {
       console.error("Error deleting order:", error);
       throw error;
     }
-  }      
+  },
+  getOrderById: async (orderId) => {
+    try {
+      const response = await apiClient.get(`Order/${orderId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching order by ID:", error);
+      throw error;
+    }
+  },
+          
 }
 
 export default ManageOrdersService;
