@@ -37,6 +37,15 @@ const ManageServicePromotions =  {
       throw error;
     }
   },
+  getPromotionById: async (id) => {
+    try {
+      const response = await apiClient.get(`Promotion/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching promotion by ID:", error);
+      throw error;
+    } 
+  },
 }
 
 export default ManageServicePromotions;

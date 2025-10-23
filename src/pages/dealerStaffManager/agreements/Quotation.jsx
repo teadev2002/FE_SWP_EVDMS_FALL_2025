@@ -172,9 +172,7 @@ const Quotation = () => {
 
   // Calculate pagination details
   const totalQuotations = filteredQuotations.length;
-  const startIndex = (currentPage - 1) * pageSize + 1;
-  const endIndex = Math.min(currentPage * pageSize, totalQuotations);
-
+ 
   return (
     <div>
       <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
@@ -201,11 +199,7 @@ const Quotation = () => {
       </Row>
       <Row align="middle" justify="space-between" style={{ marginTop: 16 }}>
    
-          <Col>
-          <Text>
-            Showing {startIndex} to {endIndex} of {totalQuotations} quotations
-          </Text>
-        </Col>
+        
           <Table
             columns={columns}
             dataSource={filteredQuotations}
@@ -217,6 +211,8 @@ const Quotation = () => {
               total: totalQuotations,
               onChange: (page) => setCurrentPage(page),
               style: { margin: 0 },
+                        showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Store${total !== 1 ? 's' : ''}`,
+
             }}
             bordered
             style={{ width: '100%' }}

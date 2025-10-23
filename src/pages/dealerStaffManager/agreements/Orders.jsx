@@ -341,6 +341,9 @@ const Orders = () => {
           current: currentPage,
           total: totalOrders,
           onChange: (page) => setCurrentPage(page),
+          
+          showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Store${total !== 1 ? 's' : ''}`,
+    
         }}
         bordered
       />

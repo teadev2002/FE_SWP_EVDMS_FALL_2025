@@ -165,9 +165,7 @@ const ManageSaleAgreements = () => {
 
   // Calculate pagination details
   const totalAgreements = filteredAgreements.length;
-  const startIndex = (currentPage - 1) * pageSize + 1;
-  const endIndex = Math.min(currentPage * pageSize, totalAgreements);
-
+ 
   return (
     <div>
       <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
@@ -197,11 +195,7 @@ const ManageSaleAgreements = () => {
               </Button>
             </Col>
           </Row>
-               <Col>
-              <Text>
-                Showing {startIndex} to {endIndex} of {totalAgreements} agreements
-              </Text>
-            </Col>
+                
           <Row align="middle" justify="space-between" style={{ marginTop: 16 }}>
        
            
@@ -216,6 +210,8 @@ const ManageSaleAgreements = () => {
                   total: totalAgreements,
                   onChange: (page) => setCurrentPage(page),
                   style: { margin: 0 },
+                  showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Store${total !== 1 ? 's' : ''}`,
+
                 }}
                 bordered
                 style={{ width: '100%' }}
