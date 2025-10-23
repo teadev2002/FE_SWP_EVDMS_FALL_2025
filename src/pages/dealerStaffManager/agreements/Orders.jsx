@@ -1,20 +1,23 @@
-// thay thế DealerId bằng dealer name trong FORM
- import React, { useState, useEffect } from 'react';
-import { Table, Typography, Form, Button, Input, InputNumber, Select, Modal } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Table, Typography, Form, Button, Input, InputNumber, Select, Modal, Row, Col } from 'antd';
 import ManageOrdersService from '../../../services/ManageOrders/ManageOrdersService';
 import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
 import ManageDealerService from '../../../services/ManageDealer/ManageDealerService';
 import { toast } from 'react-toastify';
 
-const { Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [dealers, setDealers] = useState([]);
+  const [searchCustomer, setSearchCustomer] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
   const [form] = Form.useForm();
 
   useEffect(() => {
@@ -54,6 +57,7 @@ const Orders = () => {
           })
         );
         setOrders(formattedData);
+        setFilteredOrders(formattedData);
 
         // Fetch customers and dealers for the form
         const customerData = await ManageCustomersService.getAllCustomers();
@@ -69,6 +73,16 @@ const Orders = () => {
 
     fetchData();
   }, []);
+
+  // Handle search
+  useEffect(() => {
+    const filtered = orders.filter(
+      (order) =>
+        order.customerName.toLowerCase().includes(searchCustomer.toLowerCase())
+    );
+    setFilteredOrders(filtered);
+    setCurrentPage(1); // Reset to first page on search
+  }, [searchCustomer, orders]);
 
   const showModal = () => {
     setIsModalVisible(true);
@@ -124,6 +138,7 @@ const Orders = () => {
         })
       );
       setOrders(formattedData);
+      setFilteredOrders(formattedData);
       setIsModalVisible(false);
       form.resetFields();
     } catch (error) {
@@ -144,51 +159,82 @@ const Orders = () => {
       title: 'Customer Name',
       dataIndex: 'customerName',
       key: 'customerName',
+      sorter: (a, b) => a.customerName.localeCompare(b.customerName),
     },
     {
       title: 'Dealer Name',
       dataIndex: 'dealerName',
       key: 'dealerName',
+      sorter: (a, b) => a.dealerName.localeCompare(b.dealerName),
     },
     {
       title: 'Order Date',
       dataIndex: 'orderDate',
       key: 'orderDate',
+      sorter: (a, b) => new Date(a.orderDate) - new Date(b.orderDate),
     },
     {
       title: 'Quantity',
       dataIndex: 'quantity',
       key: 'quantity',
+      sorter: (a, b) => a.quantity - b.quantity,
     },
     {
       title: 'Total Amount',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
+      sorter: (a, b) => {
+        const aValue = a.totalAmount === 'N/A' ? 0 : parseFloat(a.totalAmount);
+        const bValue = b.totalAmount === 'N/A' ? 0 : parseFloat(b.totalAmount);
+        return aValue - bValue;
+      },
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      sorter: (a, b) => a.status.localeCompare(b.status),
     },
     {
       title: 'Note',
       dataIndex: 'note',
       key: 'note',
+      sorter: (a, b) => a.note.localeCompare(b.note),
     },
   ];
+
+  // Calculate pagination details
+  const totalOrders = filteredOrders.length;
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, totalOrders);
 
   return (
     <div>
       <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
-        Order Management
+        Order  
       </Title>
-      <Button
-        type="primary"
-        onClick={showModal}
-        style={{ marginBottom: 16 }}
-      >
-        Add Order
-      </Button>
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={20}>
+          <Input
+            placeholder="Search by Customer Name"
+            value={searchCustomer}
+            onChange={(e) => setSearchCustomer(e.target.value)}
+            allowClear
+          />
+        </Col>
+        <Col span={4}>
+          <Button
+            type="primary"
+            onClick={showModal}
+            style={{ width: '100%' }}
+          >
+            Add Order
+          </Button>
+        </Col>
+      </Row>
+      <Text style={{ marginBottom: 16, display: 'block' }}>
+        Showing {startIndex} to {endIndex} of {totalOrders} orders
+      </Text>
       <Modal
         title="Add New Order"
         open={isModalVisible}
@@ -287,10 +333,15 @@ const Orders = () => {
       </Modal>
       <Table
         columns={columns}
-        dataSource={orders}
+        dataSource={filteredOrders}
         loading={loading}
         rowKey="key"
-        pagination={{ pageSize: 5 }}
+        pagination={{
+          pageSize: pageSize,
+          current: currentPage,
+          total: totalOrders,
+          onChange: (page) => setCurrentPage(page),
+        }}
         bordered
       />
     </div>
@@ -298,3 +349,5 @@ const Orders = () => {
 };
 
 export default Orders;
+
+//implement some feature like search, sort in Orders.jsx

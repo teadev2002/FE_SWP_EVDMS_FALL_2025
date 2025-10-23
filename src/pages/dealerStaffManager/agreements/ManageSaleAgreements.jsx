@@ -1,20 +1,28 @@
+// them core features for sale agreement management
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Select, DatePicker, Input, Tabs, message } from 'antd';
+import { Table, Typography, Form, Button, Input, Select, DatePicker, Modal, Tabs, Row, Col } from 'antd';
 import ManageServiceSaleAgreements from '../../../services/ManageAgreements/ManageServiceSaleAgreements';
 import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
+import ManageOrdersService from '../../../services/ManageOrders/ManageOrdersService';
 import Quotation from './Quotation';
 import Orders from './Orders';
-import ManageOrdersService from '../../../services/ManageOrders/ManageOrdersService';
+import { toast } from 'react-toastify';
+
+const { Title, Text } = Typography;
 const { TabPane } = Tabs;
 
 const ManageSaleAgreements = () => {
   const [agreements, setSaleAgreements] = useState([]);
+  const [filteredAgreements, setFilteredAgreements] = useState([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('agreements');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [orderOptions, setOrderOptions] = useState([]);
   const [customerOrdersMap, setCustomerOrdersMap] = useState(new Map());
+  const [searchText, setSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
   const [form] = Form.useForm();
 
   // Fetch agreements and related data
@@ -45,15 +53,16 @@ const ManageSaleAgreements = () => {
         // Format agreement data
         const formattedData = agreementData.map(item => ({
           key: item.agreementId,
-          customerName: item.customerName,
-          agreementDate: item.agreementDate,
+          customerName: item.customerName || 'N/A',
+          agreementDate: item.agreementDate || 'N/A',
           status: item.status || 'N/A',
         }));
 
         setSaleAgreements(formattedData);
+        setFilteredAgreements(formattedData);
       } catch (error) {
         console.error('Failed to fetch data:', error);
-        message.error('Failed to fetch data');
+        toast.error('Failed to fetch data');
       } finally {
         setLoading(false);
       }
@@ -61,6 +70,17 @@ const ManageSaleAgreements = () => {
 
     fetchData();
   }, []);
+
+  // Handle search
+  useEffect(() => {
+    const filtered = agreements.filter(
+      (agreement) =>
+        agreement.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
+        agreement.agreementDate.toLowerCase().includes(searchText.toLowerCase())
+    );
+    setFilteredAgreements(filtered);
+    setCurrentPage(1); // Reset to first page on search
+  }, [searchText, agreements]);
 
   // Handle customer selection change
   const handleCustomerChange = (value) => {
@@ -76,6 +96,7 @@ const ManageSaleAgreements = () => {
   // Handle form submission
   const handleAddAgreement = async (values) => {
     try {
+      setLoading(true);
       const agreementData = {
         customerId: values.customerId,
         orderId: values.orderId,
@@ -85,23 +106,26 @@ const ManageSaleAgreements = () => {
         fileUrl: values.fileUrl || '',
       };
       await ManageServiceSaleAgreements.AddSaleAgreement(agreementData);
-      message.success('Agreement added successfully');
+      toast.success('Agreement added successfully');
 
       // Refresh agreements
       const agreementDataUpdated = await ManageServiceSaleAgreements.getAllSaleAgreements();
       const formattedData = agreementDataUpdated.map(item => ({
         key: item.agreementId,
-        customerName: item.customerName,
-        agreementDate: item.agreementDate,
+        customerName: item.customerName || 'N/A',
+        agreementDate: item.agreementDate || 'N/A',
         status: item.status || 'N/A',
       }));
       setSaleAgreements(formattedData);
+      setFilteredAgreements(formattedData);
       setIsModalVisible(false);
       form.resetFields();
       setOrderOptions([]);
     } catch (error) {
       console.error('Failed to add agreement:', error);
-      message.error('Failed to add agreement');
+      toast.error('Failed to add agreement');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -123,33 +147,81 @@ const ManageSaleAgreements = () => {
       title: 'Customer Name',
       dataIndex: 'customerName',
       key: 'customerName',
+      sorter: (a, b) => a.customerName.localeCompare(b.customerName),
     },
     {
       title: 'Agreement Date',
       dataIndex: 'agreementDate',
       key: 'agreementDate',
+      sorter: (a, b) => new Date(a.agreementDate) - new Date(b.agreementDate),
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      sorter: (a, b) => a.status.localeCompare(b.status),
     },
   ];
 
+  // Calculate pagination details
+  const totalAgreements = filteredAgreements.length;
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, totalAgreements);
+
   return (
     <div>
-      <h2>Manage Sale Agreements</h2>
+      <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
+        Sale Management
+      </Title>
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <TabPane tab="Agreements" key="agreements">
-          <Button type="primary" onClick={showModal} style={{ marginBottom: 16 }}>
-            Add Agreement
-          </Button>
-          <Table
-            columns={columns}
-            dataSource={agreements}
-            loading={loading}
-            rowKey="key"
-          />
+                <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
+         Agreements  
+      </Title>
+          <Row gutter={16} style={{ marginBottom: 16 }}>
+            <Col span={20}>
+              <Input
+                placeholder="Search by Customer Name or Agreement Date"
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                allowClear
+              />
+            </Col>
+            <Col span={4}>
+              <Button
+                type="primary"
+                onClick={showModal}
+                style={{ width: '100%' }}
+              >
+                Add Agreement
+              </Button>
+            </Col>
+          </Row>
+               <Col>
+              <Text>
+                Showing {startIndex} to {endIndex} of {totalAgreements} agreements
+              </Text>
+            </Col>
+          <Row align="middle" justify="space-between" style={{ marginTop: 16 }}>
+       
+           
+              <Table
+                columns={columns}
+                dataSource={filteredAgreements}
+                loading={loading}
+                rowKey="key"
+                pagination={{
+                  pageSize: pageSize,
+                  current: currentPage,
+                  total: totalAgreements,
+                  onChange: (page) => setCurrentPage(page),
+                  style: { margin: 0 },
+                }}
+                bordered
+                style={{ width: '100%' }}
+              />
+            
+          </Row>
         </TabPane>
         <TabPane tab="Quotations" key="quotations">
           <Quotation />
@@ -160,7 +232,7 @@ const ManageSaleAgreements = () => {
       </Tabs>
       <Modal
         title="Add New Agreement"
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={form.submit}
         onCancel={handleCancel}
         okText="Submit"

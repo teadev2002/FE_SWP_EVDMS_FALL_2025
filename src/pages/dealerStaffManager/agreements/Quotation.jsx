@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, Modal, Form, Select, DatePicker, message } from 'antd';
+import { Table, Typography, Form, Button, Input, Select, DatePicker, Modal, Row, Col } from 'antd';
 import ManageQuoteService from '../../../services/ManageQuotes/ManageQuoteService';
 import ManageDealerService from '../../../services/ManageDealer/ManageDealerService';
 import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
 import ManageVehicleService from '../../../services/ManageVehicleService/ManageVehicleService';
 import { toast } from 'react-toastify';
- 
+
+const { Title, Text } = Typography;
+const { Option } = Select;
+
 const Quotation = () => {
   const [quotations, setQuotations] = useState([]);
+  const [filteredQuotations, setFilteredQuotations] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [dealers, setDealers] = useState([]);
+  const [searchText, setSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
   const [form] = Form.useForm();
 
   // Fetch quotations and related data
@@ -43,12 +50,13 @@ const Quotation = () => {
         }));
 
         setQuotations(formattedData);
+        setFilteredQuotations(formattedData);
         setCustomers(customerData.map(c => ({ value: c.customerId, label: c.fullName })));
         setVehicles(vehicleData.map(v => ({ value: v.vehicleId, label: v.modelName })));
         setDealers(dealerData.map(d => ({ value: d.dealerId, label: d.fullName })));
       } catch (error) {
         console.error('Failed to fetch data:', error);
-        message.error('Failed to fetch data');
+        toast.error('Failed to fetch data');
       } finally {
         setLoading(false);
       }
@@ -57,9 +65,21 @@ const Quotation = () => {
     fetchData();
   }, []);
 
+  // Handle search
+  useEffect(() => {
+    const filtered = quotations.filter(
+      (quote) =>
+        quote.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
+        quote.vehicleName.toLowerCase().includes(searchText.toLowerCase())
+    );
+    setFilteredQuotations(filtered);
+    setCurrentPage(1); // Reset to first page on search
+  }, [searchText, quotations]);
+
   // Handle form submission
   const handleAddQuote = async (values) => {
     try {
+      setLoading(true);
       const quoteData = {
         customerId: values.customerId,
         vehicleId: values.vehicleId,
@@ -68,8 +88,8 @@ const Quotation = () => {
         status: values.status || 'Draft',
       };
       await ManageQuoteService.AddQuotation(quoteData);
-      message.success('Quote added successfully');
-      
+      toast.success('Quote added successfully');
+
       // Refresh quotations
       const quoteDataUpdated = await ManageQuoteService.getAllQuotations();
       const [customerData, vehicleData, dealerData] = await Promise.all([
@@ -89,12 +109,14 @@ const Quotation = () => {
         status: item.status,
       }));
       setQuotations(formattedData);
+      setFilteredQuotations(formattedData);
       setIsModalVisible(false);
       form.resetFields();
-      toast.success('Quote added successfully');
     } catch (error) {
       console.error('Failed to add quote:', error);
-      message.error('Failed to add quote');
+      toast.error('Failed to add quote');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,49 +136,96 @@ const Quotation = () => {
       title: 'Quote ID',
       dataIndex: 'key',
       key: 'key',
+      sorter: (a, b) => a.key - b.key,
     },
     {
       title: 'Customer Name',
       dataIndex: 'customerName',
       key: 'customerName',
+      sorter: (a, b) => a.customerName.localeCompare(b.customerName),
     },
     {
       title: 'Vehicle Model',
       dataIndex: 'vehicleName',
       key: 'vehicleName',
+      sorter: (a, b) => a.vehicleName.localeCompare(b.vehicleName),
     },
     {
       title: 'Dealer Name',
       dataIndex: 'dealerName',
       key: 'dealerName',
+      sorter: (a, b) => a.dealerName.localeCompare(b.dealerName),
     },
     {
       title: 'Quote Date',
       dataIndex: 'quoteDate',
       key: 'quoteDate',
+      sorter: (a, b) => new Date(a.quoteDate) - new Date(b.quoteDate),
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
+      sorter: (a, b) => a.status.localeCompare(b.status),
     },
   ];
 
+  // Calculate pagination details
+  const totalQuotations = filteredQuotations.length;
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, totalQuotations);
+
   return (
     <div>
-      <h3>Quotations</h3>
-      <Button type="primary" onClick={showModal} style={{ marginBottom: 16 }}>
-        Add Quote
-      </Button>
-      <Table
-        columns={columns}
-        dataSource={quotations}
-        loading={loading}
-        rowKey="key"
-      />
+      <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
+        Quotation  
+      </Title>
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={20}>
+          <Input
+            placeholder="Search by Customer Name or Vehicle Model"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            allowClear
+          />
+        </Col>
+        <Col span={4}>
+          <Button
+            type="primary"
+            onClick={showModal}
+            style={{ width: '100%' }}
+          >
+            Add Quote
+          </Button>
+        </Col>
+      </Row>
+      <Row align="middle" justify="space-between" style={{ marginTop: 16 }}>
+   
+          <Col>
+          <Text>
+            Showing {startIndex} to {endIndex} of {totalQuotations} quotations
+          </Text>
+        </Col>
+          <Table
+            columns={columns}
+            dataSource={filteredQuotations}
+            loading={loading}
+            rowKey="key"
+            pagination={{
+              pageSize: pageSize,
+              current: currentPage,
+              total: totalQuotations,
+              onChange: (page) => setCurrentPage(page),
+              style: { margin: 0 },
+            }}
+            bordered
+            style={{ width: '100%' }}
+          />
+        
+      </Row>
       <Modal
         title="Add New Quote"
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={form.submit}
         onCancel={handleCancel}
         okText="Submit"
