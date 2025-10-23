@@ -1,15 +1,14 @@
-// import React, { useEffect, useState } from 'react';
-// import { Table } from 'antd';
-// import ManageServiceVehicle from '../../../services/ManageServiceVehicle/ManageServiceVehicle'; // Adjust the import path based on your file structure
- 
-// export default ManageVehicle;
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Table, Card, Statistic, Button, Calendar, List, Modal, Input, Select, Checkbox, Upload, Slider, Row, Col, Tag, Image } from 'antd';
+import { Table, Card, Statistic, Button, Input, Select, Checkbox, Upload, Slider, Row, Col, Tag, Image, Modal, Typography } from 'antd';
 import { DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import '../../../styles/dealerStaffManager/ManageVehicle.scss';
- 
+import ManageVehicleService from '../../../services/ManageVehicleService/ManageVehicleService';
+import ManageBrandService from '../../../services/ManageBrand/ManageBrandService';
+import { toast } from 'react-toastify';
+
 const { Search } = Input;
 const { Option } = Select;
+const { Text } = Typography;
 
 // Custom hook for debouncing
 function useDebounce(value, delay) {
@@ -25,119 +24,83 @@ function useDebounce(value, delay) {
   return debouncedValue;
 }
 
-// Mock data for vehicles (realistic EVs)
-const mockVehicles = [
-  {
-    id: 1,
-    image: 'https://carwow-uk-wp-2.imgix.net/2019-Tesla-Model-3-Performance-lead.png?auto=format&cs=tinysrgb&fit=crop&h=&ixlib=rb-1.1.0&q=60&w=1600',
-    make: 'Tesla',
-    model: 'Model 3',
-    year: 2023,
-    range: 500,
-    power: 300,
-    price: 45000,
-    features: ['Autopilot', 'Fast Charging', 'Premium Audio'],
-    color: 'Red',
-    version: 'Standard Range',
-    onPromotion: true,
-  },
-  {
-    id: 2,
-    image: 'https://th.bing.com/th/id/R.62fd970baf05cbf465945d2946f4eacc?rik=Wy7JujWWlp6Gug&pid=ImgRaw&r=0',
-    make: 'Tesla',
-    model: 'Model Y',
-    year: 2023,
-    range: 530,
-    power: 350,
-    price: 55000,
-    features: ['Autopilot', 'Panoramic Roof', 'Fast Charging'],
-    color: 'White',
-    version: 'Long Range',
-    onPromotion: false,
-  },
-  {
-    id: 3,
-    image: 'https://tse1.mm.bing.net/th/id/OIP.Mx-1GGrbqKuVqftJaJtrvQHaE7?rs=1&pid=ImgDetMain&o=7&rm=3',
-    make: 'Nissan',
-    model: 'Leaf',
-    year: 2022,
-    range: 364,
-    power: 160,
-    price: 32000,
-    features: ['ProPilot Assist', 'e-Pedal'],
-    color: 'Blue',
-    version: 'SV Plus',
-    onPromotion: true,
-  },
-  {
-    id: 4,
-    image: 'https://tse1.mm.bing.net/th/id/OIP.UuT9Dsg9n2wqzLeuSc9mXAHaEK?rs=1&pid=ImgDetMain&o=7&rm=3',
-    make: 'Chevrolet',
-    model: 'Bolt EV',
-    year: 2023,
-    range: 416,
-    power: 200,
-    price: 31000,
-    features: ['Super Cruise', 'Wireless Charging'],
-    color: 'Black',
-    version: 'LT',
-    onPromotion: false,
-  },
-  {
-    id: 5,
-    image: 'https://www.automaistv.com.br/wp-content/uploads/2022/09/ford_mustang_mach-e_gt_performance_edition_47_edited.jpg',
-    make: 'Ford',
-    model: 'Mustang Mach-E',
-    year: 2023,
-    range: 490,
-    power: 346,
-    price: 43000,
-    features: ['BlueCruise', 'B&O Sound'],
-    color: 'Gray',
-    version: 'Premium',
-    onPromotion: true,
-  },
-];
-
-// Mock promotions
-// const mockPromotions = [
-//   {
-//     id: 1,
-//     title: 'Tesla Model 3 10% Discount',
-//     description: 'Special holiday offer',
-//     validFrom: '2023-10-01',
-//     validTo: '2023-12-31',
-//     cta: 'Apply Now',
-//   },
-//   {
-//     id: 2,
-//     title: 'Nissan Leaf Cashback',
-//     description: '$2000 off select models',
-//     validFrom: '2023-11-01',
-//     validTo: '2023-11-30',
-//     cta: 'Claim',
-//   },
-// ];
-
 const ManageVehicle = () => {
   // States
-  const [vehicles] = useState(mockVehicles);
-  const [filteredVehicles, setFilteredVehicles] = useState(vehicles);
+  const [vehicles, setVehicles] = useState([]);
+  const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [selectedVehicles, setSelectedVehicles] = useState([]);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [isCompareModalVisible, setIsCompareModalVisible] = useState(false);
   const [sortConfig, setSortConfig] = useState({ field: null, order: null });
- // const [promotions] = useState(mockPromotions);
-
-  // Filter states
+  const [searchText, setSearchText] = useState('');
+  const debouncedSearchText = useDebounce(searchText, 300);
   const [brandFilter, setBrandFilter] = useState([]);
-  const [modelSearch, setModelSearch] = useState('');
-  const debouncedModelSearch = useDebounce(modelSearch, 300);
   const [colorFilter, setColorFilter] = useState([]);
   const [featureFilters, setFeatureFilters] = useState([]);
-  const [priceRange, setPriceRange] = useState([0, 100000]);
+  const [priceRange, setPriceRange] = useState([0, 2000000000]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [loading, setLoading] = useState(false);
+
+  // Fetch vehicles and brand names
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      setLoading(true);
+      try {
+        // Fetch all vehicles
+        const vehicleData = await ManageVehicleService.getAllVehicle();
+
+        // Create a cache for brand names to avoid duplicate API calls
+        const brandCache = new Map();
+
+        // Fetch brand names for unique brandIds
+        const uniqueBrandIds = [...new Set(vehicleData.map(item => item.brandId))];
+        await Promise.all(uniqueBrandIds.map(async (brandId) => {
+          try {
+            const brandData = await ManageBrandService.GetBrandById(brandId);
+            brandCache.set(brandId, brandData.brandName || 'Unknown');
+          } catch (error) {
+            console.error(`Failed to fetch brand ${brandId}:`, error);
+            brandCache.set(brandId, 'Unknown');
+          }
+        }));
+
+        // Format vehicle data with brand names
+        const formattedData = vehicleData.map(item => ({
+          id: item.vehicleId,
+          make: brandCache.get(item.brandId) || 'Unknown',
+          model: item.modelName,
+          year: item.year,
+          range: item.rangePerCharge ? parseInt(item.rangePerCharge) : 0,
+          power: item.horsepower,
+          price: item.price,
+          features: [
+            item.batteryCapacity ? `Battery: ${item.batteryCapacity}` : null,
+            item.airConditioning ? `AC: ${item.airConditioning}` : null,
+            item.speakerSystem ? `Audio: ${item.speakerSystem}` : null,
+            item.headlights ? `Headlights: ${item.headlights}` : null,
+            item.cameras ? `Cameras: ${item.cameras}` : null,
+          ].filter(Boolean),
+          color: item.color,
+          version: item.version,
+          image: item.imageUrls && item.imageUrls.length > 0 ? item.imageUrls[0] : '',
+          onPromotion: false, // Not in API response; adjust if promotion data is available
+        }));
+
+        setVehicles(formattedData);
+        setFilteredVehicles(formattedData);
+      } catch (error) {
+        console.error('Failed to fetch vehicles:', error);
+        toast.error('Failed to fetch vehicles');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
 
   // Derived data
   const allBrands = useMemo(() => [...new Set(vehicles.map(v => v.make))], [vehicles]);
@@ -147,13 +110,16 @@ const ManageVehicle = () => {
   // Statistics
   const totalModels = useMemo(() => new Set(vehicles.map(v => `${v.make} ${v.model}`)).size, [vehicles]);
   const onPromotion = useMemo(() => vehicles.filter(v => v.onPromotion).length, [vehicles]);
-  const avgPrice = useMemo(() => Math.round(vehicles.reduce((sum, v) => sum + v.price, 0) / vehicles.length), [vehicles]);
+  const avgPrice = useMemo(() => {
+    if (vehicles.length === 0) return 0;
+    return Math.round(vehicles.reduce((sum, v) => sum + v.price, 0) / vehicles.length);
+  }, [vehicles]);
 
   // Filtered and sorted data
   const processedData = useMemo(() => {
     let data = vehicles.filter(v => {
       if (brandFilter.length > 0 && !brandFilter.includes(v.make)) return false;
-      if (debouncedModelSearch && !v.model.toLowerCase().includes(debouncedModelSearch.toLowerCase())) return false;
+      if (debouncedSearchText && !v.model.toLowerCase().includes(debouncedSearchText.toLowerCase())) return false;
       if (colorFilter.length > 0 && !colorFilter.includes(v.color)) return false;
       if (featureFilters.length > 0 && !featureFilters.every(f => v.features.includes(f))) return false;
       if (v.price < priceRange[0] || v.price > priceRange[1]) return false;
@@ -170,23 +136,23 @@ const ManageVehicle = () => {
         return aVal < bVal ? -1 : 1;
       });
     }
-console.log( filteredVehicles);
+
     setFilteredVehicles(data);
     return data;
-  }, [vehicles, brandFilter, debouncedModelSearch, colorFilter, featureFilters, priceRange, sortConfig]);
+  }, [vehicles, brandFilter, debouncedSearchText, colorFilter, featureFilters, priceRange, sortConfig]);
 
   // Active filters for chips
   const activeFilters = useMemo(() => {
     const filters = [];
     brandFilter.forEach(b => filters.push({ type: 'brand', value: b, label: `Brand: ${b}` }));
-    if (debouncedModelSearch) filters.push({ type: 'model', value: debouncedModelSearch, label: `Model: ${debouncedModelSearch}` });
+    if (debouncedSearchText) filters.push({ type: 'model', value: debouncedSearchText, label: `Model: ${debouncedSearchText}` });
     colorFilter.forEach(c => filters.push({ type: 'color', value: c, label: `Color: ${c}` }));
     featureFilters.forEach(f => filters.push({ type: 'feature', value: f, label: `Feature: ${f}` }));
-    if (priceRange[0] > 0 || priceRange[1] < 100000) {
-      filters.push({ type: 'price', value: priceRange, label: `Price: $${priceRange[0]}-$${priceRange[1]}` });
+    if (priceRange[0] > 0 || priceRange[1] < 2000000000) {
+      filters.push({ type: 'price', value: priceRange, label: `Price: ${priceRange[0].toLocaleString()}-${priceRange[1].toLocaleString()} VND` });
     }
     return filters;
-  }, [brandFilter, debouncedModelSearch, colorFilter, featureFilters, priceRange]);
+  }, [brandFilter, debouncedSearchText, colorFilter, featureFilters, priceRange]);
 
   const removeFilter = useCallback((filter) => {
     switch (filter.type) {
@@ -194,7 +160,7 @@ console.log( filteredVehicles);
         setBrandFilter(prev => prev.filter(b => b !== filter.value));
         break;
       case 'model':
-        setModelSearch('');
+        setSearchText('');
         break;
       case 'color':
         setColorFilter(prev => prev.filter(c => c !== filter.value));
@@ -203,7 +169,7 @@ console.log( filteredVehicles);
         setFeatureFilters(prev => prev.filter(f => f !== filter.value));
         break;
       case 'price':
-        setPriceRange([0, 100000]);
+        setPriceRange([0, 2000000000]);
         break;
       default:
         break;
@@ -218,15 +184,15 @@ console.log( filteredVehicles);
       render: (img) => <Image width={50} height={50} src={img} preview={false} />,
       width: 80,
     },
-    { title: 'Make', dataIndex: 'make', width: 100 },
-    { title: 'Model', dataIndex: 'model', width: 120 },
+    { title: 'Make', dataIndex: 'make', width: 100, sorter: true },
+    { title: 'Model', dataIndex: 'model', width: 120, sorter: true },
     { title: 'Year', dataIndex: 'year', sorter: true, width: 80 },
     { title: 'Range (km)', dataIndex: 'range', sorter: true, width: 100 },
-    { title: 'Power (kW)', dataIndex: 'power', sorter: true, width: 100 },
+    { title: 'Power (hp)', dataIndex: 'power', sorter: true, width: 100 },
     {
       title: 'Price',
       dataIndex: 'price',
-      render: (price) => `$${price.toLocaleString()}`,
+      render: (price) => `${price.toLocaleString()} VND`,
       sorter: true,
       width: 120,
     },
@@ -269,6 +235,7 @@ console.log( filteredVehicles);
   // Table change handler for sorting
   const handleTableChange = useCallback((pagination, filters, sorter) => {
     setSortConfig(sorter);
+    setCurrentPage(pagination.current);
   }, []);
 
   // Export CSV
@@ -290,7 +257,7 @@ console.log( filteredVehicles);
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'ev-vehicles.csv';
+    link.download = 'vehicles.csv';
     link.click();
     URL.revokeObjectURL(url);
   }, [processedData]);
@@ -305,29 +272,6 @@ console.log( filteredVehicles);
     showUploadList: true,
   };
 
-  // Calendar date cell render for promotions
-  // const getListData = useCallback((value) => {
-  //   const currentDate = dayjs(value.format('YYYY-MM-DD'));
-  //   return promotions
-  //     .filter(p => {
-  //       const from = dayjs(p.validFrom);
-  //       const to = dayjs(p.validTo);
-  //       return currentDate.isAfter(from) && currentDate.isBefore(to);
-  //     })
-  //     .map(p => ({ content: p.title }));
-  // }, [promotions]);
-
-  // const dateCellRender = useCallback((value) => {
-  //   const listData = getListData(value);
-  //   return (
-  //     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-  //       {listData.map((item, idx) => (
-  //         <li key={idx} style={{ margin: '4px 0', color: '#1890ff' }}>{item.content}</li>
-  //       ))}
-  //     </ul>
-  //   );
-  // }, [getListData]);
-
   // Detail modal content
   const detailContent = selectedVehicle ? (
     <div role="region" aria-label="Vehicle details">
@@ -335,8 +279,8 @@ console.log( filteredVehicles);
       <h3>{selectedVehicle.make} {selectedVehicle.model}</h3>
       <p><strong>Year:</strong> {selectedVehicle.year}</p>
       <p><strong>Range:</strong> {selectedVehicle.range} km</p>
-      <p><strong>Power:</strong> {selectedVehicle.power} kW</p>
-      <p><strong>Price:</strong> ${selectedVehicle.price.toLocaleString()}</p>
+      <p><strong>Power:</strong> {selectedVehicle.power} hp</p>
+      <p><strong>Price:</strong> {selectedVehicle.price.toLocaleString()} VND</p>
       <p><strong>Color:</strong> {selectedVehicle.color}</p>
       <p><strong>Version:</strong> {selectedVehicle.version}</p>
       <p><strong>Features:</strong> {selectedVehicle.features.join(', ')}</p>
@@ -354,15 +298,20 @@ console.log( filteredVehicles);
         <Image src={vehicle.image} width="100%" height={150} preview={false} />
         <p><strong>Year:</strong> {vehicle.year}</p>
         <p><strong>Range:</strong> {vehicle.range} km</p>
-        <p><strong>Power:</strong> {vehicle.power} kW</p>
-        <p><strong>Price:</strong> ${vehicle.price.toLocaleString()}</p>
+        <p><strong>Power:</strong> {vehicle.power} hp</p>
+        <p><strong>Price:</strong> {vehicle.price.toLocaleString()} VND</p>
         <p><strong>Features:</strong> {vehicle.features.slice(0, 3).join(', ')}</p>
       </Card>
     </Col>
   ));
 
+  // Calculate pagination details
+  const totalVehicles = filteredVehicles.length;
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, totalVehicles);
+
   return (
-    <div className="ev-dashboard" role="main" aria-label="EV Products Dashboard">
+    <div className="ev-dashboard" role="main" aria-label="Vehicle Management Dashboard">
       {/* Statistics at top */}
       <Row gutter={16} className="stats-row">
         <Col span={8}>
@@ -372,18 +321,18 @@ console.log( filteredVehicles);
           <Statistic title="Vehicles on Promotion" value={onPromotion} />
         </Col>
         <Col span={8}>
-          <Statistic title="Average Price" value={avgPrice} prefix="$" />
+          <Statistic title="Average Price" value={avgPrice} prefix="VND " />
         </Col>
       </Row>
 
       <Row gutter={16}>
-        {/* Main content: Filters, Search, Table */}
         <Col xs={24} lg={24}>
           <Card title="Vehicle Catalog" className="main-card">
             {/* Global Search */}
             <Search
-              placeholder="Search by model or name (debounced)"
-              onSearch={setModelSearch}
+              placeholder="Search by model name"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
               enterButton
               allowClear
               aria-label="Search vehicles"
@@ -422,9 +371,9 @@ console.log( filteredVehicles);
                 range
                 value={priceRange}
                 min={0}
-                max={100000}
+                max={2000000000}
                 onChange={setPriceRange}
-                tipFormatter={(v) => `$${v}`}
+                tipFormatter={(v) => `${v.toLocaleString()} VND`}
                 aria-label="Price range filter"
                 style={{ width: 200 }}
               />
@@ -444,18 +393,34 @@ console.log( filteredVehicles);
               ))}
             </div>
 
-            {/* Table */}
-            <Table
-              rowSelection={rowSelection}
-              columns={columns}
-              dataSource={processedData}
-              onRow={onRow}
-              onChange={handleTableChange}
-              pagination={{ pageSize: 10, showSizeChanger: false }}
-              rowKey="id"
-              bordered
-              aria-label="Vehicles table"
-            />
+            {/* Pagination Summary and Table */}
+        
+        
+               <Col>
+                <Text>
+                  Showing {startIndex} to {endIndex} of {totalVehicles} vehicles
+                </Text>
+              </Col>
+                <Table
+                  rowSelection={rowSelection}
+                  columns={columns}
+                  dataSource={processedData}
+                  onRow={onRow}
+                  onChange={handleTableChange}
+                  pagination={{
+                    pageSize: pageSize,
+                    current: currentPage,
+                    total: totalVehicles,
+                    showSizeChanger: false,
+                    style: { margin: 0 },
+                  }}
+                  rowKey="id"
+                  bordered
+                  loading={loading}
+                  aria-label="Vehicles table"
+                />
+            
+        
 
             {/* Actions */}
             <div className="actions" role="toolbar" aria-label="Table actions">
@@ -478,36 +443,6 @@ console.log( filteredVehicles);
             </div>
           </Card>
         </Col>
-
-        {/* Sidebar: Promotions and Calendar */}
-        {/* <Col xs={24} lg={8}>
-          <Card title="Promotions" className="sidebar-card" style={{ marginBottom: 16 }}>
-            <List
-              dataSource={promotions}
-              renderItem={promo => (
-                <List.Item key={promo.id}>
-                  <List.Item.Meta
-                    title={promo.title}
-                    description={promo.description}
-                  />
-                  <div>
-                    <span>Valid: {promo.validFrom} - {promo.validTo}</span>
-                    <Button size="small" type="link">{promo.cta}</Button>
-                  </div>
-                </List.Item>
-              )}
-              aria-label="Current promotions"
-            />
-          </Card>
-
-          <Card title="Promotion Calendar" className="calendar-card">
-            <Calendar
-              fullscreen={false}
-              dateCellRender={dateCellRender}
-              aria-label="Promotion calendar"
-            />
-          </Card>
-        </Col> */}
       </Row>
 
       {/* Detail Modal */}
