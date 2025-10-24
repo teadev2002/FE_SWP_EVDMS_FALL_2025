@@ -35,7 +35,16 @@ const ManageStoreService =  {
       console.error("Error deleting store:", error);
       throw error;
     } 
-  },       
+  }, 
+  getStoreById: async (storeId) => {
+    try {
+      const response = await apiClient.get(`Store/${storeId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching store by ID:", error);
+      throw error;
+    } 
+  },      
 }
 
 export default ManageStoreService;

@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Table, Button, Modal, Form, Input, Space, Typography, Popconfirm, Row, Col,
+  Table, Button, Modal, Form, Input, Space, Typography, Popconfirm, Row, Col, Select,
 } from 'antd';
 import {
   UserOutlined, MailOutlined, PhoneOutlined, PlusOutlined,
-  EditOutlined, DeleteOutlined, IdcardOutlined, SearchOutlined,
+  EditOutlined, DeleteOutlined, IdcardOutlined, SearchOutlined, LockOutlined,
 } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import ManageDealerService from '../../../services/ManageDealer/ManageDealerService';
-import dayjs from 'dayjs';
+import ManageStoreService from '../../../services/ManageStore/ManageStoreService';
 
 const { Title } = Typography;
+const { Option } = Select;
 
 const DealerManage = () => {
   const [dealers, setDealers] = useState([]);
+  const [storeNames, setStoreNames] = useState({}); // Store ID to storeName mapping
+  const [stores, setStores] = useState([]); // List of stores for dropdown
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingDealer, setEditingDealer] = useState(null);
   const [form] = Form.useForm();
@@ -26,12 +29,10 @@ const DealerManage = () => {
       setLoading(true);
       try {
         const data = await ManageDealerService.getAllDealers();
-        // Map dealerId to id for frontend consistency and add lastUpdated
         const mappedData = data.map(dealer => ({
           ...dealer,
           id: dealer.dealerId,
           key: dealer.dealerId.toString(),
-          lastUpdated: dealer.lastUpdated || dayjs().format('YYYY-MM-DD'),
         }));
         setDealers(mappedData);
       } catch (error) {
@@ -40,6 +41,24 @@ const DealerManage = () => {
       setLoading(false);
     };
     fetchDealers();
+  }, []);
+
+  // Fetch stores for dropdown and store names for table
+  useEffect(() => {
+    const fetchStores = async () => {
+      try {
+        const storeData = await ManageStoreService.getAllStores();
+        setStores(storeData);
+        const storeNameMap = {};
+        storeData.forEach(store => {
+          storeNameMap[store.storeId] = store.storeName || `Store ${store.storeId}`;
+        });
+        setStoreNames(storeNameMap);
+      } catch (error) {
+        toast.error('Failed to load stores', error);
+      }
+    };
+    fetchStores();
   }, []);
 
   // Handle search
@@ -57,7 +76,6 @@ const DealerManage = () => {
           ...dealer,
           id: dealer.dealerId,
           key: dealer.dealerId.toString(),
-          lastUpdated: dealer.lastUpdated || dayjs().format('YYYY-MM-DD'),
         }));
         setDealers(mappedData);
       } catch (error) {
@@ -84,14 +102,21 @@ const DealerManage = () => {
       const values = await form.validateFields();
       setLoading(true);
       if (editingDealer) {
-        // Update existing dealer
+        // Update existing dealer using UpdateDealer API
+        const updatedDealerData = {
+          fullName: values.fullName,
+          role: values.role,
+          phone: values.phone,
+          email: values.email,
+          address: values.address,
+          storeId: values.storeId,
+        };
+        await ManageDealerService.UpdateDealer(editingDealer.dealerId, updatedDealerData);
         const updatedDealer = {
-          ...editingDealer,
-          ...values,
+          ...updatedDealerData,
           dealerId: editingDealer.dealerId,
           id: editingDealer.dealerId,
           key: editingDealer.dealerId.toString(),
-          lastUpdated: dayjs().format('YYYY-MM-DD'),
         };
         setDealers(
           dealers.map((dealer) =>
@@ -100,14 +125,22 @@ const DealerManage = () => {
         );
         toast.success('Dealer updated successfully');
       } else {
-        // Create new dealer
-        const newId = Math.max(...dealers.map(d => d.dealerId), 0) + 1;
+        // Create new dealer using AddDealer API
+        const newDealerData = {
+          fullName: values.fullName,
+          role: values.role,
+          password: values.password,
+          phone: values.phone,
+          email: values.email,
+          address: values.address,
+          storeId: values.storeId,
+        };
+        const response = await ManageDealerService.AddDealer(newDealerData);
         const newDealer = {
-          ...values,
-          dealerId: newId,
-          id: newId,
-          key: newId.toString(),
-          lastUpdated: dayjs().format('YYYY-MM-DD'),
+          ...newDealerData,
+          dealerId: response.dealerId || Math.max(...dealers.map(d => d.dealerId), 0) + 1,
+          id: response.dealerId || Math.max(...dealers.map(d => d.dealerId), 0) + 1,
+          key: (response.dealerId || Math.max(...dealers.map(d => d.dealerId), 0) + 1).toString(),
         };
         setDealers([...dealers, newDealer]);
         toast.success('Dealer added successfully');
@@ -140,14 +173,19 @@ const DealerManage = () => {
   };
 
   // Handle delete
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (!id) {
       toast.error('Cannot delete dealer: Invalid dealer ID');
       return;
     }
     setLoading(true);
-    setDealers(dealers.filter((dealer) => dealer.id !== id));
-    toast.success('Dealer deleted successfully');
+    try {
+      await ManageDealerService.DeleteDealer(id);
+      setDealers(dealers.filter((dealer) => dealer.id !== id));
+      toast.success('Dealer deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete dealer', error);
+    }
     setLoading(false);
   };
 
@@ -180,7 +218,7 @@ const DealerManage = () => {
       sorter: (a, b) => a.role.localeCompare(b.role),
       filters: [
         { text: 'Dealer_Staff', value: 'Dealer_Staff' },
-        { text: 'Manager', value: 'Manager' },
+        { text: 'Dealer_Manager', value: 'Dealer_Manager' },
       ],
       onFilter: (value, record) => record.role === value,
     },
@@ -202,15 +240,10 @@ const DealerManage = () => {
       key: 'address',
     },
     {
-      title: 'Store ID',
+      title: 'Store Name',
       dataIndex: 'storeId',
       key: 'storeId',
-    },
-    {
-      title: 'Last Updated',
-      dataIndex: 'lastUpdated',
-      key: 'lastUpdated',
-      sorter: (a, b) => dayjs(a.lastUpdated).unix() - dayjs(b.lastUpdated).unix(),
+      render: (storeId) => storeNames[storeId] || `Store ${storeId}`,
     },
     {
       title: 'Actions',
@@ -318,17 +351,32 @@ const DealerManage = () => {
           <Form.Item
             name="role"
             label="Role"
-            rules={[
-              { required: true, message: 'Please enter the role' },
-              { min: 2, message: 'Role must be at least 2 characters' },
-            ]}
+            rules={[{ required: true, message: 'Please select a role' }]}
           >
-            <Input
-              prefix={<IdcardOutlined style={{ color: '#007BFF' }} />}
-              placeholder="Enter role (e.g., Dealer_Staff)"
+            <Select
+              placeholder="Select role"
               style={inputStyle}
-            />
+            >
+              <Option value="Dealer_Staff">Dealer_Staff</Option>
+              <Option value="Dealer_Manager">Dealer_Manager</Option>
+            </Select>
           </Form.Item>
+          {!editingDealer && (
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[
+                { required: true, message: 'Please enter the password' },
+                { min: 6, message: 'Password must be at least 6 characters' },
+              ]}
+            >
+              <Input.Password
+                prefix={<LockOutlined style={{ color: '#007BFF' }} />}
+                placeholder="Enter password"
+                style={inputStyle}
+              />
+            </Form.Item>
+          )}
           <Form.Item
             name="email"
             label="Email"
@@ -376,17 +424,24 @@ const DealerManage = () => {
           </Form.Item>
           <Form.Item
             name="storeId"
-            label="Store ID"
-            rules={[
-              { required: true, message: 'Please enter the store ID' },
-              { type: 'number', message: 'Store ID must be a number', transform: (value) => Number(value) },
-            ]}
+            label="Store Name"
+            rules={[{ required: true, message: 'Please select a store' }]}
           >
-            <Input
-              type="number"
-              placeholder="Enter store ID"
+            <Select
+              placeholder="Select store"
               style={inputStyle}
-            />
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {stores.map(store => (
+                <Option key={store.storeId} value={store.storeId}>
+                  {store.storeName}
+                </Option>
+              ))}
+            </Select>
           </Form.Item>
         </Form>
       </Modal>
