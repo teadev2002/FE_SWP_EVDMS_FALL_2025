@@ -41,8 +41,7 @@ const items = [
   ]
 
   ),
-  getItem('Dealer', 'dealer-management', <UserOutlined />),
-
+   
   getItem('Report', 'report', <FileOutlined />, [
     getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),
     getItem('Customer Debt Report', 'report/customer-debt-report', <FileOutlined />),

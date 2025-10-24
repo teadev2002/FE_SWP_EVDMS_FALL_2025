@@ -17,7 +17,7 @@ import PaymentManagement from './pages/dealerStaffManager/sale/PaymentManagement
 import CustomerProfile from './pages/dealerStaffManager/customer/CustomerProfile.jsx';
 import StaffSalesReport from './pages/dealerStaffManager/Report/StaffSalesReport.jsx';
 import DebtReports from './pages/dealerStaffManager/Report/DebtReports.jsx';
-import Brands from './components/dashboard/brands.jsx';
+import  Dealers from './components/dashboard/dealers.jsx';
 import VehicleCatalog from './pages/evmStaffAdmin/ProductNDistribution/VehicleCatalogManage/VehicleCatalog.jsx';
 import InventoryManage from './pages/evmStaffAdmin/ProductNDistribution/InventoryNAllocation/InventoryManagement/InventoryManage.jsx';
 import VehicleAllocationManage from './pages/evmStaffAdmin/ProductNDistribution/InventoryNAllocation/VehicleAllocation/VehicleAllocationManage.jsx';
@@ -101,16 +101,13 @@ function App() {
           path: "report/customer-debt-report",
           element: <DebtReports />,
         },
-      {
-        path: "dealer-management",
-        element: <DealerManage />,
-      }
+      
 
       ],
     },
     {
-      path: "/brands",
-      element: <Brands />,
+      path: "/dealers",
+      element: <Dealers />,
       children: [
         {
           path: "vehicle-catalog",
@@ -163,6 +160,10 @@ function App() {
         {
           path: "store-management",
           element: <StoreManage />,
+        },
+        {
+        path: "dealer-management",
+        element: <DealerManage />,
         },
 
       ],
