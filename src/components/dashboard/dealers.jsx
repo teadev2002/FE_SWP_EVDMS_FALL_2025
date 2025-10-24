@@ -36,7 +36,7 @@ const items = [
     getItem('Debt', 'agency-management/debt-management', <FileOutlined />),
   ]),
     getItem('Store Management', 'store-management',  <FileOutlined />),
-    getItem('Dealer Management', 'dealer-management', <UserOutlined />),
+     
   // getItem('Account Management', 'account-management', <DesktopOutlined />),
   // getItem('Reports & Analysis', 'reports-analysis', <PieChartOutlined /> ),
   // getItem('Inventory & Consumtion', 'inventory-&-consumtion-report', <DesktopOutlined />),

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Table, Button, Modal, Form, Input, Space, Typography, Popconfirm,
+  Table, Button, Modal, Form, Input, Space, Typography, Popconfirm, Row, Col,
 } from 'antd';
 import {
   UserOutlined, MailOutlined, PhoneOutlined, PlusOutlined,
-  EditOutlined, DeleteOutlined, IdcardOutlined,
+  EditOutlined, DeleteOutlined, IdcardOutlined, SearchOutlined,
 } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import ManageDealerService from '../../../services/ManageDealer/ManageDealerService';
+import dayjs from 'dayjs';
 
 const { Title } = Typography;
 
@@ -17,6 +18,7 @@ const DealerManage = () => {
   const [editingDealer, setEditingDealer] = useState(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch dealers using ManageDealerService
   useEffect(() => {
@@ -24,10 +26,12 @@ const DealerManage = () => {
       setLoading(true);
       try {
         const data = await ManageDealerService.getAllDealers();
-        // Map dealerId to id for frontend consistency
+        // Map dealerId to id for frontend consistency and add lastUpdated
         const mappedData = data.map(dealer => ({
           ...dealer,
           id: dealer.dealerId,
+          key: dealer.dealerId.toString(),
+          lastUpdated: dealer.lastUpdated || dayjs().format('YYYY-MM-DD'),
         }));
         setDealers(mappedData);
       } catch (error) {
@@ -37,6 +41,32 @@ const DealerManage = () => {
     };
     fetchDealers();
   }, []);
+
+  // Handle search
+  useEffect(() => {
+    const fetchDealers = async () => {
+      setLoading(true);
+      try {
+        const data = await ManageDealerService.getAllDealers();
+        const filteredData = data.filter((dealer) =>
+          dealer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          dealer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          dealer.phone.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        const mappedData = filteredData.map(dealer => ({
+          ...dealer,
+          id: dealer.dealerId,
+          key: dealer.dealerId.toString(),
+          lastUpdated: dealer.lastUpdated || dayjs().format('YYYY-MM-DD'),
+        }));
+        setDealers(mappedData);
+      } catch (error) {
+        toast.error('Failed to load dealers', error);
+      }
+      setLoading(false);
+    };
+    fetchDealers();
+  }, [searchTerm]);
 
   // Styles
   const buttonStyle = {
@@ -58,8 +88,10 @@ const DealerManage = () => {
         const updatedDealer = {
           ...editingDealer,
           ...values,
-          dealerId: editingDealer.dealerId, // Preserve dealerId
-          id: editingDealer.dealerId, // Map dealerId to id
+          dealerId: editingDealer.dealerId,
+          id: editingDealer.dealerId,
+          key: editingDealer.dealerId.toString(),
+          lastUpdated: dayjs().format('YYYY-MM-DD'),
         };
         setDealers(
           dealers.map((dealer) =>
@@ -69,8 +101,14 @@ const DealerManage = () => {
         toast.success('Dealer updated successfully');
       } else {
         // Create new dealer
-        const newId = dealers.length + 1;
-        const newDealer = { ...values, dealerId: newId, id: newId };
+        const newId = Math.max(...dealers.map(d => d.dealerId), 0) + 1;
+        const newDealer = {
+          ...values,
+          dealerId: newId,
+          id: newId,
+          key: newId.toString(),
+          lastUpdated: dayjs().format('YYYY-MM-DD'),
+        };
         setDealers([...dealers, newDealer]);
         toast.success('Dealer added successfully');
       }
@@ -133,21 +171,30 @@ const DealerManage = () => {
       title: 'Full Name',
       dataIndex: 'fullName',
       key: 'fullName',
+      sorter: (a, b) => a.fullName.localeCompare(b.fullName),
     },
     {
       title: 'Role',
       dataIndex: 'role',
       key: 'role',
+      sorter: (a, b) => a.role.localeCompare(b.role),
+      filters: [
+        { text: 'Dealer_Staff', value: 'Dealer_Staff' },
+        { text: 'Manager', value: 'Manager' },
+      ],
+      onFilter: (value, record) => record.role === value,
     },
     {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
       title: 'Phone',
       dataIndex: 'phone',
       key: 'phone',
+      sorter: (a, b) => a.phone.localeCompare(b.phone),
     },
     {
       title: 'Address',
@@ -158,6 +205,12 @@ const DealerManage = () => {
       title: 'Store ID',
       dataIndex: 'storeId',
       key: 'storeId',
+    },
+    {
+      title: 'Last Updated',
+      dataIndex: 'lastUpdated',
+      key: 'lastUpdated',
+      sorter: (a, b) => dayjs(a.lastUpdated).unix() - dayjs(b.lastUpdated).unix(),
     },
     {
       title: 'Actions',
@@ -196,28 +249,42 @@ const DealerManage = () => {
   ];
 
   return (
-    <div style={{ padding: '24px', background: '#f0f2f5', minHeight: '100vh' }}>
+    <div>
       <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
         Dealer Management
       </Title>
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={handleCreate}
-        style={{ ...buttonStyle, background: '#007BFF', borderColor: '#007BFF', marginBottom: 16 }}
-        onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-        onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-      >
-        Add Dealer
-      </Button>
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={20}>
+          <Input
+            prefix={<SearchOutlined style={{ color: '#007BFF' }} />}
+            placeholder="Search by Name, Email, or Phone"
+            style={inputStyle}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </Col>
+        <Col span={4}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreate}
+            style={{ ...buttonStyle, background: '#007BFF', borderColor: '#007BFF' }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            Add Dealer
+          </Button>
+        </Col>
+      </Row>
       <Table
         columns={columns}
         dataSource={dealers}
-        rowKey="id"
-        pagination={{ pageSize: 5 }}
-        bordered
+        rowKey="key"
         loading={loading}
-        style={{ background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' }}
+        style={{ marginTop: 16, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' }}
+        pagination={{
+          pageSize: 10,
+          showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Dealer${total !== 1 ? 's' : ''}`,
+        }}
       />
       <Modal
         title={editingDealer ? 'Edit Dealer' : 'Add Dealer'}
@@ -258,7 +325,7 @@ const DealerManage = () => {
           >
             <Input
               prefix={<IdcardOutlined style={{ color: '#007BFF' }} />}
-              placeholder="Enter role (e.g., Dealer_staff)"
+              placeholder="Enter role (e.g., Dealer_Staff)"
               style={inputStyle}
             />
           </Form.Item>

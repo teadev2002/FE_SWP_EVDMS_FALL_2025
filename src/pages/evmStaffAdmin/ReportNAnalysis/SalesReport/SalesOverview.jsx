@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs, Card, Typography } from 'antd';
+import { Tabs, Typography } from 'antd';
 import SalesByRegion from './SalesByRegion/SalesByRegion';
 import SalesByDealer from './SalesByDealer/SalesByDealer';
 
@@ -10,10 +10,7 @@ const SalesOverview = () => {
   return (
     <div>
       <Title level={2}>Sales Overview</Title>
-      <Card
-       variant='borderless'
-        style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
-      >
+     
         <Tabs defaultActiveKey="1" type="card">
           <TabPane tab="Sales by Region" key="1">
             <SalesByRegion />
@@ -22,7 +19,7 @@ const SalesOverview = () => {
             <SalesByDealer />
           </TabPane>
         </Tabs>
-      </Card>
+       
     </div>
   );
 };

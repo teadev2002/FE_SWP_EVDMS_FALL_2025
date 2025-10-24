@@ -146,10 +146,6 @@ function App() {
           element: <DebtManagement />,
         },
         {
-          path: "account-management",
-          element: <AccountManagement />,
-        },
-        {
           path: "reports-analysis",
           element: <SalesOverview />,
         },
@@ -161,10 +157,7 @@ function App() {
           path: "store-management",
           element: <StoreManage />,
         },
-        {
-        path: "dealer-management",
-        element: <DealerManage />,
-        },
+     
 
       ],
     },
