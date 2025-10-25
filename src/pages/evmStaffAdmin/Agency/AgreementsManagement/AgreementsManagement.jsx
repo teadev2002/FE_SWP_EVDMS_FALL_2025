@@ -1,118 +1,120 @@
-import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Space, Typography, Card, message, DatePicker } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FilterOutlined } from '@ant-design/icons';
+// PUT
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Modal, Form, Input, Select, Space, Typography, Card, message } from 'antd';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import ManageServiceSaleAgreements from '../../../../services/ManageAgreements/ManageServiceSaleAgreements';
+import { toast } from 'react-toastify';
 
 const { Title } = Typography;
 const { Option } = Select;
+const { Search } = Input;
 
 const AgreementsManagement = () => {
-  // Sample agreement data
-  const [agreementsData, setAgreementsData] = useState([
-    {
-      key: '1',
-      agreementId: 'AGR-001',
-      type: 'Dealer Contract',
-      party: 'City Y Dealership',
-      status: 'Active',
-      agreementDate: '2025-09-01',
-      details: 'Exclusive EV distribution for City Y',
-    },
-    {
-      key: '2',
-      agreementId: 'AGR-002',
-      type: 'Customer Purchase',
-      party: 'John Doe',
-      status: 'Pending',
-      agreementDate: '2025-09-15',
-      details: 'Purchase of EcoVolt X1',
-    },
-    {
-      key: '3',
-      agreementId: 'AGR-003',
-      type: 'Service Contract',
-      party: 'City Z Service Center',
-      status: 'Expired',
-      agreementDate: '2025-06-01',
-      details: 'Maintenance for EcoVolt S2 fleet',
-    },
-  ]);
-
-  // State for modal, form, and filters
+  const [agreementsData, setAgreementsData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingKey, setEditingKey] = useState(null);
-  const [typeFilter, setTypeFilter] = useState(null);
-  const [statusFilter, setStatusFilter] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [form] = Form.useForm();
 
-  // Show modal for adding or editing
-  const showModal = (record = null) => {
-    if (record) {
-      form.setFieldsValue({
-        ...record,
-        agreementDate: record.agreementDate ? dayjs(record.agreementDate) : null,
-      });
-      setEditingKey(record.key);
-    } else {
-      form.resetFields();
-      setEditingKey(null);
-    }
+  // Fetch agreements on component mount
+  useEffect(() => {
+    const fetchAgreements = async () => {
+      setLoading(true);
+      try {
+        const data = await ManageServiceSaleAgreements.getAllSaleAgreements();
+        // Map API response to table data
+        const formattedData = data.map((item) => ({
+          key: item.agreementId.toString(),
+          agreementId: item.agreementId.toString(),
+          type: 'Customer Purchase',
+          party: item.customerName,
+          status: item.status,
+          agreementDate: item.agreementDate,
+          details: item.termsAndConditions,
+        }));
+        setAgreementsData(formattedData);
+        setFilteredData(formattedData); // Initialize filtered data
+      } catch (error) {
+        message.error('Failed to fetch agreements: ' + error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAgreements();
+  }, []);
+
+  // Handle search input
+  const handleSearch = (value) => {
+    setSearchQuery(value);
+    const lowerCaseQuery = value.toLowerCase();
+    const filtered = agreementsData.filter(
+      (item) =>
+        item.party.toLowerCase().includes(lowerCaseQuery) ||
+        item.details.toLowerCase().includes(lowerCaseQuery)
+    );
+    setFilteredData(filtered);
+  };
+
+  // Show modal for editing
+  const showModal = (record) => {
+    form.setFieldsValue({
+      status: record.status,
+      details: record.details,
+    });
+    setEditingKey(record.key);
     setIsModalVisible(true);
   };
 
-  // Handle form submission
-  const handleSubmit = (values) => {
+  // Handle form submission for editing
+  const handleSubmit = async (values) => {
     const formattedValues = {
-      ...values,
-      agreementDate: values.agreementDate ? values.agreementDate.format('YYYY-MM-DD') : null,
+      status: values.status,
+      termsAndConditions: values.details,
     };
-    if (editingKey) {
-      // Update existing record
-      setAgreementsData((prev) =>
-        prev.map((item) =>
-          item.key === editingKey ? { ...item, ...formattedValues } : item
+
+    try {
+      await ManageServiceSaleAgreements.editSaleAgreement(editingKey, formattedValues);
+      const updatedData = agreementsData.map((item) =>
+        item.key === editingKey
+          ? { ...item, status: values.status, details: values.details }
+          : item
+      );
+      setAgreementsData(updatedData);
+      setFilteredData(
+        updatedData.filter(
+          (item) =>
+            item.party.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.details.toLowerCase().includes(searchQuery.toLowerCase())
         )
       );
-      message.success('Agreement updated successfully');
-    } else {
-      // Add new record
-      setAgreementsData((prev) => [
-        ...prev,
-        { key: `${prev.length + 1}`, ...formattedValues },
-      ]);
-      message.success('Agreement added successfully');
+      toast.success('Agreement updated successfully');
+      setIsModalVisible(false);
+      form.resetFields();
+    } catch (error) {
+      toast.error('Failed to update agreement: ' + error.toast);
     }
-    setIsModalVisible(false);
-    form.resetFields();
   };
 
   // Handle delete
-  const handleDelete = (key) => {
-    setAgreementsData((prev) => prev.filter((item) => item.key !== key));
-    message.success('Agreement deleted successfully');
-  };
-
-  // Handle filters
-  const handleTypeFilter = (value) => {
-    setTypeFilter(value);
-    applyFilters(value, statusFilter);
-  };
-
-  const handleStatusFilter = (value) => {
-    setStatusFilter(value);
-    applyFilters(typeFilter, value);
-  };
-
-  // Apply filters
-  const applyFilters = (type, status) => {
-    let filteredData = [...agreementsData]; // Create a copy of the original data
-    if (type) {
-      filteredData = filteredData.filter((item) => item.type === type);
+  const handleDelete = async (key) => {
+    try {
+      await ManageServiceSaleAgreements.deleteSaleAgreement(key);
+      const updatedData = agreementsData.filter((item) => item.key !== key);
+      setAgreementsData(updatedData);
+      setFilteredData(
+        updatedData.filter(
+          (item) =>
+            item.party.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.details.toLowerCase().includes(searchQuery.toLowerCase())
+        )
+      );
+      toast.success('Agreement deleted successfully');
+    } catch (error) {
+      toast.error('Failed to delete agreement: ' + error.toast);
     }
-    if (status) {
-      filteredData = filteredData.filter((item) => item.status === status);
-    }
-    setAgreementsData(filteredData);
   };
 
   // Table columns
@@ -124,18 +126,7 @@ const AgreementsManagement = () => {
       sorter: (a, b) => a.agreementId.localeCompare(b.agreementId),
     },
     {
-      title: 'Type',
-      dataIndex: 'type',
-      key: 'type',
-      filters: [
-        { text: 'Dealer Contract', value: 'Dealer Contract' },
-        { text: 'Customer Purchase', value: 'Customer Purchase' },
-        { text: 'Service Contract', value: 'Service Contract' },
-      ],
-      onFilter: (value, record) => record.type === value,
-    },
-    {
-      title: 'Party',
+      title: 'Customer Name',
       dataIndex: 'party',
       key: 'party',
       sorter: (a, b) => a.party.localeCompare(b.party),
@@ -148,6 +139,7 @@ const AgreementsManagement = () => {
         { text: 'Active', value: 'Active' },
         { text: 'Pending', value: 'Pending' },
         { text: 'Expired', value: 'Expired' },
+        { text: 'Terminated', value: 'Terminated' },
       ],
       onFilter: (value, record) => record.status === value,
     },
@@ -155,7 +147,7 @@ const AgreementsManagement = () => {
       title: 'Agreement Date',
       dataIndex: 'agreementDate',
       key: 'agreementDate',
-      sorter: (a, b) => dayjs(a.agreementDate).unix() - dayjs(b.agreementDate).unix(),
+      sorter: (a, b) => dayjs(a.agreementDate, 'DD/MM/YYYY').unix() - dayjs(b.agreementDate, 'DD/MM/YYYY').unix(),
     },
     {
       title: 'Details',
@@ -190,53 +182,32 @@ const AgreementsManagement = () => {
   return (
     <div>
       <Title level={2}>Agreements Management</Title>
+  
       <Card
         title="Agreements List"
-      variant="borderless"
+        variant="borderless"
         style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
-        extra={
-          <Space>
-            <Select
-              placeholder="Filter by Type"
-              allowClear
-              style={{ width: 200 }}
-              onChange={handleTypeFilter}
-            >
-              <Option value="Dealer Contract">Dealer Contract</Option>
-              <Option value="Customer Purchase">Customer Purchase</Option>
-              <Option value="Service Contract">Service Contract</Option>
-            </Select>
-            <Select
-              placeholder="Filter by Status"
-              allowClear
-              style={{ width: 200 }}
-              onChange={handleStatusFilter}
-            >
-              <Option value="Active">Active</Option>
-              <Option value="Pending">Pending</Option>
-              <Option value="Expired">Expired</Option>
-            </Select>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => showModal()}
-            >
-              Add New Agreement
-            </Button>
-          </Space>
-        }
+        
       >
+            <Search
+            placeholder="Search by Customer Name or Details"
+            allowClear
+            onChange={(e) => handleSearch(e.target.value)}
+          />
         <Table
           columns={columns}
-          dataSource={agreementsData}
+          dataSource={filteredData}
           rowKey="key"
-          pagination={{ pageSize: 10 }}
+          pagination={{ pageSize: 10,
+          showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Store${total !== 1 ? 's' : ''}`,
+           }}
+          loading={loading}
           style={{ marginTop: 16 }}
         />
       </Card>
 
       <Modal
-        title={editingKey ? 'Edit Agreement' : 'Add Agreement'}
+        title="Edit Agreement"
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
@@ -245,33 +216,8 @@ const AgreementsManagement = () => {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{ status: 'Active', type: 'Dealer Contract' }}
+          initialValues={{ status: 'Active' }}
         >
-          <Form.Item
-            label="Agreement ID"
-            name="agreementId"
-            rules={[{ required: true, message: 'Please enter the agreement ID' }]}
-          >
-            <Input placeholder="e.g., AGR-001" />
-          </Form.Item>
-          <Form.Item
-            label="Type"
-            name="type"
-            rules={[{ required: true, message: 'Please select the agreement type' }]}
-          >
-            <Select>
-              <Option value="Dealer Contract">Dealer Contract</Option>
-              <Option value="Customer Purchase">Customer Purchase</Option>
-              <Option value="Service Contract">Service Contract</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="Party"
-            name="party"
-            rules={[{ required: true, message: 'Please enter the party name' }]}
-          >
-            <Input placeholder="e.g., City Y Dealership" />
-          </Form.Item>
           <Form.Item
             label="Status"
             name="status"
@@ -281,26 +227,20 @@ const AgreementsManagement = () => {
               <Option value="Active">Active</Option>
               <Option value="Pending">Pending</Option>
               <Option value="Expired">Expired</Option>
+              <Option value="Terminated">Terminated</Option>
             </Select>
-          </Form.Item>
-          <Form.Item
-            label="Agreement Date"
-            name="agreementDate"
-            rules={[{ required: true, message: 'Please select the agreement date' }]}
-          >
-            <DatePicker style={{ width: '100%' }} />
           </Form.Item>
           <Form.Item
             label="Details"
             name="details"
             rules={[{ required: true, message: 'Please enter agreement details' }]}
           >
-            <Input.TextArea rows={4} placeholder="e.g., Exclusive EV distribution" />
+            <Input.TextArea rows={4} placeholder="e.g., Purchase agreement details" />
           </Form.Item>
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                {editingKey ? 'Update' : 'Add'}
+                Update
               </Button>
               <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
             </Space>

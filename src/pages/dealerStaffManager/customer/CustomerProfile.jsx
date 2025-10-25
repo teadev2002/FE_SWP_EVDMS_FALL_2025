@@ -83,6 +83,7 @@ const CustomerProfile = () => {
       setIsModalVisible(false);
       setEditingCustomer(null);
       form.resetFields();
+      toast.success('Customer saved successfully');
     } catch (error) {
       toast.error('Failed to save customer',error);
     }

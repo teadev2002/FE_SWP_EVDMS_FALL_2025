@@ -162,7 +162,7 @@ const ManageSaleAgreements = () => {
       sorter: (a, b) => a.status.localeCompare(b.status),
     },
   ];
-
+  
   // Calculate pagination details
   const totalAgreements = filteredAgreements.length;
  
