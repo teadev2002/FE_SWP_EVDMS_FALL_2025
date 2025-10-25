@@ -33,6 +33,7 @@ import Admin from './components/dashboard/admin.jsx';
 import DealerManage from './pages/dealerStaffManager/DealerManagement/DealerManage.jsx';
 import StoreManage from './pages/evmStaffAdmin/StoreManage/StoreManage.jsx';
 import TestAppointment from './pages/dealerStaffManager/TestAppointment/TestAppointment.jsx';
+import BrandManage from './pages/evmStaffAdmin/BrandManage/BrandManage.jsx';
 
 function App() {
 
@@ -176,6 +177,10 @@ function App() {
         {
           path: "inventory-&-consumtion-report",
           element: <InventoryAndConsumtionReport />,
+        },
+        {
+          path: "brands-management",
+          element: <BrandManage />,
         },
       ]
     },

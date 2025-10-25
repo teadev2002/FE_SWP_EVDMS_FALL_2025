@@ -25,6 +25,7 @@ const items = [
   getItem('Account Management', 'account-management', <DesktopOutlined />),
   getItem('Reports & Analysis', 'reports-analysis', <PieChartOutlined /> ),
   getItem('Inventory & Consumtion', 'inventory-&-consumtion-report', <DesktopOutlined />),
+  getItem('Brand Management', 'brands-management', <UserOutlined />),
   ] 
 
 const Admin = () => {
