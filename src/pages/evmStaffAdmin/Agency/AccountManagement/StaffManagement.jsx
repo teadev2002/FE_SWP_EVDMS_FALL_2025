@@ -1,62 +1,73 @@
+// add new staff
 import React, { useState, useEffect } from 'react';
 import {
-  Table, Button, Modal, Form, Input, Space, Popconfirm, Typography,
-  Row,
-  Col,
+  Table, Button, Modal, Form, Input, Space, Popconfirm, Typography, Row, Col, Select,
 } from 'antd';
 import {
   UserOutlined, MailOutlined, PhoneOutlined, PlusOutlined,
-  EditOutlined, DeleteOutlined, IdcardOutlined, LockOutlined, SearchOutlined
+  EditOutlined, DeleteOutlined, IdcardOutlined, LockOutlined, SearchOutlined,
 } from '@ant-design/icons';
 import { toast } from 'react-toastify';
-import dayjs from 'dayjs';
+import ManageStaffService from '../../../../services/ManageStaff/ManageStaffService';
 
 const { Title } = Typography;
-
-// Mock data for staff
-const mockStaffData = [
-  {
-    key: '1',
-    staffId: 1,
-    fullName: "John Doe",
-    phone: "+1-555-123-4567",
-    email: "john.doe@example.com",
-    password: "password123",
-    status: "Active",
-    role: "EVM_Staff",
-    lastUpdated: "2025-10-20",
-  },
-  {
-    key: '2',
-    staffId: 2,
-    fullName: "Jane Smith",
-    phone: "+1-555-987-6543",
-    email: "jane.smith@example.com",
-    password: "password456",
-    status: "Active",
-    role: "EVM_Staff",
-    lastUpdated: "2025-10-18",
-  },
-  {
-    key: '3',
-    staffId: 3,
-    fullName: "Bob Johnson",
-    phone: "+1-555-555-5555",
-    email: "bob.johnson@example.com",
-    password: "password789",
-    status: "Inactive",
-    role: "EVM_Staff",
-    lastUpdated: "2025-10-22",
-  },
-];
+const { Option } = Select;
 
 const StaffManagement = () => {
-  const [staffs, setStaffs] = useState(mockStaffData);
+  const [staffs, setStaffs] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingStaff, setEditingStaff] = useState(null);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Fetch staff using ManageStaffService
+  useEffect(() => {
+    const fetchStaffs = async () => {
+      setLoading(true);
+      try {
+        const data = await ManageStaffService.getAllStaffs();
+        const filteredData = data.filter(staff => staff.status !== 'Deleted');
+        const mappedData = filteredData.map(staff => ({
+          ...staff,
+          id: staff.staffId,
+          key: staff.staffId.toString(),
+        }));
+        setStaffs(mappedData);
+      } catch (error) {
+        toast.error('Failed to load staffs', error);
+      }
+      setLoading(false);
+    };
+    fetchStaffs();
+  }, []);
+
+  // Handle search
+  useEffect(() => {
+    const fetchStaffs = async () => {
+      setLoading(true);
+      try {
+        const data = await ManageStaffService.getAllStaffs();
+        const filteredData = data
+          .filter(staff => staff.status !== 'Deleted')
+          .filter((staff) =>
+            staff.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            staff.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            staff.email.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        const mappedData = filteredData.map(staff => ({
+          ...staff,
+          id: staff.staffId,
+          key: staff.staffId.toString(),
+        }));
+        setStaffs(mappedData);
+      } catch (error) {
+        toast.error('Failed to load staffs', error);
+      }
+      setLoading(false);
+    };
+    fetchStaffs();
+  }, [searchTerm]);
 
   // Styles
   const buttonStyle = {
@@ -68,29 +79,18 @@ const StaffManagement = () => {
     borderRadius: 8,
   };
 
-  // Handle search
-  useEffect(() => {
-    const filteredData = mockStaffData.filter((staff) =>
-      staff.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      staff.phone.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      staff.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-    setStaffs(filteredData);
-  }, [searchTerm]);
-
   // Handle create or update staff
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
       setLoading(true);
       if (editingStaff) {
-        // Update existing staff
+        // Update existing staff (placeholder, as API not provided)
         const updatedStaff = {
           ...editingStaff,
           ...values,
           staffId: editingStaff.staffId,
           key: editingStaff.key,
-          lastUpdated: dayjs().format('YYYY-MM-DD'),
         };
         setStaffs(
           staffs.map((staff) =>
@@ -99,13 +99,21 @@ const StaffManagement = () => {
         );
         toast.success('Staff updated successfully');
       } else {
-        // Create new staff
-        const newId = staffs.length + 1;
+        // Create new staff using AddStaff API
+        const newStaffData = {
+          fullName: values.fullName,
+          phone: values.phone,
+          email: values.email,
+          password: values.password || '',
+          status: values.status,
+          role: values.role,
+        };
+        const response = await ManageStaffService.AddStaff(newStaffData);
         const newStaff = {
-          ...values,
-          staffId: newId,
-          key: `${newId}`,
-          lastUpdated: dayjs().format('YYYY-MM-DD'),
+          ...newStaffData,
+          staffId: response.staffId || Math.max(...staffs.map(s => s.staffId), 0) + 1,
+          id: response.staffId || Math.max(...staffs.map(s => s.staffId), 0) + 1,
+          key: (response.staffId || Math.max(...staffs.map(s => s.staffId), 0) + 1).toString(),
         };
         setStaffs([...staffs, newStaff]);
         toast.success('Staff added successfully');
@@ -200,12 +208,6 @@ const StaffManagement = () => {
       sorter: (a, b) => a.role.localeCompare(b.role),
     },
     {
-      title: 'Last Updated',
-      dataIndex: 'lastUpdated',
-      key: 'lastUpdated',
-      sorter: (a, b) => dayjs(a.lastUpdated).unix() - dayjs(b.lastUpdated).unix(),
-    },
-    {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
@@ -244,44 +246,40 @@ const StaffManagement = () => {
   return (
     <div>
       <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
-        EVM_Staff Management
+        EVM Staff Management
       </Title>
-         <Row gutter={16} style={{ marginBottom: 16 }}>
-           <Col span={20}>
-             <Input 
-              prefix={<SearchOutlined style={{ color: '#007BFF' }} />}
-              placeholder="Search by Name, Phone, or Email"
-              style={{ ...inputStyle }}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-           </Col>
-           <Col span={4}>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-              style={{ ...buttonStyle, background: '#007BFF', borderColor: '#007BFF' }}
-              onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            >
-              Add Staff
-            </Button>
-            </Col>
-         </Row>
-          
-           
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={20}>
+          <Input 
+            prefix={<SearchOutlined style={{ color: '#007BFF' }} />}
+            placeholder="Search by Name, Phone, or Email"
+            style={{ ...inputStyle }}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </Col>
+        <Col span={4}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreate}
+            style={{ ...buttonStyle, background: '#007BFF', borderColor: '#007BFF' }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            Add Staff
+          </Button>
+        </Col>
+      </Row>
       <Table
         columns={columns}
         dataSource={staffs}
         rowKey="key"
         loading={loading}
         style={{ marginTop: 16 }}
-         pagination={{
+        pagination={{
           pageSize: 10,
-          showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Store${total !== 1 ? 's' : ''}`,
+          showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Staff${total !== 1 ? 's' : ''}`,
         }}
-        
-      
       />
       <Modal
         title={editingStaff ? 'Edit Staff' : 'Add Staff'}
@@ -347,40 +345,40 @@ const StaffManagement = () => {
             name="password"
             label="Password"
             rules={[
-              { required: true, message: 'Please enter the password' },
               { min: 6, message: 'Password must be at least 6 characters' },
             ]}
           >
             <Input.Password
               prefix={<LockOutlined style={{ color: '#007BFF' }} />}
-              placeholder="Enter password"
+              placeholder="Enter password (optional)"
               style={inputStyle}
             />
           </Form.Item>
           <Form.Item
             name="status"
             label="Status"
-            rules={[{ required: true, message: 'Please enter the status' }]}
+            rules={[{ required: true, message: 'Please select a status' }]}
           >
-            <Input
-              prefix={<IdcardOutlined style={{ color: '#007BFF' }} />}
-              placeholder="Enter status (e.g., Active, Inactive)"
+            <Select
+              placeholder="Select status"
               style={inputStyle}
-            />
+            >
+              <Option value="Active">Active</Option>
+              <Option value="Inactive">Inactive</Option>
+            </Select>
           </Form.Item>
           <Form.Item
             name="role"
             label="Role"
-            rules={[
-              { required: true, message: 'Please enter the role' },
-              { min: 2, message: 'Role must be at least 2 characters' },
-            ]}
+            rules={[{ required: true, message: 'Please select a role' }]}
           >
-            <Input
-              prefix={<IdcardOutlined style={{ color: '#007BFF' }} />}
-              placeholder="Enter role (e.g., EVM_Staff)"
+            <Select
+              placeholder="Select role"
               style={inputStyle}
-            />
+            >
+              <Option value="EVM_Staff">EVM_Staff</Option>
+              <Option value="Admin">Admin</Option>
+            </Select>
           </Form.Item>
         </Form>
       </Modal>

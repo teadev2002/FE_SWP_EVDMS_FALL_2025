@@ -42,7 +42,7 @@ const items = [
   // getItem('Inventory & Consumtion', 'inventory-&-consumtion-report', <DesktopOutlined />),
   ] 
 
-const Dealers = () => {
+const Brands = () => {
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer, borderRadiusLG },
@@ -79,4 +79,4 @@ const Dealers = () => {
     </Layout>
   );
 };
-export default Dealers;
+export default Brands;
