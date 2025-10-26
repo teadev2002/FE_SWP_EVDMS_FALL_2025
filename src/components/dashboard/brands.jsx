@@ -21,7 +21,7 @@ function getItem(label, key, icon, children) {
 }
 
 const items = [
-  getItem('Vehicle Catalog', 'vehicle-catalog', <PieChartOutlined />), // ('TÊN HIỂN THỊ RA', 'ĐƯỜNG DẪN KHI CLICK VÀO', <ICON>)
+  getItem('Brand Vehicles', 'brand-vehicles', <PieChartOutlined />), // ('TÊN HIỂN THỊ RA', 'ĐƯỜNG DẪN KHI CLICK VÀO', <ICON>)
   getItem('Inventory & Allocation', 'inventory-allocation', <TeamOutlined />, [
     getItem('Inventory Management', 'inventory-allocation/inventory', <FileOutlined />),
     getItem('Vehicle Allocation', 'inventory-allocation/vehicle-allocation', <FileOutlined />),

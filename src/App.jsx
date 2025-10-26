@@ -1,4 +1,4 @@
-  import { ToastContainer } from 'react-toastify';
+import { ToastContainer } from 'react-toastify';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Store from './components/dashboard/store.jsx';
@@ -17,8 +17,7 @@ import PaymentManagement from './pages/dealerStaffManager/sale/PaymentManagement
 import CustomerProfile from './pages/dealerStaffManager/customer/CustomerProfile.jsx';
 import StaffSalesReport from './pages/dealerStaffManager/Report/StaffSalesReport.jsx';
 import DebtReports from './pages/dealerStaffManager/Report/DebtReports.jsx';
-import  Brands from './components/dashboard/brands.jsx';
-import VehicleCatalog from './pages/evmStaffAdmin/ProductNDistribution/VehicleCatalogManage/VehicleCatalog.jsx';
+import Brands from './components/dashboard/brands.jsx';
 import InventoryManage from './pages/evmStaffAdmin/ProductNDistribution/InventoryNAllocation/InventoryManagement/InventoryManage.jsx';
 import VehicleAllocationManage from './pages/evmStaffAdmin/ProductNDistribution/InventoryNAllocation/VehicleAllocation/VehicleAllocationManage.jsx';
 import PricePromotionManage from './pages/evmStaffAdmin/ProductNDistribution/PricePromotionManage/PricePromotionManage.jsx';
@@ -30,10 +29,10 @@ import SalesOverview from './pages/evmStaffAdmin/ReportNAnalysis/SalesReport/Sal
 import InventoryAndConsumtionReport from './pages/evmStaffAdmin/ReportNAnalysis/InventoryNConsumtionReport/InventoryAndConsumtionReport.jsx';
 import Login from './pages/Login.jsx';
 import Admin from './components/dashboard/admin.jsx';
-import DealerManage from './pages/dealerStaffManager/DealerManagement/DealerManage.jsx';
 import StoreManage from './pages/evmStaffAdmin/StoreManage/StoreManage.jsx';
 import TestAppointment from './pages/dealerStaffManager/TestAppointment/TestAppointment.jsx';
 import BrandManage from './pages/evmStaffAdmin/BrandManage/BrandManage.jsx';
+import BrandVehicleManage from './pages/evmStaffAdmin/ProductNDistribution/BrandVehicle/BrandVehicleManage.jsx';
 
 function App() {
 
@@ -111,8 +110,8 @@ function App() {
       element: <Brands />,
       children: [
         {
-          path: "vehicle-catalog",
-          element: <VehicleCatalog />,
+          path: "brand-vehicles",
+          element: <BrandVehicleManage />,
         },
         {
           path: "inventory-allocation",

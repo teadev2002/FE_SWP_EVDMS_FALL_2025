@@ -1,34 +1,3 @@
-// import { apiClient } from "../../api/apiClient";
-
-
-// const ManageVehicleService =  {
-//   getAllVehicle: async () => {
-//     try {
-//       const response = await apiClient.get("/Vehicles");
-//       return response.data;
-//     } catch (error) {
-//       console.error("Error fetching vehicles:", error);
-//       throw error;
-//     }
-//   },
-//   GetVehicleById: async (id) => {
-//     try {
-// const response = await apiClient.get(`Vehicles/{id}?id=${id}`);  
-//     return response.data;
-//     } catch (error) {
-//       console.error("Error fetching dealer by ID:", error);
-//       throw error;
-//     }
-//   },
-
-
-// }
-
-// export default ManageVehicleService
-
-//---------------------------------------------------------------------------------------------------------//
-
-
 import { apiClient } from "../../api/apiClient";
 
 const ManageVehicleService = {
@@ -43,7 +12,7 @@ const ManageVehicleService = {
   },
   GetVehicleById: async (id) => {
     try {
-      const response = await apiClient.get(`Vehicles/{id}?id=${id}`);
+      const response = await apiClient.get(`Vehicles/${id}`);
       return response.data;
     } catch (error) {
       console.error("Error fetching vehicle by ID:", error);
@@ -68,6 +37,34 @@ const ManageVehicleService = {
       throw error;
     }
   },
+  AddVehicle: async (vehicleData) => {
+    try {
+      const response = await apiClient.post("Vehicles", vehicleData);
+      return response.data;
+    } catch (error) {
+      console.error("Error adding vehicle:", error);
+      throw error;
+    }
+  },
+  updateVehicle: async (vehicleId, vehicleData) => {
+    try {
+      const response = await apiClient.put(`Vehicles/${vehicleId}`, vehicleData);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating vehicle:", error);
+      throw error;
+    }
+  },
+  deleteVehicle: async (vehicleId) => {
+    try {
+      const response = await apiClient.delete(`Vehicles/${vehicleId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting vehicle:", error);
+      throw error;
+    }
+  },
+
 };
 
 export default ManageVehicleService;
