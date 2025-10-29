@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+ //fix searchh
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table, Button, Modal, Form, Input, Space, Typography, Popconfirm, Row, Col, Select,
 } from 'antd';
@@ -14,7 +15,8 @@ const { Title } = Typography;
 const { Option } = Select;
 
 const DealerManage = () => {
-  const [dealers, setDealers] = useState([]);
+  const [allDealers, setAllDealers] = useState([]); // Full list of dealers
+  const [filteredDealers, setFilteredDealers] = useState([]); // Filtered list for display
   const [storeNames, setStoreNames] = useState({}); // Store ID to storeName mapping
   const [stores, setStores] = useState([]); // List of stores for dropdown
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -23,25 +25,38 @@ const DealerManage = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch dealers using ManageDealerService
-  useEffect(() => {
-    const fetchDealers = async () => {
-      setLoading(true);
-      try {
-        const data = await ManageDealerService.getAllDealers();
-        const mappedData = data.map(dealer => ({
-          ...dealer,
-          id: dealer.dealerId,
-          key: dealer.dealerId.toString(),
-        }));
-        setDealers(mappedData);
-      } catch (error) {
-        toast.error('Failed to load dealers', error);
+  // Fetch dealers using ManageDealerService (common function)
+  const fetchDealers = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await ManageDealerService.getAllDealers();
+      const mappedData = data.map(dealer => ({
+        ...dealer,
+        id: dealer.dealerId,
+        key: dealer.dealerId.toString(),
+      }));
+      setAllDealers(mappedData);
+      // Apply current filter after fetch
+      if (searchTerm) {
+        const filtered = mappedData.filter((dealer) =>
+          dealer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          dealer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (dealer.phone && dealer.phone.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+        setFilteredDealers(filtered);
+      } else {
+        setFilteredDealers(mappedData);
       }
-      setLoading(false);
-    };
+    } catch (error) {
+      toast.error(`Failed to load dealers: ${error.message || error}`);
+    }
+    setLoading(false);
+  }, [searchTerm]);
+
+  // Initial fetch dealers
+  useEffect(() => {
     fetchDealers();
-  }, []);
+  }, [fetchDealers]);
 
   // Fetch stores for dropdown and store names for table
   useEffect(() => {
@@ -55,36 +70,25 @@ const DealerManage = () => {
         });
         setStoreNames(storeNameMap);
       } catch (error) {
-        toast.error('Failed to load stores', error);
+        toast.error(`Failed to load stores: ${error.message || error}`);
       }
     };
     fetchStores();
   }, []);
 
-  // Handle search
+  // Handle search (client-side filter, no re-fetch)
   useEffect(() => {
-    const fetchDealers = async () => {
-      setLoading(true);
-      try {
-        const data = await ManageDealerService.getAllDealers();
-        const filteredData = data.filter((dealer) =>
-          dealer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          dealer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          dealer.phone.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        const mappedData = filteredData.map(dealer => ({
-          ...dealer,
-          id: dealer.dealerId,
-          key: dealer.dealerId.toString(),
-        }));
-        setDealers(mappedData);
-      } catch (error) {
-        toast.error('Failed to load dealers', error);
-      }
-      setLoading(false);
-    };
-    fetchDealers();
-  }, [searchTerm]);
+    if (searchTerm === '') {
+      setFilteredDealers(allDealers);
+    } else {
+      const filtered = allDealers.filter((dealer) =>
+        dealer.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        dealer.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (dealer.phone && dealer.phone.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredDealers(filtered);
+    }
+  }, [searchTerm, allDealers]);
 
   // Styles
   const buttonStyle = {
@@ -112,17 +116,6 @@ const DealerManage = () => {
           storeId: values.storeId,
         };
         await ManageDealerService.UpdateDealer(editingDealer.dealerId, updatedDealerData);
-        const updatedDealer = {
-          ...updatedDealerData,
-          dealerId: editingDealer.dealerId,
-          id: editingDealer.dealerId,
-          key: editingDealer.dealerId.toString(),
-        };
-        setDealers(
-          dealers.map((dealer) =>
-            dealer.id === editingDealer.id ? updatedDealer : dealer
-          )
-        );
         toast.success('Dealer updated successfully');
       } else {
         // Create new dealer using AddDealer API
@@ -135,21 +128,16 @@ const DealerManage = () => {
           address: values.address,
           storeId: values.storeId,
         };
-        const response = await ManageDealerService.AddDealer(newDealerData);
-        const newDealer = {
-          ...newDealerData,
-          dealerId: response.dealerId || Math.max(...dealers.map(d => d.dealerId), 0) + 1,
-          id: response.dealerId || Math.max(...dealers.map(d => d.dealerId), 0) + 1,
-          key: (response.dealerId || Math.max(...dealers.map(d => d.dealerId), 0) + 1).toString(),
-        };
-        setDealers([...dealers, newDealer]);
+        await ManageDealerService.AddDealer(newDealerData);
         toast.success('Dealer added successfully');
       }
       setIsModalVisible(false);
       setEditingDealer(null);
       form.resetFields();
+      // Refresh full list after save
+      fetchDealers();
     } catch (error) {
-      toast.error('Failed to save dealer', error);
+      toast.error(`Failed to save dealer: ${error.message || error}`);
     }
     setLoading(false);
   };
@@ -181,10 +169,11 @@ const DealerManage = () => {
     setLoading(true);
     try {
       await ManageDealerService.DeleteDealer(id);
-      setDealers(dealers.filter((dealer) => dealer.id !== id));
       toast.success('Dealer deleted successfully');
+      // Refresh full list after delete
+      fetchDealers();
     } catch (error) {
-      toast.error('Failed to delete dealer', error);
+      toast.error(`Failed to delete dealer: ${error.message || error}`);
     }
     setLoading(false);
   };
@@ -223,28 +212,29 @@ const DealerManage = () => {
       onFilter: (value, record) => record.role === value,
     },
     {
+      title: 'Store Name',
+      dataIndex: 'storeId',
+      key: 'storeId',
+      render: (storeId) => storeNames[storeId] || `Store ${storeId}`,
+    },
+     {
+      title: 'Phone',
+      dataIndex: 'phone',
+      key: 'phone',
+      sorter: (a, b) => (a.phone || '').localeCompare(b.phone || ''),
+    },
+    {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
       sorter: (a, b) => a.email.localeCompare(b.email),
     },
     {
-      title: 'Phone',
-      dataIndex: 'phone',
-      key: 'phone',
-      sorter: (a, b) => a.phone.localeCompare(b.phone),
-    },
-    {
       title: 'Address',
       dataIndex: 'address',
       key: 'address',
     },
-    {
-      title: 'Store Name',
-      dataIndex: 'storeId',
-      key: 'storeId',
-      render: (storeId) => storeNames[storeId] || `Store ${storeId}`,
-    },
+    
     {
       title: 'Actions',
       key: 'actions',
@@ -310,7 +300,7 @@ const DealerManage = () => {
       </Row>
       <Table
         columns={columns}
-        dataSource={dealers}
+        dataSource={filteredDealers}
         rowKey="key"
         loading={loading}
         style={{ marginTop: 16, background: '#fff', borderRadius: 12, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)' }}

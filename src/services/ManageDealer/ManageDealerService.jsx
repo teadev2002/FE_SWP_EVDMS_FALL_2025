@@ -20,7 +20,7 @@ const response = await apiClient.get(`Dealers/{id}?id=${id}`);
   },
   AddDealer: async (dealerData) => {
     try {
-      const response = await apiClient.post("Dealers", dealerData);
+      const response = await apiClient.post("Auth/CreateDealer", dealerData);
       return response.data;
     } catch (error) {
       console.error("Error adding dealer:", error);

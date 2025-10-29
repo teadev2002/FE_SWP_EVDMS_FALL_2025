@@ -20,7 +20,7 @@ const response = await apiClient.get(`Staffs/{id}?id=${id}`);
   },
     AddStaff: async (staffData) => {    
     try {
-      const response = await apiClient.post("Staffs", staffData);
+      const response = await apiClient.post("Auth/CreateEVMStaff", staffData);
       return response.data;
     } catch (error) {
       console.error("Error adding staff:", error);
