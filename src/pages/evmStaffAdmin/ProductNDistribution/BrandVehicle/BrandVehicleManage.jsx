@@ -18,9 +18,9 @@ const BrandVehicleManage = () => {
   const [filteredVehicles, setFilteredVehicles] = useState([]);
   const [storageData] = useState([
     { storageId: 1, vehicleId: 1, storeId: 1, quantityAvailable: 1, lastUpdated: '24/10/2025' },
-    { storageId: 4, vehicleId: 15, storeId: 2, quantityAvailable: 3, lastUpdated: '25/10/2025' },
-    { storageId: 5, vehicleId: 13, storeId: 1, quantityAvailable: 5, lastUpdated: '25/10/2025' },
-    { storageId: 6, vehicleId: 17, storeId: 3, quantityAvailable: 2, lastUpdated: '24/10/2025' },
+    { storageId: 2, vehicleId: 2, storeId: 2, quantityAvailable: 2, lastUpdated: '25/10/2025' },
+    { storageId: 3, vehicleId: 3, storeId: 3, quantityAvailable: 3, lastUpdated: '25/10/2025' },
+    { storageId: 4, vehicleId: 4, storeId: 4, quantityAvailable: 4, lastUpdated: '24/10/2025' },
   ]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);

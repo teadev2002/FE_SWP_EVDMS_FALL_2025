@@ -38,6 +38,10 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
+    localStorage.removeItem('expiresIn');
+    localStorage.removeItem('dealerInfo');
+    localStorage.removeItem('staffInfo');
   };
 
   const value = {
