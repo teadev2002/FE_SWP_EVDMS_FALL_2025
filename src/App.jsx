@@ -33,15 +33,13 @@
 // import TestAppointment from './pages/dealerStaffManager/TestAppointment/TestAppointment.jsx';
 // import BrandManage from './pages/evmStaffAdmin/BrandManage/BrandManage.jsx';
 // import BrandVehicleManage from './pages/evmStaffAdmin/ProductNDistribution/BrandVehicle/BrandVehicleManage.jsx';
- 
 // function App() {
 
 //   const router = createBrowserRouter([
 //     {
-//       path: "/store",
+//       path: "/store/:storeId", // Thêm param :storeId
 //       element: <Store />,
 //       children: [
-
 //         {
 //           path: "vehicle",
 //           element: <ManageVehicle />,
@@ -58,7 +56,6 @@
 //           path: "sales/promotions",
 //           element: <Promotions />,
 //         },
-
 //         {
 //           path: "sales/agreements",
 //           element: <ManageSaleAgreements />,
@@ -75,8 +72,6 @@
 //           path: "sales/payment-management",
 //           element: <PaymentManagement />,
 //         },
-
-
 //         {
 //           path: "customer",
 //           element: <CustomerOverview />,
@@ -101,12 +96,10 @@
 //           path: "report/customer-debt-report",
 //           element: <DebtReports />,
 //         },
-      
-
 //       ],
 //     },
 //     {
-//       path: "/brands",
+//       path: "/brands/:brandId", // Thêm param :brandId
 //       element: <Brands />,
 //       children: [
 //         {
@@ -157,8 +150,6 @@
 //           path: "store-management",
 //           element: <StoreManage />,
 //         },
-     
-
 //       ],
 //     },
 //     {
@@ -210,18 +201,17 @@
 //       path: "/login",
 //       element: <Login />,
 //     },
-
 //   ]);
 //   return (
 //     <AuthProvider>
 //       <RouterProvider router={router} />
-//         <ToastContainer />
+//       <ToastContainer />
 //     </AuthProvider>
 //   )
 // }
-// export default App
+// export default App;
 
-//------------------------------ Thêm param------------------------------------------------//
+//update url
 import { ToastContainer } from 'react-toastify';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -257,7 +247,6 @@ import StoreManage from './pages/evmStaffAdmin/StoreManage/StoreManage.jsx';
 import TestAppointment from './pages/dealerStaffManager/TestAppointment/TestAppointment.jsx';
 import BrandManage from './pages/evmStaffAdmin/BrandManage/BrandManage.jsx';
 import BrandVehicleManage from './pages/evmStaffAdmin/ProductNDistribution/BrandVehicle/BrandVehicleManage.jsx';
- 
 function App() {
 
   const router = createBrowserRouter([

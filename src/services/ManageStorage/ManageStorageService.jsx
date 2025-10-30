@@ -19,6 +19,16 @@ const ManageStorageService = {
             throw error;
         }
     },
-};
+    getStorageByBrandId: async (brandId) => {
+        try {
+            const response = await apiClient.get(`Storages/brand/${brandId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching storage by brand ID:", error);
+            throw error;
+        }
+    },
 
+};
+ 
 export default ManageStorageService;

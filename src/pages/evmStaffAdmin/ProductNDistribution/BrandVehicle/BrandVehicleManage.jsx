@@ -366,5 +366,5 @@ const BrandVehicleManage = () => {
 };
 
 export default BrandVehicleManage;
- // fix detail view not showing data - Wait api getStorageByBrandId 
+
  
