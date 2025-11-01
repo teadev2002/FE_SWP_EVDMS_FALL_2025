@@ -28,6 +28,36 @@ const ManageStorageService = {
             throw error;
         }
     },
+    filterStorageByBrandIdAndVehicleId: async (brandId, vehicleId) => {
+        try {
+            const response = await apiClient.get(`Storages/filter?brandId=${brandId}&vehicleId=${vehicleId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error filtering storage by brand ID and vehicle ID:", error);
+            throw error;
+        }
+    },
+    addToStock: async (storageData) => {
+        try {
+            const response = await apiClient.post("Storages", storageData);
+            return response.data;
+        } catch (error) {
+            console.error("Error adding to stock:", error);
+            throw error;
+        }
+    },
+// ManageStorageService.js
+vehicleAllocate: async (payload) => {
+  try {
+    const response = await apiClient.post(`Storages/allocate`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error allocating vehicle from storage:", error);
+    throw error;
+  }
+},
+
+
 
 };
  

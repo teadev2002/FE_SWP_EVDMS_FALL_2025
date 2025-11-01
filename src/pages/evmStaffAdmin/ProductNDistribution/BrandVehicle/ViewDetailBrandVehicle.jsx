@@ -1,10 +1,10 @@
-// fix detail view not showing data - Wait api getStorageByBrandId 
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Descriptions, Image, Typography, Tabs, Carousel, Tag, Divider } from 'antd';
 import ManageStoreService from '../../../../services/ManageStore/ManageStoreService.jsx';
 import ManageVehicleService from '../../../../services/ManageVehicleService/ManageVehicleService.jsx';
+import ManageStorageService from '../../../../services/ManageStorage/ManageStorageService.jsx';
 import { toast } from 'react-toastify';
-import '../../../../styles/dealerStaffManager/ManageVehicle.scss'; // Reuse the same SCSS
+import '../../../../styles/dealerStaffManager/ManageVehicle.scss';
 
 const { Text } = Typography;
 const { TabPane } = Tabs;
@@ -13,54 +13,81 @@ const ViewDetailBrandVehicle = ({
   vehicleId,
   isDetailModalVisible,
   handleDetailCancel,
-  getStorageInfo,
-   
+  vehicles, // Nhận danh sách vehicles để lấy brandId
 }) => {
   const [vehicle, setVehicle] = useState(null);
   const [storeName, setStoreName] = useState('N/A');
+  const [storageInfo, setStorageInfo] = useState({
+    quantityAvailable: 'Loading...',
+    lastUpdated: 'N/A',
+  });
   const [loading, setLoading] = useState(false);
-
-  // Fetch vehicle details and store name
+console.log(storeName);
   useEffect(() => {
     if (!vehicleId || !isDetailModalVisible) {
       setVehicle(null);
       setStoreName('N/A');
+      setStorageInfo({ quantityAvailable: 'N/A', lastUpdated: 'N/A' });
       return;
     }
 
-    const fetchVehicleDetails = async () => {
+    const fetchData = async () => {
       setLoading(true);
       try {
         const vehicleData = await ManageVehicleService.GetVehicleById(vehicleId);
-        setVehicle({ ...vehicleData, status: vehicleData.status || 'Active' });
-        const storageInfo = getStorageInfo(vehicleId);
-        if (storageInfo.storeId && storageInfo.storeId !== 'N/A') {
-          try {
-            const storeData = await ManageStoreService.getStoreById(storageInfo.storeId);
-            setStoreName(storeData.storeName || 'N/A');
-          } catch (error) {
-            console.error('Failed to fetch store name:', error);
+        const fullVehicle = { ...vehicleData, status: vehicleData.status || 'Active' };
+        setVehicle(fullVehicle);
+
+        const currentVehicle = vehicles.find(v => v.vehicleId === vehicleId);
+        if (!currentVehicle?.brandId) {
+          setStoreName('N/A');
+          setStorageInfo({ quantityAvailable: 'N/A', lastUpdated: 'N/A' });
+          return;
+        }
+
+        const data = await ManageStorageService.filterStorageByBrandIdAndVehicleId(
+          currentVehicle.brandId,
+          vehicleId
+        );
+
+        if (data && data.length > 0) {
+          const info = data[0];
+          setStorageInfo({
+            quantityAvailable: info.quantityAvailable,
+            lastUpdated: info.lastUpdated || 'N/A',
+          });
+
+          if (info.storeId) {
+            try {
+              const storeData = await ManageStoreService.getStoreById(info.storeId);
+              setStoreName(storeData.storeName || 'N/A');
+            } catch (err) {
+              console.error('Failed to fetch store name:', err);
+              setStoreName('N/A');
+            }
+          } else {
             setStoreName('N/A');
-            toast.error('Failed to fetch store name');
           }
         } else {
+          setStorageInfo({ quantityAvailable: 'N/A', lastUpdated: 'N/A' });
           setStoreName('N/A');
         }
       } catch (error) {
-        console.error('Failed to fetch vehicle details:', error);
-        toast.error('Failed to fetch vehicle details');
+        console.error('Failed to fetch details:', error);
+        toast.error('Failed to load vehicle details');
         setVehicle(null);
         setStoreName('N/A');
+        setStorageInfo({ quantityAvailable: 'Error', lastUpdated: 'N/A' });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchVehicleDetails();
-  }, [vehicleId, isDetailModalVisible, getStorageInfo]);
+    fetchData();
+  }, [vehicleId, isDetailModalVisible, vehicles]);
 
-  // Determine stock tag class based on quantity
   const getStockTagClass = (quantity) => {
+    if (typeof quantity !== 'number') return 'out-of-stock';
     if (quantity > 1) return 'available';
     if (quantity === 1) return 'limited';
     return 'out-of-stock';
@@ -72,27 +99,19 @@ const ViewDetailBrandVehicle = ({
       open={isDetailModalVisible}
       onCancel={handleDetailCancel}
       footer={[
-        <Button
-          key="close"
-          type="primary"
-          onClick={handleDetailCancel}
-          disabled={loading}
-          className="ant-btn-primary"
-        >
+        <Button key="close" type="primary" onClick={handleDetailCancel} disabled={loading}>
           Close
         </Button>,
       ]}
-      width="80%" // Match ManageVehicle modal width
+      width="80%"
       centered
-      aria-label="Vehicle details modal"
-      className="ev-dashboard" // Apply same SCSS scope
+      className="ev-dashboard"
     >
       {loading ? (
         <Text>Loading...</Text>
       ) : vehicle ? (
         <div>
-          {/* Image Carousel */}
-          <Carousel autoplay className="ant-carousel">
+          <Carousel autoplay>
             {vehicle.imageUrls && vehicle.imageUrls.length > 0 ? (
               vehicle.imageUrls.map((url, index) => (
                 <div key={index}>
@@ -104,8 +123,7 @@ const ViewDetailBrandVehicle = ({
             )}
           </Carousel>
 
-          {/* Tabs for organized content */}
-          <Tabs defaultActiveKey="1" className="ant-tabs">
+          <Tabs defaultActiveKey="1">
             <TabPane tab="General Information" key="1">
               <Descriptions bordered column={2} style={{ marginTop: 16 }}>
                 <Descriptions.Item label="Model">{vehicle.modelName || 'N/A'}</Descriptions.Item>
@@ -161,18 +179,17 @@ const ViewDetailBrandVehicle = ({
             </TabPane>
           </Tabs>
 
-          {/* Storage Information */}
-          <Divider orientation="left" className="ant-divider">
-            Storage Information
-          </Divider>
+          <Divider orientation="left">Storage Information</Divider>
           <Descriptions bordered column={2}>
-            <Descriptions.Item label="Store Name">{storeName}</Descriptions.Item>
+            {/* <Descriptions.Item label="Store Name">{storeName}</Descriptions.Item> */}
             <Descriptions.Item label="Quantity Available">
-              <Tag className={getStockTagClass(getStorageInfo(vehicleId).quantityAvailable)}>
-                {getStorageInfo(vehicleId).quantityAvailable} Available
+              <Tag className={getStockTagClass(storageInfo.quantityAvailable)}>
+                {storageInfo.quantityAvailable} Available
               </Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="Last Updated">{getStorageInfo(vehicleId).lastUpdated || 'N/A'}</Descriptions.Item>
+            <Descriptions.Item label="Last Updated">
+              {storageInfo.lastUpdated}
+            </Descriptions.Item>
           </Descriptions>
         </div>
       ) : (

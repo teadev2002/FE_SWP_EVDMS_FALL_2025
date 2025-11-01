@@ -55,6 +55,7 @@ const ManageSaleAgreements = () => {
           key: item.agreementId,
           customerName: item.customerName || 'N/A',
           agreementDate: item.agreementDate || 'N/A',
+          termsAndConditions: item.termsAndConditions || 'N/A',
           status: item.status || 'N/A',
         }));
 
@@ -114,6 +115,7 @@ const ManageSaleAgreements = () => {
         key: item.agreementId,
         customerName: item.customerName || 'N/A',
         agreementDate: item.agreementDate || 'N/A',
+        termsAndConditions: item.termsAndConditions || 'N/A',
         status: item.status || 'N/A',
       }));
       setSaleAgreements(formattedData);
@@ -154,6 +156,12 @@ const ManageSaleAgreements = () => {
       dataIndex: 'agreementDate',
       key: 'agreementDate',
       sorter: (a, b) => new Date(a.agreementDate) - new Date(b.agreementDate),
+    },
+    {
+      title: 'Terms and Conditions',
+      dataIndex: 'termsAndConditions',
+      key: 'termsAndConditions',
+      sorter: (a, b) => a.termsAndConditions.localeCompare(b.termsAndConditions),
     },
     {
       title: 'Status',

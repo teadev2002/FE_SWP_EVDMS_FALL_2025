@@ -3,6 +3,20 @@ import { Modal, Form, Input, Select, Row, Col, InputNumber, Button, Divider, Typ
 const { Option } = Select;
 const { Title } = Typography;
 
+// Hàm lấy brandId từ localStorage
+const getBrandIdFromStorage = () => {
+  try {
+    const staffInfo = localStorage.getItem('staffInfo');
+    if (staffInfo) {
+      const parsed = JSON.parse(staffInfo);
+      return parsed.brandId;
+    }
+  } catch (error) {
+    console.error('Failed to parse staffInfo from localStorage:', error);
+  }
+  return null;
+};
+
 const ModalVehicle = ({
   isModalVisible,
   editingVehicle,
@@ -19,9 +33,14 @@ const ModalVehicle = ({
     wrapperCol: { span: 18 },
   };
 
-  // Function to generate random demo data (unchanged)
+  // Function to generate random demo data
   const handleAutoFill = () => {
-    const models = ['Model X', 'Taycan', 'E-Tron', 'i4', 'Cybertruck', 'ID.4', 'Mustang Mach-E'];
+    const models = [
+      'Model X', 'Taycan', 'E-Tron', 'i4', 'Cybertruck', 'ID.4', 'Mustang Mach-E',
+      'Model Y', 'Ioniq 5', 'EV6', 'Ariya', 'Polestar 2', 'Lucid Air', 'Hummer EV',
+      'BMW iX', 'Mercedes EQS', 'Volvo EX30'
+    ];
+
     const versions = ['Standard', 'Turbo', 'Performance', 'Sport', 'Luxury', 'Pro', 'GT'];
     const colors = ['Jet Black', 'Snow White', 'Midnight Blue', 'Racing Red', 'Silver Metallic', 'Emerald Green'];
     const batteryCapacities = ['75 kWh', '82 kWh', '93.4 kWh', '100 kWh', '120 kWh'];
@@ -42,8 +61,13 @@ const ModalVehicle = ({
     const mirrors = ['Auto-Dimming', 'Power-Folding', 'Heated & Auto-Dimming'];
     const cameras = ['360° Camera', 'Rear & Side Cameras', 'Full Surround Sensors'];
 
+    // ✅ Lấy brandId từ localStorage khi thêm mới
+    const currentBrandId = editingVehicle 
+      ? editingVehicle.brandId 
+      : getBrandIdFromStorage();
+
     const randomData = {
-      brandId: brands.length > 0 ? brands[Math.floor(Math.random() * brands.length)].brandId : null,
+      brandId: currentBrandId,
       modelName: models[Math.floor(Math.random() * models.length)] + ` ${Math.floor(1000 + Math.random() * 9000)}`,
       version: versions[Math.floor(Math.random() * versions.length)],
       year: 2023 + Math.floor(Math.random() * 3),
@@ -60,9 +84,7 @@ const ModalVehicle = ({
       vehicleType: vehicleTypes[Math.floor(Math.random() * vehicleTypes.length)],
       trunkCapacity: 300 + Math.floor(Math.random() * 400),
       dailyDrivingLimit: 300 + Math.floor(Math.random() * 200),
-     
       screen: `Main ${(15 + Math.random() * 3).toFixed(1)} inch + Secondary ${(10 + Math.random() * 2).toFixed(1)} inch`,
-
       seatMaterial: seatMaterials[Math.floor(Math.random() * seatMaterials.length)],
       interiorMaterial: interiorMaterials[Math.floor(Math.random() * interiorMaterials.length)],
       airConditioning: airConditionings[Math.floor(Math.random() * airConditionings.length)],
@@ -84,6 +106,16 @@ const ModalVehicle = ({
     form.setFieldsValue(randomData);
   };
 
+  // ✅ Tự động set brandId khi mở modal thêm mới
+  React.useEffect(() => {
+    if (isModalVisible && !editingVehicle) {
+      const brandId = getBrandIdFromStorage();
+      if (brandId) {
+        form.setFieldsValue({ brandId });
+      }
+    }
+  }, [isModalVisible, editingVehicle, form]);
+
   return (
     <Modal
       title={editingVehicle ? 'Edit Vehicle' : 'Add Vehicle'}
@@ -94,7 +126,7 @@ const ModalVehicle = ({
       cancelText="Cancel"
       okButtonProps={{ style: { ...buttonStyle, background: '#007BFF', borderColor: '#007BFF' } }}
       cancelButtonProps={{ style: buttonStyle }}
-      width={1000} // Increased width for better spacing
+      width={1000}
       footer={[
         <Button key="auto-fill" onClick={handleAutoFill} style={{ ...buttonStyle, marginRight: 8 }}>
           Auto Fill
@@ -114,24 +146,41 @@ const ModalVehicle = ({
     >
       <Form form={form} layout="horizontal" {...formItemLayout}>
         <Row gutter={[16, 16]}>
-          {/* Left Column: General Information and Performance */}
           <Col span={12}>
             <Divider orientation="left">
               <Title level={5}>General Information</Title>
             </Divider>
-            <Form.Item
-              name="brandId"
-              label="Brand"
-              rules={[{ required: true, message: 'Please select a brand' }]}
-            >
-              <Select placeholder="Select a brand">
-                {brands.map((brand) => (
-                  <Option key={brand.brandId} value={brand.brandId}>
-                    {brand.brandName}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
+
+            {/* ✅ Ẩn dropdown brand khi thêm mới, chỉ hiển thị khi chỉnh sửa */}
+            {editingVehicle ? (
+              <Form.Item
+                name="brandId"
+                label="Brand"
+                rules={[{ required: true, message: 'Please select a brand' }]}
+              >
+                <Select placeholder="Select a brand">
+                  {brands.map((brand) => (
+                    <Option key={brand.brandId} value={brand.brandId}>
+                      {brand.brandName}
+                    </Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            ) : (
+              // Hiển thị brand name thay vì dropdown khi thêm mới
+              <Form.Item label="Brand" required>
+                <Input
+                  value={brands.find(b => b.brandId === getBrandIdFromStorage())?.brandName || 'Loading...'}
+                  disabled
+                  style={inputStyle}
+                />
+                {/* Ẩn field brandId nhưng vẫn giữ giá trị trong form */}
+                <Form.Item name="brandId" noStyle>
+                  <Input type="hidden" />
+                </Form.Item>
+              </Form.Item>
+            )}
+
             <Form.Item
               name="modelName"
               label="Model Name"
@@ -246,9 +295,8 @@ const ModalVehicle = ({
             </Form.Item>
           </Col>
 
-          {/* Right Column: Interior and Exterior */}
           <Col span={12}>
-           <Divider orientation="left">
+            <Divider orientation="left">
               <Title level={5}>Performance</Title>
             </Divider>
             <Form.Item

@@ -1,9 +1,9 @@
-// PUT
 import React, { useState, useEffect } from 'react';
 import { Table, Button, Modal, Form, Input, Select, Space, Typography, Card, message } from 'antd';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import ManageServiceSaleAgreements from '../../../../services/ManageAgreements/ManageServiceSaleAgreements';
+import ManageStoreService from '../../../../services/ManageStore/ManageStoreService';
 import { toast } from 'react-toastify';
 
 const { Title } = Typography;
@@ -17,15 +17,31 @@ const AgreementsManagement = () => {
   const [editingKey, setEditingKey] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [storeNames, setStoreNames] = useState({}); // { "1": "CuongStore", ... }
   const [form] = Form.useForm();
 
-  // Fetch agreements on component mount
+  // Hàm fetch tên cửa hàng theo danh sách storeId
+  const fetchStoreNames = async (storeIds) => {
+    try {
+      const storePromises = storeIds.map(id => ManageStoreService.getStoreById(id));
+      const stores = await Promise.all(storePromises);
+      const nameMap = {};
+      stores.forEach(store => {
+        nameMap[store.storeId] = store.storeName || `Store ${store.storeId}`;
+      });
+      setStoreNames(prev => ({ ...prev, ...nameMap }));
+    } catch (error) {
+      console.error('Failed to fetch store names:', error);
+      message.error('Failed to load store names');
+    }
+  };
+
+  // Fetch agreements + store names
   useEffect(() => {
     const fetchAgreements = async () => {
       setLoading(true);
       try {
         const data = await ManageServiceSaleAgreements.getAllSaleAgreements();
-        // Map API response to table data
         const formattedData = data.map((item) => ({
           key: item.agreementId.toString(),
           agreementId: item.agreementId.toString(),
@@ -34,9 +50,16 @@ const AgreementsManagement = () => {
           status: item.status,
           agreementDate: item.agreementDate,
           details: item.termsAndConditions,
+          storeId: item.storeId,
         }));
         setAgreementsData(formattedData);
-        setFilteredData(formattedData); // Initialize filtered data
+        setFilteredData(formattedData);
+
+        // Lấy danh sách storeId duy nhất
+        const uniqueStoreIds = [...new Set(data.map(item => item.storeId))];
+        if (uniqueStoreIds.length > 0) {
+          await fetchStoreNames(uniqueStoreIds);
+        }
       } catch (error) {
         message.error('Failed to fetch agreements: ' + error.message);
       } finally {
@@ -46,7 +69,7 @@ const AgreementsManagement = () => {
     fetchAgreements();
   }, []);
 
-  // Handle search input
+  // Handle search
   const handleSearch = (value) => {
     setSearchQuery(value);
     const lowerCaseQuery = value.toLowerCase();
@@ -68,7 +91,7 @@ const AgreementsManagement = () => {
     setIsModalVisible(true);
   };
 
-  // Handle form submission for editing
+  // Handle form submission
   const handleSubmit = async (values) => {
     const formattedValues = {
       status: values.status,
@@ -94,7 +117,7 @@ const AgreementsManagement = () => {
       setIsModalVisible(false);
       form.resetFields();
     } catch (error) {
-      toast.error('Failed to update agreement: ' + error.toast);
+      toast.error('Failed to update agreement: ' + (error.message || 'Unknown error'));
     }
   };
 
@@ -113,18 +136,18 @@ const AgreementsManagement = () => {
       );
       toast.success('Agreement deleted successfully');
     } catch (error) {
-      toast.error('Failed to delete agreement: ' + error.toast);
+      toast.error('Failed to delete agreement: ' + (error.message || 'Unknown error'));
     }
   };
 
   // Table columns
   const columns = [
-    {
-      title: 'Agreement ID',
-      dataIndex: 'agreementId',
-      key: 'agreementId',
-      sorter: (a, b) => a.agreementId.localeCompare(b.agreementId),
-    },
+    // {
+    //   title: 'Agreement ID',
+    //   dataIndex: 'agreementId',
+    //   key: 'agreementId',
+    //   sorter: (a, b) => a.agreementId.localeCompare(b.agreementId),
+    // },
     {
       title: 'Customer Name',
       dataIndex: 'party',
@@ -155,23 +178,25 @@ const AgreementsManagement = () => {
       key: 'details',
     },
     {
+      title: 'Store',
+      key: 'store',
+      render: (_, record) => {
+        const storeName = storeNames[record.storeId];
+        if (storeName === undefined) {
+          return <span style={{ color: '#999', fontStyle: 'italic' }}>Loading...</span>;
+        }
+        return storeName;
+      },
+    },
+    {
       title: 'Actions',
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => showModal(record)}
-          >
+          <Button type="link" icon={<EditOutlined />} onClick={() => showModal(record)}>
             Edit
           </Button>
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.key)}
-          >
+          <Button type="link" danger icon={<DeleteOutlined />} onClick={() => handleDelete(record.key)}>
             Delete
           </Button>
         </Space>
@@ -182,42 +207,39 @@ const AgreementsManagement = () => {
   return (
     <div>
       <Title level={2}>Agreements Management</Title>
-  
+
       <Card
         title="Agreements List"
-        variant="borderless"
         style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
-        
       >
-            <Search
-            placeholder="Search by Customer Name or Details"
-            allowClear
-            onChange={(e) => handleSearch(e.target.value)}
-          />
+        <Search
+          placeholder="Search by Customer Name or Details"
+          allowClear
+          onChange={(e) => handleSearch(e.target.value)}
+          style={{ marginBottom: 16 }}
+        />
         <Table
           columns={columns}
           dataSource={filteredData}
           rowKey="key"
-          pagination={{ pageSize: 10,
-          showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Store${total !== 1 ? 's' : ''}`,
-           }}
+          pagination={{
+            pageSize: 10,
+            showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Agreement${total !== 1 ? 's' : ''}`,
+          }}
           loading={loading}
-          style={{ marginTop: 16 }}
         />
       </Card>
 
       <Modal
         title="Edit Agreement"
         open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
+        onCancel={() => {
+          setIsModalVisible(false);
+          form.resetFields();
+        }}
         footer={null}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{ status: 'Active' }}
-        >
+        <Form form={form} layout="vertical" onFinish={handleSubmit} initialValues={{ status: 'Active' }}>
           <Form.Item
             label="Status"
             name="status"

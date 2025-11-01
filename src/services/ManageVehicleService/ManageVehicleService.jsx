@@ -64,6 +64,16 @@ const ManageVehicleService = {
       throw error;
     }
   },
+  getAllVehicleByBrandId: async (brandId) => {
+    try {
+      const response = await apiClient.get(`Vehicles/brand/${brandId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching vehicles by brand ID:", error);
+      throw error;
+    }
+  },
+
 
 };
 
