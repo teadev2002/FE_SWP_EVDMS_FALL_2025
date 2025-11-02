@@ -1,62 +1,476 @@
+// import React, { useState, useEffect } from 'react';
+// import {
+//   Table,
+//   Typography,
+//   Form,
+//   Button,
+//   Input,
+//   Select,
+//   DatePicker,
+//   Modal,
+//   Row,
+//   Col,
+//   Tag,
+// } from 'antd';
+// import ManageQuoteService from '../../../services/ManageQuotes/ManageQuoteService';
+// import ManageDealerService from '../../../services/ManageDealer/ManageDealerService';
+// import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
+// import ManageStorageService from '../../../services/ManageStorage/ManageStorageService';
+// import { toast } from 'react-toastify';
+
+// const { Title } = Typography;
+
+// const Quotation = () => {
+//   const [quotations, setQuotations] = useState([]);
+//   const [filteredQuotations, setFilteredQuotations] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [isModalVisible, setIsModalVisible] = useState(false);
+//   const [customers, setCustomers] = useState([]);
+//   const [vehicles, setVehicles] = useState([]); // Dùng chung cho form + bảng
+//   const [dealers, setDealers] = useState([]);
+//   const [searchText, setSearchText] = useState('');
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [pageSize] = useState(10);
+//   const [form] = Form.useForm();
+
+//   // Lấy storeId từ localStorage
+//   const getDealerStoreId = () => {
+//     try {
+//       const dealerInfo = JSON.parse(localStorage.getItem('dealerInfo') || '{}');
+//       return dealerInfo.storeId ? Number(dealerInfo.storeId) : null;
+//     } catch (error) {
+//       console.error('Lỗi parse dealerInfo:', error);
+//       return null;
+//     }
+//   };
+
+//   // === TẢI DỮ LIỆU ===
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       setLoading(true);
+//       const dealerStoreId = getDealerStoreId();
+
+//       if (!dealerStoreId) {
+//         toast.error('Không tìm thấy thông tin cửa hàng. Vui lòng đăng nhập lại.');
+//         setLoading(false);
+//         return;
+//       }
+
+//       try {
+//         console.log('Bắt đầu tải dữ liệu báo giá...');
+
+//         // 1. LẤY TẤT CẢ BÁO GIÁ
+//         const quoteData = await ManageQuoteService.getAllQuotations();
+//         console.log('getAllQuotations:', quoteData);
+
+//         // 2. LỌC BÁO GIÁ THEO storeId (dùng dealerId)
+//         const filteredByStore = [];
+//         for (const quote of quoteData) {
+//           try {
+//             const dealer = await ManageDealerService.GetDealerById(quote.dealerId);
+//             if (dealer?.storeId && Number(dealer.storeId) === dealerStoreId) {
+//               filteredByStore.push({ ...quote, dealer });
+//             }
+//           } catch (error) {
+//             console.warn(`Không thể lấy dealer ID ${quote.dealerId}:`, error);
+//           }
+//         }
+//         console.log('filteredByStore:', filteredByStore);
+
+//         // 3. LẤY DỮ LIỆU CHO FORM (chỉ theo store)
+//         let customersByStore = [];
+//         let vehiclesByStore = [];
+//         let dealersByStore = [];
+
+//         try {
+//           [customersByStore, vehiclesByStore] = await Promise.all([
+//             ManageCustomersService.getCustomerByStoreId(dealerStoreId),
+//             ManageStorageService.getStorageVehiclesByStoreId(dealerStoreId),
+//           ]);
+//           console.log('customersByStore:', customersByStore);
+//           console.log('vehiclesByStore:', vehiclesByStore);
+//         } catch (error) {
+//           console.error('Lỗi tải dữ liệu form:', error);
+//           toast.warn('Không tải được khách hàng hoặc xe trong kho.');
+//         }
+
+//         // Lấy danh sách dealer theo store
+//         try {
+//           const allDealers = await ManageDealerService.getAllDealers();
+//           dealersByStore = allDealers.filter(d => Number(d.storeId) === dealerStoreId);
+//           console.log('dealersByStore:', dealersByStore);
+//         } catch (error) {
+//           console.error('Lỗi tải dealer:', error);
+//         }
+
+//         // 4. TẠO MAP CHO BẢNG (dùng vehiclesByStore để lấy tên xe)
+//         const customerMap = new Map(customersByStore.map(c => [c.customerId, c.fullName]));
+//         const vehicleMap = new Map(vehiclesByStore.map(v => [v.vehicleId, v.modelName]));
+//         const dealerMap = new Map(dealersByStore.map(d => [d.dealerId, d.fullName]));
+
+//         // 5. FORMAT DỮ LIỆU BẢNG
+//         const formattedData = filteredByStore.map(item => ({
+//           key: item.quoteId,
+//           quoteId: item.quoteId,
+//           customerName: customerMap.get(item.customerId) || 'N/A',
+//           vehicleName: vehicleMap.get(item.vehicleId) || 'N/A',
+//           dealerName: dealerMap.get(item.dealerId) || 'N/A',
+//           quoteDate: item.quoteDate || 'N/A',
+//           status: item.status || 'N/A',
+//         }));
+
+//         console.log('formattedData:', formattedData);
+
+//         // 6. CẬP NHẬT STATE
+//         setQuotations(formattedData);
+//         setFilteredQuotations(formattedData);
+
+//         setCustomers(customersByStore.map(c => ({ value: c.customerId, label: c.fullName })));
+//         setVehicles(vehiclesByStore.map(v => ({ value: v.vehicleId, label: v.modelName })));
+//         setDealers(dealersByStore.map(d => ({ value: d.dealerId, label: d.fullName })));
+
+//         console.log('Tải dữ liệu thành công!');
+
+//       } catch (error) {
+//         console.error('Lỗi nghiêm trọng khi tải dữ liệu báo giá:', error);
+//         toast.error('Không thể tải dữ liệu báo giá. Vui lòng thử lại.');
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     fetchData();
+//   }, []);
+
+//   // === TÌM KIẾM ===
+//   useEffect(() => {
+//     const filtered = quotations.filter(quote =>
+//       quote.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
+//       quote.vehicleName.toLowerCase().includes(searchText.toLowerCase())
+//     );
+//     setFilteredQuotations(filtered);
+//     setCurrentPage(1);
+//   }, [searchText, quotations]);
+
+//   // === THÊM BÁO GIÁ ===
+//   const handleAddQuote = async (values) => {
+//     setLoading(true);
+//     try {
+//       const quoteData = {
+//         customerId: values.customerId,
+//         vehicleId: values.vehicleId,
+//         dealerId: values.dealerId,
+//         quoteDate: values.quoteDate.format('DD/MM/YYYY'),
+//         status: values.status || 'Draft',
+//       };
+
+//       await ManageQuoteService.AddQuotation(quoteData);
+//       toast.success('Thêm báo giá thành công!');
+
+//       // REFRESH (gọi lại fetchData)
+//       const fetchData = async () => {
+//         const dealerStoreId = getDealerStoreId();
+//         if (!dealerStoreId) return;
+
+//         const quoteData = await ManageQuoteService.getAllQuotations();
+//         const filteredByStore = [];
+//         for (const quote of quoteData) {
+//           try {
+//             const dealer = await ManageDealerService.GetDealerById(quote.dealerId);
+//             if (dealer?.storeId && Number(dealer.storeId) === dealerStoreId) {
+//               filteredByStore.push({ ...quote, dealer });
+//             }
+//           } catch (error) {
+//             console.warn(`Không thể lấy dealer ${quote.dealerId}:`, error);
+//           }
+//         }
+
+//         const [customersByStore, vehiclesByStore] = await Promise.all([
+//           ManageCustomersService.getCustomerByStoreId(dealerStoreId),
+//           ManageStorageService.getStorageVehiclesByStoreId(dealerStoreId),
+//         ]);
+
+//         const dealersByStore = (await ManageDealerService.getAllDealers())
+//           .filter(d => Number(d.storeId) === dealerStoreId);
+
+//         const customerMap = new Map(customersByStore.map(c => [c.customerId, c.fullName]));
+//         const vehicleMap = new Map(vehiclesByStore.map(v => [v.vehicleId, v.modelName]));
+//         const dealerMap = new Map(dealersByStore.map(d => [d.dealerId, d.fullName]));
+
+//         const formattedData = filteredByStore.map(item => ({
+//           key: item.quoteId,
+//           quoteId: item.quoteId,
+//           customerName: customerMap.get(item.customerId) || 'N/A',
+//           vehicleName: vehicleMap.get(item.vehicleId) || 'N/A',
+//           dealerName: dealerMap.get(item.dealerId) || 'N/A',
+//           quoteDate: item.quoteDate || 'N/A',
+//           status: item.status || 'N/A',
+//         }));
+
+//         setQuotations(formattedData);
+//         setFilteredQuotations(formattedData);
+//         setCustomers(customersByStore.map(c => ({ value: c.customerId, label: c.fullName })));
+//         setVehicles(vehiclesByStore.map(v => ({ value: v.vehicleId, label: v.modelName })));
+//         setDealers(dealersByStore.map(d => ({ value: d.dealerId, label: d.fullName })));
+//       };
+
+//       await fetchData();
+//       setIsModalVisible(false);
+//       form.resetFields();
+
+//     } catch (error) {
+//       console.error('Lỗi thêm báo giá:', error);
+//       toast.error('Thêm báo giá thất bại');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // === MODAL ===
+//   const showModal = () => setIsModalVisible(true);
+//   const handleCancel = () => {
+//     setIsModalVisible(false);
+//     form.resetFields();
+//   };
+
+//   // === CỘT BẢNG ===
+//   const columns = [
+//     { title: 'Quote ID', dataIndex: 'quoteId', key: 'quoteId', sorter: (a, b) => a.quoteId - b.quoteId },
+//     { title: 'Khách hàng', dataIndex: 'customerName', key: 'customerName', sorter: (a, b) => a.customerName.localeCompare(b.customerName) },
+//     { title: 'Mẫu xe', dataIndex: 'vehicleName', key: 'vehicleName', sorter: (a, b) => a.vehicleName.localeCompare(b.vehicleName) },
+//     { title: 'Nhân viên', dataIndex: 'dealerName', key: 'dealerName', sorter: (a, b) => a.dealerName.localeCompare(b.dealerName) },
+//     {
+//       title: 'Ngày báo giá',
+//       dataIndex: 'quoteDate',
+//       key: 'quoteDate',
+//       sorter: (a, b) => {
+//         const parse = d => {
+//           if (!d || d === 'N/A') return 0;
+//           const [day, month, year] = d.split('/').map(Number);
+//           return new Date(year, month - 1, day).getTime();
+//         };
+//         return parse(a.quoteDate) - parse(b.quoteDate);
+//       },
+//     },
+//     {
+//       title: 'Trạng thái',
+//       dataIndex: 'status',
+//       key: 'status',
+//       render: (status) => (
+//         <Tag color={
+//           status === 'Accepted' ? 'green' :
+//           status === 'Sent' ? 'blue' :
+//           status === 'Rejected' ? 'red' :
+//           status === 'Draft' ? 'orange' : 'default'
+//         }>
+//           {status}
+//         </Tag>
+//       ),
+//       sorter: (a, b) => a.status.localeCompare(b.status),
+//     },
+//   ];
+
+//   const totalQuotations = filteredQuotations.length;
+//   const startIndex = (currentPage - 1) * pageSize + 1;
+//   const endIndex = Math.min(currentPage * pageSize, totalQuotations);
+
+//   return (
+//     <div>
+//       <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
+//         Quản lý báo giá
+//       </Title>
+
+//       <Row gutter={16} style={{ marginBottom: 16 }}>
+//         <Col span={20}>
+//           <Input
+//             placeholder="Tìm theo tên khách hàng hoặc mẫu xe"
+//             value={searchText}
+//             onChange={(e) => setSearchText(e.target.value)}
+//             allowClear
+//           />
+//         </Col>
+//         <Col span={4}>
+//           <Button type="primary" onClick={showModal} style={{ width: '100%' }}>
+//             Thêm báo giá
+//           </Button>
+//         </Col>
+//       </Row>
+
+//       <div style={{ marginBottom: 16, fontSize: 14, color: '#666' }}>
+//         Hiển thị {startIndex} đến {endIndex} của {totalQuotations} báo giá
+//       </div>
+
+//       <Table
+//         columns={columns}
+//         dataSource={filteredQuotations}
+//         loading={loading}
+//         rowKey="key"
+//         pagination={{
+//           pageSize,
+//           current: currentPage,
+//           total: totalQuotations,
+//           onChange: (page) => setCurrentPage(page),
+//           showTotal: (total, range) => `Hiển thị ${range[0]}-${range[1]} của ${total} báo giá`,
+//         }}
+//         bordered
+//       />
+
+// <Modal
+//   title="Thêm báo giá mới"
+//   open={isModalVisible}
+//   onCancel={handleCancel}
+//   footer={null}
+//   width={600}
+// >
+//   <Form form={form} layout="vertical" onFinish={handleAddQuote}>
+//     <Form.Item name="customerId" label="Khách hàng" rules={[{ required: true, message: 'Vui lòng chọn khách hàng!' }]}>
+//       <Select showSearch placeholder="Chọn khách hàng" options={customers} loading={loading} />
+//     </Form.Item>
+
+//     <Form.Item name="vehicleId" label="Mẫu xe" rules={[{ required: true, message: 'Vui lòng chọn mẫu xe!' }]}>
+//       <Select showSearch placeholder="Chọn mẫu xe" options={vehicles} loading={loading} />
+//     </Form.Item>
+
+//     <Form.Item name="dealerId" label="Nhân viên" rules={[{ required: true, message: 'Vui lòng chọn nhân viên!' }]}>
+//       <Select showSearch placeholder="Chọn nhân viên" options={dealers} loading={loading} />
+//     </Form.Item>
+
+//     <Form.Item name="quoteDate" label="Ngày báo giá" rules={[{ required: true, message: 'Vui lòng chọn ngày!' }]}>
+//       <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} />
+//     </Form.Item>
+
+//     <Form.Item name="status" label="Trạng thái" initialValue="Draft">
+//       <Select>
+//         <Select.Option value="Draft">Draft</Select.Option>
+//         <Select.Option value="Sent">Sent</Select.Option>
+//         <Select.Option value="Accepted">Accepted</Select.Option>
+//         <Select.Option value="Rejected">Rejected</Select.Option>
+//       </Select>
+//     </Form.Item>
+
+//     <Form.Item>
+//       <Button type="primary" htmlType="submit" loading={loading} style={{ marginRight: 8 }}>
+//         Thêm báo giá
+//       </Button>
+//       <Button onClick={handleCancel}>Hủy</Button>
+//     </Form.Item>
+//   </Form>
+// </Modal>
+//     </div>
+//   );
+// };
+
+// export default Quotation;
+
+// put quote
+// src/components/quotation/Quotation.jsx
 import React, { useState, useEffect } from 'react';
-import { Table, Typography, Form, Button, Input, Select, DatePicker, Modal, Row, Col } from 'antd';
+import {
+  Table,
+  Typography,
+  Form,
+  Button,
+  Input,
+  Select,
+  DatePicker,
+  Modal,
+  Row,
+  Col,
+  Tag,
+  Space,
+} from 'antd';
 import ManageQuoteService from '../../../services/ManageQuotes/ManageQuoteService';
 import ManageDealerService from '../../../services/ManageDealer/ManageDealerService';
 import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
-import ManageVehicleService from '../../../services/ManageVehicleService/ManageVehicleService';
+import ManageStorageService from '../../../services/ManageStorage/ManageStorageService';
 import { toast } from 'react-toastify';
 
-const { Title, Text } = Typography;
-const { Option } = Select;
+const { Title } = Typography;
 
 const Quotation = () => {
   const [quotations, setQuotations] = useState([]);
   const [filteredQuotations, setFilteredQuotations] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editingQuote, setEditingQuote] = useState(null); // Dữ liệu đang edit
   const [customers, setCustomers] = useState([]);
   const [vehicles, setVehicles] = useState([]);
   const [dealers, setDealers] = useState([]);
   const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
-  const [form] = Form.useForm();
+  const [addForm] = Form.useForm();
+  const [editForm] = Form.useForm();
 
-  // Fetch quotations and related data
+  // Lấy storeId từ localStorage
+  const getDealerStoreId = () => {
+    try {
+      const dealerInfo = JSON.parse(localStorage.getItem('dealerInfo') || '{}');
+      return dealerInfo.storeId ? Number(dealerInfo.storeId) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  // === TẢI DỮ LIỆU ===
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      const dealerStoreId = getDealerStoreId();
+
+      if (!dealerStoreId) {
+        toast.error('Không tìm thấy thông tin cửa hàng. Vui lòng đăng nhập lại.');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const [quoteData, customerData, vehicleData, dealerData] = await Promise.all([
-          ManageQuoteService.getAllQuotations(),
-          ManageCustomersService.getAllCustomers(),
-          ManageVehicleService.getAllVehicle(),
-          ManageDealerService.getAllDealers(),
+        const quoteData = await ManageQuoteService.getAllQuotations();
+
+        const filteredByStore = [];
+        for (const quote of quoteData) {
+          try {
+            const dealer = await ManageDealerService.GetDealerById(quote.dealerId);
+            if (dealer?.storeId && Number(dealer.storeId) === dealerStoreId) {
+              filteredByStore.push({ ...quote, dealer });
+            }
+          } catch (error) {
+            console.warn(`Không thể lấy dealer ID ${quote.dealerId}:`, error);
+          }
+        }
+
+        const [customersByStore, vehiclesByStore] = await Promise.all([
+          ManageCustomersService.getCustomerByStoreId(dealerStoreId),
+          ManageStorageService.getStorageVehiclesByStoreId(dealerStoreId),
         ]);
 
-        // Create lookup maps for quick access
-        const customerMap = new Map(customerData.map(c => [c.customerId, c.fullName]));
-        const vehicleMap = new Map(vehicleData.map(v => [v.vehicleId, v.modelName]));
-        const dealerMap = new Map(dealerData.map(d => [d.dealerId, d.fullName]));
+        const dealersByStore = (await ManageDealerService.getAllDealers())
+          .filter(d => Number(d.storeId) === dealerStoreId);
 
-        // Format quotation data with resolved names
-        const formattedData = quoteData.map(item => ({
+        const customerMap = new Map(customersByStore.map(c => [c.customerId, c.fullName]));
+        const vehicleMap = new Map(vehiclesByStore.map(v => [v.vehicleId, v.modelName]));
+        const dealerMap = new Map(dealersByStore.map(d => [d.dealerId, d.fullName]));
+
+        const formattedData = filteredByStore.map(item => ({
           key: item.quoteId,
+          quoteId: item.quoteId,
           customerName: customerMap.get(item.customerId) || 'N/A',
           vehicleName: vehicleMap.get(item.vehicleId) || 'N/A',
           dealerName: dealerMap.get(item.dealerId) || 'N/A',
-          quoteDate: item.quoteDate,
-          status: item.status,
+          quoteDate: item.quoteDate || 'N/A',
+          status: item.status || 'N/A',
         }));
 
         setQuotations(formattedData);
         setFilteredQuotations(formattedData);
-        setCustomers(customerData.map(c => ({ value: c.customerId, label: c.fullName })));
-        setVehicles(vehicleData.map(v => ({ value: v.vehicleId, label: v.modelName })));
-        setDealers(dealerData.map(d => ({ value: d.dealerId, label: d.fullName })));
+        setCustomers(customersByStore.map(c => ({ value: c.customerId, label: c.fullName })));
+        setVehicles(vehiclesByStore.map(v => ({ value: v.vehicleId, label: v.modelName })));
+        setDealers(dealersByStore.map(d => ({ value: d.dealerId, label: d.fullName })));
+
       } catch (error) {
-        console.error('Failed to fetch data:', error);
-        toast.error('Failed to fetch data');
+        console.error('Lỗi tải dữ liệu:', error);
+        toast.error('Không thể tải dữ liệu báo giá');
       } finally {
         setLoading(false);
       }
@@ -65,21 +479,49 @@ const Quotation = () => {
     fetchData();
   }, []);
 
-  // Handle search
+  // === TÌM KIẾM ===
   useEffect(() => {
-    const filtered = quotations.filter(
-      (quote) =>
-        quote.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
-        quote.vehicleName.toLowerCase().includes(searchText.toLowerCase())
+    const filtered = quotations.filter(quote =>
+      quote.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
+      quote.vehicleName.toLowerCase().includes(searchText.toLowerCase())
     );
     setFilteredQuotations(filtered);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1);
   }, [searchText, quotations]);
 
-  // Handle form submission
-  const handleAddQuote = async (values) => {
+  // === MỞ MODAL THÊM ===
+  const showAddModal = () => setIsAddModalVisible(true);
+  const hideAddModal = () => {
+    setIsAddModalVisible(false);
+    addForm.resetFields();
+  };
+
+  // === MỞ MODAL EDIT ===
+  const handleEdit = async (quoteId) => {
     try {
       setLoading(true);
+      const quote = await ManageQuoteService.GetQuotationById(quoteId);
+      setEditingQuote(quote);
+      editForm.setFieldsValue({ status: quote.status });
+      setIsEditModalVisible(true);
+    } catch (error) {
+      toast.error('Không thể tải thông tin báo giá');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const hideEditModal = () => {
+    setIsEditModalVisible(false);
+    setEditingQuote(null);
+    editForm.resetFields();
+  };
+
+  // === THÊM BÁO GIÁ ===
+  const handleAddQuote = async (values) => {
+    setLoading(true);
+    try {
       const quoteData = {
         customerId: values.customerId,
         vehicleId: values.vehicleId,
@@ -87,208 +529,191 @@ const Quotation = () => {
         quoteDate: values.quoteDate.format('DD/MM/YYYY'),
         status: values.status || 'Draft',
       };
-      await ManageQuoteService.AddQuotation(quoteData);
-      toast.success('Quote added successfully');
 
-      // Refresh quotations
-      const quoteDataUpdated = await ManageQuoteService.getAllQuotations();
-      const [customerData, vehicleData, dealerData] = await Promise.all([
-        ManageCustomersService.getAllCustomers(),
-        ManageVehicleService.getAllVehicle(),
-        ManageDealerService.getAllDealers(),
-      ]);
-      const customerMap = new Map(customerData.map(c => [c.customerId, c.fullName]));
-      const vehicleMap = new Map(vehicleData.map(v => [v.vehicleId, v.modelName]));
-      const dealerMap = new Map(dealerData.map(d => [d.dealerId, d.fullName]));
-      const formattedData = quoteDataUpdated.map(item => ({
-        key: item.quoteId,
-        customerName: customerMap.get(item.customerId) || 'N/A',
-        vehicleName: vehicleMap.get(item.vehicleId) || 'N/A',
-        dealerName: dealerMap.get(item.dealerId) || 'N/A',
-        quoteDate: item.quoteDate,
-        status: item.status,
-      }));
-      setQuotations(formattedData);
-      setFilteredQuotations(formattedData);
-      setIsModalVisible(false);
-      form.resetFields();
+      await ManageQuoteService.AddQuotation(quoteData);
+      toast.success('Thêm báo giá thành công!');
+      hideAddModal();
+      // Refresh
+      window.location.reload(); // Đơn giản nhất
     } catch (error) {
-      console.error('Failed to add quote:', error);
-      toast.error('Failed to add quote');
+      toast.error('Thêm báo giá thất bại');
+      console.error(error);
     } finally {
       setLoading(false);
     }
   };
 
-  // Show modal
-  const showModal = () => {
-    setIsModalVisible(true);
+  // === CẬP NHẬT STATUS ===
+  const handleUpdateStatus = async (values) => {
+    if (!editingQuote) return;
+
+    setLoading(true);
+    try {
+      const updateData = {
+        customerId: editingQuote.customerId,
+        vehicleId: editingQuote.vehicleId,
+        dealerId: editingQuote.dealerId,
+        quoteDate: editingQuote.quoteDate,
+        status: values.status,
+      };
+
+      await ManageQuoteService.EditQuotation(editingQuote.quoteId, updateData);
+      toast.success('Cập nhật trạng thái thành công!');
+
+      // Refresh bảng
+      const updatedQuote = { ...editingQuote, status: values.status };
+      const updatedList = quotations.map(q =>
+        q.quoteId === updatedQuote.quoteId
+          ? { ...q, status: updatedQuote.status }
+          : q
+      );
+      setQuotations(updatedList);
+      setFilteredQuotations(updatedList);
+
+      hideEditModal();
+    } catch (error) {
+      toast.error('Cập nhật thất bại');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle modal cancel
-  const handleCancel = () => {
-    setIsModalVisible(false);
-    form.resetFields();
-  };
-
+  // === CỘT BẢNG ===
   const columns = [
+    { title: 'Quote ID', dataIndex: 'quoteId', key: 'quoteId', sorter: (a, b) => a.quoteId - b.quoteId },
+    { title: 'Khách hàng', dataIndex: 'customerName', key: 'customerName' },
+    { title: 'Mẫu xe', dataIndex: 'vehicleName', key: 'vehicleName' },
+    { title: 'Nhân viên', dataIndex: 'dealerName', key: 'dealerName' },
+    { title: 'Ngày báo giá', dataIndex: 'quoteDate', key: 'quoteDate' },
     {
-      title: 'Quote ID',
-      dataIndex: 'key',
-      key: 'key',
-      sorter: (a, b) => a.key - b.key,
-    },
-    {
-      title: 'Customer Name',
-      dataIndex: 'customerName',
-      key: 'customerName',
-      sorter: (a, b) => a.customerName.localeCompare(b.customerName),
-    },
-    {
-      title: 'Vehicle Model',
-      dataIndex: 'vehicleName',
-      key: 'vehicleName',
-      sorter: (a, b) => a.vehicleName.localeCompare(b.vehicleName),
-    },
-    {
-      title: 'Dealer Name',
-      dataIndex: 'dealerName',
-      key: 'dealerName',
-      sorter: (a, b) => a.dealerName.localeCompare(b.dealerName),
-    },
-    {
-      title: 'Quote Date',
-      dataIndex: 'quoteDate',
-      key: 'quoteDate',
-      sorter: (a, b) => new Date(a.quoteDate) - new Date(b.quoteDate),
-    },
-    {
-      title: 'Status',
+      title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
-      sorter: (a, b) => a.status.localeCompare(b.status),
+      render: (status) => (
+        <Tag color={
+          status === 'Accepted' ? 'green' :
+          status === 'Sent' ? 'blue' :
+          status === 'Rejected' ? 'red' :
+          status === 'Draft' ? 'orange' : 'default'
+        }>
+          {status}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => (
+        <Space size="middle">
+          <Button className='btn btn-outline-primary' type="link" onClick={() => handleEdit(record.quoteId)} >
+            Edit
+          </Button>
+        </Space>
+      ),
     },
   ];
 
-  // Calculate pagination details
   const totalQuotations = filteredQuotations.length;
  
   return (
     <div>
       <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
-        Quotation  
+        Quản lý báo giá
       </Title>
+
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={20}>
           <Input
-            placeholder="Search by Customer Name or Vehicle Model"
+            placeholder="Tìm theo tên khách hàng hoặc mẫu xe"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             allowClear
           />
         </Col>
         <Col span={4}>
-          <Button
-            type="primary"
-            onClick={showModal}
-            style={{ width: '100%' }}
-          >
-            Add Quote
+          <Button type="primary" onClick={showAddModal} style={{ width: '100%' }}>
+            Thêm báo giá
           </Button>
         </Col>
       </Row>
-      <Row align="middle" justify="space-between" style={{ marginTop: 16 }}>
-   
-        
-          <Table
-            columns={columns}
-            dataSource={filteredQuotations}
-            loading={loading}
-            rowKey="key"
-            pagination={{
-              pageSize: pageSize,
-              current: currentPage,
-              total: totalQuotations,
-              onChange: (page) => setCurrentPage(page),
-              style: { margin: 0 },
-                        showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Store${total !== 1 ? 's' : ''}`,
 
-            }}
-            bordered
-            style={{ width: '100%' }}
-          />
-        
-      </Row>
+     
+      <Table
+        columns={columns}
+        dataSource={filteredQuotations}
+        loading={loading}
+        rowKey="key"
+        pagination={{
+          pageSize,
+          current: currentPage,
+          total: totalQuotations,
+          onChange: (page) => setCurrentPage(page),
+          showTotal: (total, range) => `Hiển thị ${range[0]}-${range[1]} của ${total} báo giá`,
+        }}
+        bordered
+      />
+
+      {/* MODAL THÊM */}
       <Modal
-        title="Add New Quote"
-        open={isModalVisible}
-        onOk={form.submit}
-        onCancel={handleCancel}
-        okText="Submit"
-        cancelText="Cancel"
+        title="Thêm báo giá mới"
+        open={isAddModalVisible}
+        onCancel={hideAddModal}
+        footer={null}
+        width={600}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleAddQuote}
-        >
-          <Form.Item
-            name="customerId"
-            label="Customer"
-            rules={[{ required: true, message: 'Please select a customer' }]}
-          >
-            <Select
-              showSearch
-              placeholder="Select a customer"
-              optionFilterProp="label"
-              options={customers}
-            />
+        <Form form={addForm} layout="vertical" onFinish={handleAddQuote}>
+          <Form.Item name="customerId" label="Khách hàng" rules={[{ required: true }]}>
+            <Select showSearch placeholder="Chọn khách hàng" options={customers} loading={loading} />
           </Form.Item>
-          <Form.Item
-            name="vehicleId"
-            label="Vehicle"
-            rules={[{ required: true, message: 'Please select a vehicle' }]}
-          >
-            <Select
-              showSearch
-              placeholder="Select a vehicle"
-              optionFilterProp="label"
-              options={vehicles}
-            />
+          <Form.Item name="vehicleId" label="Mẫu xe" rules={[{ required: true }]}>
+            <Select showSearch placeholder="Chọn mẫu xe" options={vehicles} loading={loading} />
           </Form.Item>
-          <Form.Item
-            name="dealerId"
-            label="Dealer"
-            rules={[{ required: true, message: 'Please select a dealer' }]}
-          >
-            <Select
-              showSearch
-              placeholder="Select a dealer"
-              optionFilterProp="label"
-              options={dealers}
-            />
+          <Form.Item name="dealerId" label="Nhân viên" rules={[{ required: true }]}>
+            <Select showSearch placeholder="Chọn nhân viên" options={dealers} loading={loading} />
           </Form.Item>
-          <Form.Item
-            name="quoteDate"
-            label="Quote Date"
-            rules={[{ required: true, message: 'Please select a quote date' }]}
-          >
+          <Form.Item name="quoteDate" label="Ngày báo giá" rules={[{ required: true }]}>
             <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} />
           </Form.Item>
-          <Form.Item
-            name="status"
-            label="Status"
-            initialValue="Draft"
-          >
-            <Select
-              placeholder="Select status"
-              options={[
-                { value: 'Draft', label: 'Draft' },
-                { value: 'Sent', label: 'Sent' },
-                { value: 'Accepted', label: 'Accepted' },
-                { value: 'Rejected', label: 'Rejected' },
-              ]}
-            />
+          <Form.Item name="status" label="Trạng thái" initialValue="Draft">
+            <Select>
+              <Select.Option value="Draft">Draft</Select.Option>
+              <Select.Option value="Sent">Sent</Select.Option>
+              <Select.Option value="Accepted">Accepted</Select.Option>
+              <Select.Option value="Rejected">Rejected</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} style={{ marginRight: 8 }}>
+              Thêm
+            </Button>
+            <Button onClick={hideAddModal}>Hủy</Button>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* MODAL EDIT STATUS */}
+      <Modal
+        title={`Cập nhật trạng thái - Quote #${editingQuote?.quoteId}`}
+        open={isEditModalVisible}
+        onCancel={hideEditModal}
+        footer={null}
+        width={500}
+      >
+        <Form form={editForm} layout="vertical" onFinish={handleUpdateStatus}>
+          <Form.Item name="status" label="Trạng thái" rules={[{ required: true }]}>
+            <Select>
+              <Select.Option value="Draft">Draft</Select.Option>
+              <Select.Option value="Sent">Sent</Select.Option>
+              <Select.Option value="Accepted">Accepted</Select.Option>
+              <Select.Option value="Rejected">Rejected</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item>
+            <Button type="primary" htmlType="submit" loading={loading} style={{ marginRight: 8 }}>
+              Cập nhật
+            </Button>
+            <Button onClick={hideEditModal}>Hủy</Button>
           </Form.Item>
         </Form>
       </Modal>

@@ -1,6 +1,18 @@
-// filter theo storeId
 import React, { useState, useEffect } from 'react';
-import { Table, Typography, Form, Button, Input, Select, DatePicker, Modal, Tabs, Row, Col } from 'antd';
+import {
+  Table,
+  Typography,
+  Form,
+  Button,
+  Input,
+  Select,
+  DatePicker,
+  Modal,
+  Tabs,
+  Row,
+  Col,
+  Tag,
+} from 'antd';
 import ManageServiceSaleAgreements from '../../../services/ManageAgreements/ManageServiceSaleAgreements';
 import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
 import ManageOrdersService from '../../../services/ManageOrders/ManageOrdersService';
@@ -8,7 +20,7 @@ import Quotation from './Quotation';
 import Orders from './Orders';
 import { toast } from 'react-toastify';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { TabPane } = Tabs;
 
 const ManageSaleAgreements = () => {
@@ -17,7 +29,7 @@ const ManageSaleAgreements = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('agreements');
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [customers, setCustomers] = useState([]); // Options: { value, label }
+  const [customers, setCustomers] = useState([]); // Chỉ khách có order
   const [orderOptions, setOrderOptions] = useState([]);
   const [customerOrdersMap, setCustomerOrdersMap] = useState(new Map());
   const [searchText, setSearchText] = useState('');
@@ -27,26 +39,30 @@ const ManageSaleAgreements = () => {
 
   // Lấy storeId từ localStorage
   const getDealerStoreId = () => {
-    const dealerInfo = JSON.parse(localStorage.getItem('dealerInfo') || '{}');
-    return dealerInfo.storeId;
+    try {
+      const dealerInfo = JSON.parse(localStorage.getItem('dealerInfo') || '{}');
+      return dealerInfo.storeId ? Number(dealerInfo.storeId) : null;
+    } catch {
+      return null;
+    }
   };
 
-  // Fetch data with storeId filter
+  // === TẢI DỮ LIỆU ===
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      const dealerStoreId = getDealerStoreId();
+
+      if (!dealerStoreId) {
+        toast.error('Không tìm thấy thông tin cửa hàng. Vui lòng đăng nhập lại.');
+        setLoading(false);
+        return;
+      }
+
       try {
-        const dealerStoreId = getDealerStoreId();
-
-        if (!dealerStoreId) {
-          toast.error('Không tìm thấy thông tin cửa hàng. Vui lòng đăng nhập lại.');
-          setLoading(false);
-          return;
-        }
-
-        // === 1. Fetch Agreements + Filter by storeId ===
+        // 1. LẤY TẤT CẢ HỢP ĐỒNG + LỌC THEO STORE
         const agreementData = await ManageServiceSaleAgreements.getAllSaleAgreements();
-        const agreementsInStore = agreementData.filter(a => a.storeId === dealerStoreId);
+        const agreementsInStore = agreementData.filter(a => Number(a.storeId) === dealerStoreId);
 
         const formattedAgreements = agreementsInStore.map(item => ({
           key: item.agreementId,
@@ -59,47 +75,58 @@ const ManageSaleAgreements = () => {
         setSaleAgreements(formattedAgreements);
         setFilteredAgreements(formattedAgreements);
 
-        // === 2. Fetch Customers by storeId ===
+        // 2. LẤY KHÁCH HÀNG THEO STORE
         let customerData = [];
         try {
           customerData = await ManageCustomersService.getCustomerByStoreId(dealerStoreId);
         } catch (error) {
-          console.error('Error fetching customers by store:', error);
+          console.error('Lỗi tải khách hàng:', error);
           toast.warn('Không tải được danh sách khách hàng.');
         }
 
-        // === 3. Fetch Orders + Filter by storeId ===
-        const orderData = await ManageOrdersService.getAllOrder();
-        const ordersInStore = orderData.filter(o => o.storeId === dealerStoreId);
+        // 3. LẤY TẤT CẢ ĐƠN HÀNG + LỌC THEO STORE
+        let orderData = [];
+        try {
+          orderData = await ManageOrdersService.getAllOrder();
+        } catch (error) {
+          console.error('Lỗi tải đơn hàng:', error);
+          toast.warn('Không tải được danh sách đơn hàng.');
+        }
 
-        // Build customer → orders map (only for customers in current store)
+        const ordersInStore = orderData.filter(order =>
+          order.dealer?.storeId != null && Number(order.dealer.storeId) === dealerStoreId
+        );
+
+        // 4. XÂY DỰNG MAP: customerId → danh sách order
         const map = new Map();
         const customerIdsInStore = new Set(customerData.map(c => c.customerId));
 
-        ordersInStore.forEach(o => {
-          if (customerIdsInStore.has(o.customerId)) {
-            if (!map.has(o.customerId)) {
-              map.set(o.customerId, []);
+        ordersInStore.forEach(order => {
+          if (customerIdsInStore.has(order.customerId)) {
+            if (!map.has(order.customerId)) {
+              map.set(order.customerId, []);
             }
-            map.get(o.customerId).push({
-              value: o.orderId,
-              label: `Order ${o.orderId} - ${o.totalPrice?.toLocaleString()}₫`
+            map.get(order.customerId).push({
+              value: order.orderId,
+              label: `Order #${order.orderId} - ${order.totalPrice?.toLocaleString('vi-VN') || 0}₫`
             });
           }
         });
+
         setCustomerOrdersMap(map);
 
-        // Set customer options (only those with orders in store)
+        // 5. CHỈ LẤY KHÁCH HÀNG CÓ ĐƠN HÀNG
         const customersWithOrders = customerData
           .filter(c => map.has(c.customerId))
           .map(c => ({
             value: c.customerId,
             label: c.fullName
           }));
+
         setCustomers(customersWithOrders);
 
       } catch (error) {
-        console.error('Failed to fetch data:', error);
+        console.error('Lỗi tải dữ liệu:', error);
         toast.error('Không thể tải dữ liệu. Vui lòng thử lại.');
       } finally {
         setLoading(false);
@@ -109,7 +136,7 @@ const ManageSaleAgreements = () => {
     fetchData();
   }, []);
 
-  // Search handler
+  // === TÌM KIẾM ===
   useEffect(() => {
     const filtered = agreements.filter(
       (agreement) =>
@@ -120,10 +147,11 @@ const ManageSaleAgreements = () => {
     setCurrentPage(1);
   }, [searchText, agreements]);
 
-  // Handle customer change → update order options
+  // === KHI CHỌN KHÁCH HÀNG → HIỆN DANH SÁCH ĐƠN HÀNG ===
   const handleCustomerChange = (value) => {
     const orders = customerOrdersMap.get(value) || [];
     setOrderOptions(orders);
+
     if (orders.length === 1) {
       form.setFieldsValue({ orderId: orders[0].value });
     } else {
@@ -131,7 +159,7 @@ const ManageSaleAgreements = () => {
     }
   };
 
-  // Handle add agreement
+  // === THÊM HỢP ĐỒNG ===
   const handleAddAgreement = async (values) => {
     setLoading(true);
     try {
@@ -148,15 +176,15 @@ const ManageSaleAgreements = () => {
         termsAndConditions: values.termsAndConditions,
         status: values.status || 'Active',
         fileUrl: values.fileUrl || '',
-        storeId: dealerStoreId, // BẮT BUỘC: Gán storeId
+        storeId: dealerStoreId,
       };
 
       await ManageServiceSaleAgreements.AddSaleAgreement(agreementData);
       toast.success('Thêm hợp đồng thành công!');
 
-      // Refresh agreements
+      // REFRESH
       const agreementDataUpdated = await ManageServiceSaleAgreements.getAllSaleAgreements();
-      const agreementsInStore = agreementDataUpdated.filter(a => a.storeId === dealerStoreId);
+      const agreementsInStore = agreementDataUpdated.filter(a => Number(a.storeId) === dealerStoreId);
 
       const formattedData = agreementsInStore.map(item => ({
         key: item.agreementId,
@@ -171,14 +199,16 @@ const ManageSaleAgreements = () => {
       setIsModalVisible(false);
       form.resetFields();
       setOrderOptions([]);
+
     } catch (error) {
-      console.error('Failed to add agreement:', error);
+      console.error('Lỗi thêm hợp đồng:', error);
       toast.error('Thêm hợp đồng thất bại.');
     } finally {
       setLoading(false);
     }
   };
 
+  // === MODAL ===
   const showModal = () => {
     setIsModalVisible(true);
     form.resetFields();
@@ -191,34 +221,50 @@ const ManageSaleAgreements = () => {
     setOrderOptions([]);
   };
 
+  // === CỘT BẢNG ===
   const columns = [
     {
-      title: 'Customer Name',
+      title: 'Khách hàng',
       dataIndex: 'customerName',
       key: 'customerName',
       sorter: (a, b) => a.customerName.localeCompare(b.customerName),
     },
     {
-      title: 'Agreement Date',
+      title: 'Ngày hợp đồng',
       dataIndex: 'agreementDate',
       key: 'agreementDate',
-      sorter: (a, b) => new Date(a.agreementDate.split('/').reverse().join('-')) - new Date(b.agreementDate.split('/').reverse().join('-')),
+      sorter: (a, b) => {
+        const parse = d => {
+          if (!d || d === 'N/A') return 0;
+          const [day, month, year] = d.split('/').map(Number);
+          return new Date(year, month - 1, day).getTime();
+        };
+        return parse(a.agreementDate) - parse(b.agreementDate);
+      },
     },
     {
-      title: 'Terms and Conditions',
+      title: 'Điều khoản',
       dataIndex: 'termsAndConditions',
       key: 'termsAndConditions',
+      ellipsis: true,
       sorter: (a, b) => a.termsAndConditions.localeCompare(b.termsAndConditions),
     },
     {
-      title: 'Status',
+      title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
+      render: (status) => (
+        <Tag color={status === 'Active' ? 'green' : status === 'Pending' ? 'orange' : 'red'}>
+          {status}
+        </Tag>
+      ),
       sorter: (a, b) => a.status.localeCompare(b.status),
     },
   ];
 
   const totalAgreements = filteredAgreements.length;
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, totalAgreements);
 
   return (
     <div>
@@ -228,8 +274,8 @@ const ManageSaleAgreements = () => {
 
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <TabPane tab="Agreements" key="agreements">
-          <Title level={4} style={{ marginBottom: 16 }}>
-            Agreements
+          <Title level={3} style={{ color: '#1F1F1F', marginBottom: 24 }}>
+            Quản lý hợp đồng bán hàng
           </Title>
 
           <Row gutter={16} style={{ marginBottom: 16 }}>
@@ -243,10 +289,14 @@ const ManageSaleAgreements = () => {
             </Col>
             <Col span={4}>
               <Button type="primary" onClick={showModal} style={{ width: '100%' }}>
-                Add Agreement
+                Thêm hợp đồng
               </Button>
             </Col>
           </Row>
+
+          <div style={{ marginBottom: 16, fontSize: 14, color: '#666' }}>
+            Hiển thị {startIndex} đến {endIndex} của {totalAgreements} hợp đồng
+          </div>
 
           <Table
             columns={columns}
@@ -254,14 +304,13 @@ const ManageSaleAgreements = () => {
             loading={loading}
             rowKey="key"
             pagination={{
-              pageSize: pageSize,
+              pageSize,
               current: currentPage,
               total: totalAgreements,
               onChange: (page) => setCurrentPage(page),
-              showTotal: (total, range) => `Hiển thị ${range[0]} đến ${range[1]} của ${total} hợp đồng`,
+              showTotal: (total, range) => `Hiển thị ${range[0]}-${range[1]} của ${total} hợp đồng`,
             }}
             bordered
-            style={{ width: '100%' }}
           />
         </TabPane>
 
@@ -274,14 +323,16 @@ const ManageSaleAgreements = () => {
         </TabPane>
       </Tabs>
 
-      {/* Add Agreement Modal */}
+      {/* MODAL THÊM HỢP ĐỒNG */}
       <Modal
         title="Thêm Hợp Đồng Bán Hàng Mới"
         open={isModalVisible}
         onCancel={handleCancel}
         footer={null}
+        width={700}
       >
         <Form form={form} layout="vertical" onFinish={handleAddAgreement}>
+          {/* KHÁCH HÀNG - CHỈ CÓ ORDER TRONG STORE */}
           <Form.Item
             name="customerId"
             label="Khách hàng"
@@ -289,13 +340,15 @@ const ManageSaleAgreements = () => {
           >
             <Select
               showSearch
-              placeholder="Chọn khách hàng"
+              placeholder="Chọn khách hàng (phải có đơn hàng)"
               optionFilterProp="label"
               options={customers}
               onChange={handleCustomerChange}
+              notFoundContent="Không có khách hàng nào có đơn hàng"
             />
           </Form.Item>
 
+          {/* ĐƠN HÀNG - TỰ ĐỘNG HIỆN KHI CHỌN KHÁCH */}
           <Form.Item
             name="orderId"
             label="Đơn hàng"
@@ -307,6 +360,7 @@ const ManageSaleAgreements = () => {
               optionFilterProp="label"
               options={orderOptions}
               disabled={orderOptions.length === 0}
+              notFoundContent="Chọn khách hàng trước"
             />
           </Form.Item>
 
@@ -327,13 +381,11 @@ const ManageSaleAgreements = () => {
           </Form.Item>
 
           <Form.Item name="status" label="Trạng thái" initialValue="Active">
-            <Select
-              options={[
-                { value: 'Active', label: 'Active' },
-                { value: 'Inactive', label: 'Inactive' },
-                { value: 'Pending', label: 'Pending' },
-              ]}
-            />
+            <Select>
+              <Select.Option value="Active">Active</Select.Option>
+              <Select.Option value="Inactive">Inactive</Select.Option>
+              <Select.Option value="Pending">Pending</Select.Option>
+            </Select>
           </Form.Item>
 
           <Form.Item name="fileUrl" label="File URL (tùy chọn)">
