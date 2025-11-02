@@ -465,10 +465,15 @@ const VehicleDetailPage = () => {
                 </div>
                 {tabKey === 'overview' && (
                     <div className="detail-actions eco-buttons mt-3">
-                        <Button variant="primary" size="lg" onClick={handleTestDriveClick} className="btn-eco-primary me-2">
+                        <Button
+                            variant="eco-primary"
+                            size="lg"
+                            onClick={handleTestDriveClick}
+                            className="me-2"
+                        >
                             Schedule Test Drive
                         </Button>
-                        <Button variant="outline-primary" size="lg" className="btn-outline-eco">
+                        <Button variant="outline-eco" size="lg">
                             Get Quote
                         </Button>
                     </div>
