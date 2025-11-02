@@ -1,3 +1,4 @@
+// fix input customer and dealer select options
 import React, { useState, useEffect } from 'react';
 import { Table, Typography, Form, Button, Input, InputNumber, Select, Modal, Row, Col } from 'antd';
 import ManageOrdersService from '../../../services/ManageOrders/ManageOrdersService';
@@ -13,22 +14,37 @@ const Orders = () => {
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [customers, setCustomers] = useState([]);
-  const [dealers, setDealers] = useState([]);
+  const [customers, setCustomers] = useState([]); // Customers theo store
+  const [dealers, setDealers] = useState([]);     // Dealers theo store (lọc từ all)
   const [searchCustomer, setSearchCustomer] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(10);
   const [form] = Form.useForm();
 
+  // Lấy storeId từ localStorage
+  const getDealerStoreId = () => {
+    const dealerInfo = JSON.parse(localStorage.getItem('dealerInfo') || '{}');
+    return dealerInfo.storeId;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
       try {
-        // Fetch orders
+        const dealerStoreId = getDealerStoreId();
+
+        if (!dealerStoreId) {
+          toast.error('Không tìm thấy thông tin cửa hàng. Vui lòng đăng nhập lại.');
+          setLoading(false);
+          return;
+        }
+
+        // === 1. Load Orders (chỉ lấy của store hiện tại) ===
         const orderData = await ManageOrdersService.getAllOrder();
-        // Fetch customer and dealer fullName for each order
+        const filteredByStore = orderData.filter(order => order.storeId === dealerStoreId);
+
         const formattedData = await Promise.all(
-          orderData.map(async (item) => {
+          filteredByStore.map(async (item) => {
             let customerName = 'Unknown';
             let dealerName = 'Unknown';
             try {
@@ -56,16 +72,34 @@ const Orders = () => {
             };
           })
         );
+
         setOrders(formattedData);
         setFilteredOrders(formattedData);
 
-        // Fetch customers and dealers for the form
-        const customerData = await ManageCustomersService.getAllCustomers();
-        const dealerData = await ManageDealerService.getAllDealers();
-        setCustomers(customerData);
-        setDealers(dealerData);
+        // === 2. Load Customers theo storeId ===
+        try {
+          const customerData = await ManageCustomersService.getCustomerByStoreId(dealerStoreId);
+          setCustomers(customerData || []);
+        } catch (error) {
+          console.error('Error fetching customers by store:', error);
+          setCustomers([]);
+          toast.warn('Không tải được danh sách khách hàng theo cửa hàng.');
+        }
+
+        // === 3. Load Dealers (all) → lọc theo storeId ===
+        try {
+          const allDealerData = await ManageDealerService.getAllDealers();
+          const filteredDealers = allDealerData.filter(dealer => dealer.storeId === dealerStoreId);
+          setDealers(filteredDealers);
+        } catch (error) {
+          console.error('Error fetching dealers:', error);
+          setDealers([]);
+          toast.warn('Không tải được danh sách nhân viên.');
+        }
+
       } catch (error) {
-        toast.error('Failed to fetch data', error);
+        toast.error('Failed to fetch data');
+        console.error(error);
       } finally {
         setLoading(false);
       }
@@ -74,18 +108,18 @@ const Orders = () => {
     fetchData();
   }, []);
 
-  // Handle search
+  // Search by customer name
   useEffect(() => {
-    const filtered = orders.filter(
-      (order) =>
-        order.customerName.toLowerCase().includes(searchCustomer.toLowerCase())
+    const filtered = orders.filter((order) =>
+      order.customerName.toLowerCase().includes(searchCustomer.toLowerCase())
     );
     setFilteredOrders(filtered);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1);
   }, [searchCustomer, orders]);
 
   const showModal = () => {
     setIsModalVisible(true);
+    form.resetFields();
   };
 
   const handleCancel = () => {
@@ -96,6 +130,7 @@ const Orders = () => {
   const handleAddOrder = async (values) => {
     setLoading(true);
     try {
+      const dealerInfo = JSON.parse(localStorage.getItem('dealerInfo') || '{}');
       const newOrder = {
         customerId: values.customerId,
         dealerId: values.dealerId,
@@ -103,13 +138,18 @@ const Orders = () => {
         totalPrice: values.totalPrice,
         status: values.status,
         note: values.note,
+        storeId: dealerInfo.storeId,
       };
+
       await ManageOrdersService.addOrder(newOrder);
       toast.success('Order added successfully');
-      // Refresh the orders list
-      const data = await ManageOrdersService.getAllOrder();
+
+      // Refresh orders
+      const orderData = await ManageOrdersService.getAllOrder();
+      const filteredByStore = orderData.filter(order => order.storeId === dealerInfo.storeId);
+
       const formattedData = await Promise.all(
-        data.map(async (item) => {
+        filteredByStore.map(async (item) => {
           let customerName = 'Unknown';
           let dealerName = 'Unknown';
           try {
@@ -137,12 +177,14 @@ const Orders = () => {
           };
         })
       );
+
       setOrders(formattedData);
       setFilteredOrders(formattedData);
       setIsModalVisible(false);
       form.resetFields();
     } catch (error) {
-      toast.error('Failed to add order', error);
+      toast.error('Failed to add order');
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -203,7 +245,6 @@ const Orders = () => {
     },
   ];
 
-  // Calculate pagination details
   const totalOrders = filteredOrders.length;
   const startIndex = (currentPage - 1) * pageSize + 1;
   const endIndex = Math.min(currentPage * pageSize, totalOrders);
@@ -211,7 +252,7 @@ const Orders = () => {
   return (
     <div>
       <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
-        Order  
+        Order
       </Title>
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={20}>
@@ -223,11 +264,7 @@ const Orders = () => {
           />
         </Col>
         <Col span={4}>
-          <Button
-            type="primary"
-            onClick={showModal}
-            style={{ width: '100%' }}
-          >
+          <Button type="primary" onClick={showModal} style={{ width: '100%' }}>
             Add Order
           </Button>
         </Col>
@@ -235,17 +272,10 @@ const Orders = () => {
       <Text style={{ marginBottom: 16, display: 'block' }}>
         Showing {startIndex} to {endIndex} of {totalOrders} orders
       </Text>
-      <Modal
-        title="Add New Order"
-        open={isModalVisible}
-        onCancel={handleCancel}
-        footer={null}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleAddOrder}
-        >
+
+      <Modal title="Add New Order" open={isModalVisible} onCancel={handleCancel} footer={null}>
+        <Form form={form} layout="vertical" onFinish={handleAddOrder}>
+          {/* CUSTOMER - Lấy theo storeId */}
           <Form.Item
             label="Customer"
             name="customerId"
@@ -258,6 +288,7 @@ const Orders = () => {
               filterOption={(input, option) =>
                 option.children.toLowerCase().includes(input.toLowerCase())
               }
+              loading={loading}
             >
               {customers.map((customer) => (
                 <Option key={customer.customerId} value={customer.customerId}>
@@ -266,6 +297,8 @@ const Orders = () => {
               ))}
             </Select>
           </Form.Item>
+
+          {/* DEALER - Lọc từ all dealers theo storeId */}
           <Form.Item
             label="Dealer"
             name="dealerId"
@@ -278,6 +311,7 @@ const Orders = () => {
               filterOption={(input, option) =>
                 option.children.toLowerCase().includes(input.toLowerCase())
               }
+              loading={loading}
             >
               {dealers.map((dealer) => (
                 <Option key={dealer.dealerId} value={dealer.dealerId}>
@@ -286,6 +320,7 @@ const Orders = () => {
               ))}
             </Select>
           </Form.Item>
+
           <Form.Item
             label="Quantity"
             name="quantity"
@@ -293,6 +328,7 @@ const Orders = () => {
           >
             <InputNumber min={1} style={{ width: '100%' }} />
           </Form.Item>
+
           <Form.Item
             label="Total Price"
             name="totalPrice"
@@ -300,6 +336,7 @@ const Orders = () => {
           >
             <InputNumber min={0} style={{ width: '100%' }} />
           </Form.Item>
+
           <Form.Item
             label="Status"
             name="status"
@@ -312,25 +349,22 @@ const Orders = () => {
               <Option value="Cancelled">Cancelled</Option>
             </Select>
           </Form.Item>
-          <Form.Item
-            label="Note"
-            name="note"
-          >
+
+          <Form.Item label="Note" name="note">
             <Input.TextArea rows={4} />
           </Form.Item>
+
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={loading}>
               Add Order
             </Button>
-            <Button
-              style={{ marginLeft: 8 }}
-              onClick={handleCancel}
-            >
+            <Button style={{ marginLeft: 8 }} onClick={handleCancel}>
               Cancel
             </Button>
           </Form.Item>
         </Form>
       </Modal>
+
       <Table
         columns={columns}
         dataSource={filteredOrders}
@@ -341,9 +375,7 @@ const Orders = () => {
           current: currentPage,
           total: totalOrders,
           onChange: (page) => setCurrentPage(page),
-          
-          showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} Store${total !== 1 ? 's' : ''}`,
-    
+          showTotal: (total, range) => `Showing ${range[0]} to ${range[1]} of ${total} order${total !== 1 ? 's' : ''}`,
         }}
         bordered
       />
@@ -352,5 +384,3 @@ const Orders = () => {
 };
 
 export default Orders;
-
-//implement some feature like search, sort in Orders.jsx
