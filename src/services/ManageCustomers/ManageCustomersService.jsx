@@ -47,7 +47,17 @@ const ManageCustomersService =  {
         console.error("Error deleting customer:", error);
         throw error;
         }
-    }
+    },
+    
+    getCustomerByStoreId: async (storeId) => {
+        try {
+        const response = await apiClient.get(`Customer/store/${storeId}/customers`);
+        return response.data;
+        } catch (error) {
+        console.error("Error fetching customers by store ID:", error);
+        throw error;
+        }
+    },
 
     
 }
