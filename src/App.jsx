@@ -247,6 +247,8 @@ import StoreManage from './pages/evmStaffAdmin/StoreManage/StoreManage.jsx';
 import TestAppointment from './pages/dealerStaffManager/TestAppointment/TestAppointment.jsx';
 import BrandManage from './pages/evmStaffAdmin/BrandManage/BrandManage.jsx';
 import BrandVehicleManage from './pages/evmStaffAdmin/ProductNDistribution/BrandVehicle/BrandVehicleManage.jsx';
+import PaymentSuccess from './pages/dealerStaffManager/sale/PaymentSuccess.jsx';
+import PaymentCancel from './pages/dealerStaffManager/sale/PaymentCancel.jsx';
 function App() {
 
   const router = createBrowserRouter([
@@ -310,6 +312,14 @@ function App() {
           path: "report/customer-debt-report",
           element: <DebtReports />,
         },
+        {
+          path: "payment-success",
+          element: <PaymentSuccess />,
+        },
+        {
+          path: "payment-cancel",
+          element: <PaymentCancel />,
+        }
       ],
     },
     {
