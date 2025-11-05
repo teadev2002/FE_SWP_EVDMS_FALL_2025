@@ -73,6 +73,15 @@ const ManageVehicleService = {
       throw error;
     }
   },
+  getAllVehicleByStoreId: async (storeId) => {
+    try {
+      const response = await apiClient.get(`Vehicles/store/${storeId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching vehicles by store ID:", error);
+      throw error;
+    }
+  },
 
 
 };

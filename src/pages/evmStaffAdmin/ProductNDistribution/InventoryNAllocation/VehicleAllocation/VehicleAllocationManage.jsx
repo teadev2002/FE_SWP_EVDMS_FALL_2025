@@ -1,308 +1,355 @@
-import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Space, Typography, Card, message, DatePicker,InputNumber } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FilterOutlined } from '@ant-design/icons';
+// fix xem dc quantity, popup phân bổ thêm auto chọn store
+import React, { useState, useEffect } from 'react';
+import {
+  Table, Button, Space, Typography, Card, Input,  
+  Modal, Form, Select, InputNumber, Tag
+} from 'antd';
+import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
+import ManageVehicleService from '../../../../../services/ManageVehicleService/ManageVehicleService.jsx';
+import ManageStorageService from '../../../../../services/ManageStorage/ManageStorageService.jsx';
+import ManageStoreService from '../../../../../services/ManageStore/ManageStoreService.jsx';
+import { toast } from 'react-toastify';
 
 const { Title } = Typography;
-const { Option } = Select;
+const { Search } = Input;
 
 const VehicleAllocationManage = () => {
-  // Sample dispatch data
-  const [dispatchData, setDispatchData] = useState([
-    {
-      key: '1',
-      model: 'EcoVolt X1',
-      vin: '5YJ3E1EA0MF123456',
-      dealer: 'City Y Dealership',
-      status: 'Scheduled',
-      dispatchDate: '2025-10-01',
-      quantity: 5,
-    },
-    {
-      key: '2',
-      model: 'EcoVolt S2',
-      vin: '5YJ3E1EA0MF789012',
-      dealer: 'City Z Dealership',
-      status: 'In Transit',
-      dispatchDate: '2025-09-29',
-      quantity: 3,
-    },
-    {
-      key: '3',
-      model: 'EcoVolt Z3',
-      vin: '5YJ3E1EA0MF345678',
-      dealer: 'City X Dealership',
-      status: 'Delivered',
-      dispatchDate: '2025-09-25',
-      quantity: 2,
-    },
-  ]);
-
-  // State for modal, form, and filters
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingKey, setEditingKey] = useState(null);
-  const [statusFilter, setStatusFilter] = useState(null);
-  const [dealerFilter, setDealerFilter] = useState(null);
+  const [stores, setStores] = useState([]);
+  const [filteredStores, setFilteredStores] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [vehiclesInStore, setVehiclesInStore] = useState([]);
+  const [isVehiclesModalOpen, setIsVehiclesModalOpen] = useState(false);
+  const [selectedStore, setSelectedStore] = useState(null);
+  const [isAllocateModalOpen, setIsAllocateModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [form] = Form.useForm();
 
-  // Show modal for adding or editing
-  const showModal = (record = null) => {
-    if (record) {
-      form.setFieldsValue({
-        ...record,
-        dispatchDate: record.dispatchDate ? dayjs(record.dispatchDate) : null,
-      });
-      setEditingKey(record.key);
-    } else {
-      form.resetFields();
-      setEditingKey(null);
+  // Lấy brandId từ localStorage
+  const staffInfo = JSON.parse(localStorage.getItem('staffInfo') || '{}');
+  const brandId = staffInfo.brandId;
+
+  // Cache lưu quantityAvailable theo vehicleId + storeId
+  const [quantityCache, setQuantityCache] = useState({});
+
+  // Load stores
+  useEffect(() => {
+    if (!brandId) {
+      toast.error('Không tìm thấy brandId trong staffInfo');
+      return;
     }
-    setIsModalVisible(true);
+    fetchStores();
+  }, [brandId]);
+
+  // API: Lấy danh sách cửa hàng
+  const fetchStores = async () => {
+    setLoading(true);
+    try {
+      const response = await ManageStoreService.getAllStores();  
+      const storeList = Array.isArray(response) ? response : response.data || [];
+      setStores(storeList);
+      setFilteredStores(storeList);
+    } catch (error) {
+      toast.error('Lấy danh sách cửa hàng thất bại', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle form submission
-  const handleSubmit = (values) => {
-    const formattedValues = {
-      ...values,
-      dispatchDate: values.dispatchDate ? values.dispatchDate.format('YYYY-MM-DD') : null,
-    };
-    if (editingKey) {
-      // Update existing record
-      setDispatchData((prev) =>
-        prev.map((item) =>
-          item.key === editingKey ? { ...item, ...formattedValues } : item
-        )
+  // Tìm kiếm stores
+  useEffect(() => {
+    const lower = searchText.toLowerCase();
+    const filtered = stores.filter(s =>
+      s.storeName?.toLowerCase().includes(lower) ||
+      s.address?.toLowerCase().includes(lower) ||
+      s.email?.toLowerCase().includes(lower)
+    );
+    setFilteredStores(filtered);
+  }, [searchText, stores]);
+
+  // Lấy quantityAvailable theo storeId, brandId, vehicleId
+  const fetchQuantityForVehicle = async (vehicleId, storeId) => {
+    const cacheKey = `${vehicleId}_${storeId}`;
+    if (quantityCache[cacheKey] !== undefined) {
+      return quantityCache[cacheKey];
+    }
+
+    try {
+      const data = await ManageStorageService.filterStorageByBrandIdAndVehicleId(brandId, vehicleId);
+      const record = Array.isArray(data) ? data.find(r => r.storeId === storeId) : null;
+      const qty = record?.quantityAvailable ?? 0;
+
+      setQuantityCache(prev => ({ ...prev, [cacheKey]: qty }));
+      return qty;
+    } catch (error) {
+      console.error('Lỗi lấy quantity:', error);
+      setQuantityCache(prev => ({ ...prev, [cacheKey]: 0 }));
+      return 0;
+    }
+  };
+
+  // Mở modal xem xe → load xe + quantity
+  const openVehiclesModal = async (store) => {
+    setSelectedStore(store);
+    setVehiclesInStore([]);
+    setIsVehiclesModalOpen(true);
+
+    try {
+      const response = await ManageVehicleService.getAllVehicleByStoreId(store.storeId);
+      const vehicleList = Array.isArray(response) ? response : response.data || [];
+
+      // Lọc theo brandId
+      const filteredByBrand = vehicleList.filter(v => v.brandId === brandId);
+
+      // Load quantity cho từng xe
+      const enrichedVehicles = await Promise.all(
+        filteredByBrand.map(async (vehicle) => {
+          const qty = await fetchQuantityForVehicle(vehicle.vehicleId, store.storeId);
+          return { ...vehicle, quantityAvailable: qty };
+        })
       );
-      message.success('Dispatch updated successfully');
-    } else {
-      // Add new record
-      setDispatchData((prev) => [
-        ...prev,
-        { key: `${prev.length + 1}`, ...formattedValues },
-      ]);
-      message.success('Dispatch added successfully');
+
+      setVehiclesInStore(enrichedVehicles);
+    } catch (error) {
+      toast.error('Lấy danh sách xe thất bại', error);
+      setVehiclesInStore([]);
     }
-    setIsModalVisible(false);
+  };
+
+  // Đóng modal xe
+  const closeVehiclesModal = () => {
+    setIsVehiclesModalOpen(false);
+    setSelectedStore(null);
+    setVehiclesInStore([]);
+  };
+
+  // Mở modal allocate → mặc định storeId là cửa hàng đang xem
+  const openAllocateModal = (vehicle) => {
+    setSelectedVehicle(vehicle);
     form.resetFields();
+    form.setFieldsValue({
+      storeId: selectedStore.storeId,
+      quantity: 1
+    });
+    setIsAllocateModalOpen(true);
   };
 
-  // Handle delete
-  const handleDelete = (key) => {
-    setDispatchData((prev) => prev.filter((item) => item.key !== key));
-    message.success('Dispatch deleted successfully');
-  };
+  // Xử lý allocate
+  const handleAllocate = async (values) => {
+    const payload = {
+      vehicleId: selectedVehicle.vehicleId,
+      stores: [{ storeId: values.storeId, quantity: values.quantity }]
+    };
 
-  // Handle filters
-  const handleStatusFilter = (value) => {
-    setStatusFilter(value);
-    applyFilters(value, dealerFilter);
-  };
+    try {
+      await ManageStorageService.vehicleAllocate(payload);
+      toast.success(`Đã phân bổ thêm ${values.quantity} xe thành công!`);
 
-  const handleDealerFilter = (value) => {
-    setDealerFilter(value);
-    applyFilters(statusFilter, value);
-  };
+      // Cập nhật quantity trong cache
+      const cacheKey = `${selectedVehicle.vehicleId}_${values.storeId}`;
+      const currentQty = quantityCache[cacheKey] || 0;
+      setQuantityCache(prev => ({ ...prev, [cacheKey]: currentQty + values.quantity }));
 
-  // Apply filters
-  const applyFilters = (status, dealer) => {
-    let filteredData = dispatchData;
-    if (status) {
-      filteredData = filteredData.filter((item) => item.status === status);
+      // Cập nhật UI trong modal
+      setVehiclesInStore(prev => prev.map(v =>
+        v.vehicleId === selectedVehicle.vehicleId
+          ? { ...v, quantityAvailable: v.quantityAvailable + values.quantity }
+          : v
+      ));
+
+      setIsAllocateModalOpen(false);
+    } catch (error) {
+      toast.error('Phân bổ thất bại: ' + (error.message || 'Lỗi không xác định'));
     }
-    if (dealer) {
-      filteredData = filteredData.filter((item) => item.dealer === dealer);
-    }
-    setDispatchData(filteredData);
   };
 
-  // Table columns
-  const columns = [
+  // Format
+  const formatPrice = (price) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+  const formatDate = (date) => date ? dayjs(date, 'DD/MM/YYYY').format('DD/MM/YYYY') : '-';
+
+  // Cột bảng stores
+  const storeColumns = [
     {
-      title: 'Model',
-      dataIndex: 'model',
-      key: 'model',
-      sorter: (a, b) => a.model.localeCompare(b.model),
+      title: 'Tên Cửa Hàng',
+      dataIndex: 'storeName',
+      key: 'storeName',
+      sorter: (a, b) => a.storeName.localeCompare(b.storeName),
     },
     {
-      title: 'VIN',
-      dataIndex: 'vin',
-      key: 'vin',
+      title: 'Địa Chỉ',
+      dataIndex: 'address',
+      key: 'address',
+      ellipsis: true,
     },
     {
-      title: 'Dealer',
-      dataIndex: 'dealer',
-      key: 'dealer',
-      filters: [
-        { text: 'City Y Dealership', value: 'City Y Dealership' },
-        { text: 'City Z Dealership', value: 'City Z Dealership' },
-        { text: 'City X Dealership', value: 'City X Dealership' },
-      ],
-      onFilter: (value, record) => record.dealer === value,
+      title: 'Email',
+      dataIndex: 'email',
+      key: 'email',
+      ellipsis: true,
     },
     {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      filters: [
-        { text: 'Scheduled', value: 'Scheduled' },
-        { text: 'In Transit', value: 'In Transit' },
-        { text: 'Delivered', value: 'Delivered' },
-      ],
-      onFilter: (value, record) => record.status === value,
-    },
-    {
-      title: 'Dispatch Date',
-      dataIndex: 'dispatchDate',
-      key: 'dispatchDate',
-      sorter: (a, b) => dayjs(a.dispatchDate).unix() - dayjs(b.dispatchDate).unix(),
-    },
-    {
-      title: 'Quantity',
-      dataIndex: 'quantity',
-      key: 'quantity',
-      sorter: (a, b) => a.quantity - b.quantity,
-    },
-    {
-      title: 'Actions',
-      key: 'actions',
+      title: 'Hành Động',
+      key: 'action',
       render: (_, record) => (
         <Space>
           <Button
-            type="link"
-            icon={<EditOutlined />}
-            onClick={() => showModal(record)}
+            type="primary"
+            size="small"
+            icon={<EyeOutlined />}
+            onClick={() => openVehiclesModal(record)}
           >
-            Edit
-          </Button>
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.key)}
-          >
-            Delete
+            Xem Xe
           </Button>
         </Space>
       ),
     },
   ];
 
+  // Cột bảng vehicles in store
+  const vehicleColumns = [
+    {
+      title: 'Model Name',
+      dataIndex: 'modelName',
+      key: 'modelName',
+    },
+    {
+      title: 'Năm Sản Xuất',
+      dataIndex: 'year',
+      key: 'year',
+    },
+    {
+      title: 'Màu Sắc',
+      dataIndex: 'color',
+      key: 'color',
+    },
+    {
+      title: 'Giá',
+      dataIndex: 'price',
+      key: 'price',
+      render: formatPrice,
+    },
+    {
+      title: 'Loại Xe',
+      dataIndex: 'vehicleType',
+      key: 'vehicleType',
+    },
+    {
+      title: 'Số Lượng',
+      key: 'quantityAvailable',
+      render: (_, record) => (
+          record.quantityAvailable
+      ),
+    },
+    {
+      title: 'Ngày Tạo',
+      dataIndex: 'createDate',
+      key: 'createDate',
+      render: formatDate,
+    },
+    {
+      title: 'Hành Động',
+      key: 'action',
+      render: (_, record) => (
+        <Button
+          type="primary"
+          size="small"
+          onClick={() => openAllocateModal(record)}
+        >
+          Phân Bổ Thêm
+        </Button>
+      ),
+    },
+  ];
+
   return (
-    <div>
-      <Title level={2}>Vehicle Dispatch Management</Title>
+    <div style={{ padding: '24px' }}>
+      <Title level={2}>Vehicle Allocation Management</Title>
+
       <Card
-        title="Dispatch List"
-          variant='borderless'
         style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
         extra={
-          <Space>
-            <Select
-              placeholder="Filter by Dealer"
-              allowClear
-              style={{ width: 200 }}
-              onChange={handleDealerFilter}
-            >
-              <Option value="City Y Dealership">City Y Dealership</Option>
-              <Option value="City Z Dealership">City Z Dealership</Option>
-              <Option value="City X Dealership">City X Dealership</Option>
-            </Select>
-            <Select
-              placeholder="Filter by Status"
-              allowClear
-              style={{ width: 200 }}
-              onChange={handleStatusFilter}
-            >
-              <Option value="Scheduled">Scheduled</Option>
-              <Option value="In Transit">In Transit</Option>
-              <Option value="Delivered">Delivered</Option>
-            </Select>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => showModal()}
-            >
-              Add New Dispatch
-            </Button>
-          </Space>
+          <Search
+            placeholder="Tìm theo tên cửa hàng, địa chỉ, email..."
+            allowClear
+            enterButton={<SearchOutlined />}
+            size="large"
+            onChange={(e) => setSearchText(e.target.value)}
+            style={{ width: 400 }}
+          />
         }
       >
         <Table
-          columns={columns}
-          dataSource={dispatchData}
-          rowKey="key"
+          columns={storeColumns}
+          dataSource={filteredStores}
+          rowKey="storeId"
+          loading={loading}
           pagination={{ pageSize: 10 }}
-          style={{ marginTop: 16 }}
+          scroll={{ x: 800 }}
         />
       </Card>
 
+      {/* Modal xem xe theo store */}
       <Modal
-        title={editingKey ? 'Edit Dispatch' : 'Add Dispatch'}
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
+        title={`Xe tại cửa hàng: ${selectedStore?.storeName || ''}`}
+        open={isVehiclesModalOpen}
+        onCancel={closeVehiclesModal}
+        footer={null}
+        width={1200}
+      >
+        <Table
+          columns={vehicleColumns}
+          dataSource={vehiclesInStore}
+          rowKey="vehicleId"
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: 1000 }}
+        />
+      </Modal>
+
+      {/* Modal Allocate – storeId mặc định là cửa hàng đang xem */}
+      <Modal
+        title={`Phân bổ thêm xe: ${selectedVehicle?.modelName || ''}`}
+        open={isAllocateModalOpen}
+        onCancel={() => setIsAllocateModalOpen(false)}
         footer={null}
       >
         <Form
           form={form}
           layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{ status: 'Scheduled', quantity: 1 }}
+          onFinish={handleAllocate}
         >
-          <Form.Item
-            label="Model"
-            name="model"
-            rules={[{ required: true, message: 'Please enter the vehicle model' }]}
-          >
-            <Input placeholder="e.g., EcoVolt X1" />
+          <Form.Item label="Cửa hàng">
+            <Input
+              value={selectedStore?.storeName || ''}
+              disabled
+              style={{ color: '#000', fontWeight: 'bold' }}
+            />
+            <Form.Item
+              name="storeId"
+              noStyle
+              rules={[{ required: true }]}
+            >
+              <Input type="hidden" />
+            </Form.Item>
           </Form.Item>
+
           <Form.Item
-            label="VIN"
-            name="vin"
-            rules={[{ required: true, message: 'Please enter the VIN' }]}
-          >
-            <Input placeholder="e.g., 5YJ3E1EA0MF123456" />
-          </Form.Item>
-          <Form.Item
-            label="Dealer"
-            name="dealer"
-            rules={[{ required: true, message: 'Please select a dealer' }]}
-          >
-            <Select>
-              <Option value="City Y Dealership">City Y Dealership</Option>
-              <Option value="City Z Dealership">City Z Dealership</Option>
-              <Option value="City X Dealership">City X Dealership</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="Status"
-            name="status"
-            rules={[{ required: true, message: 'Please select a status' }]}
-          >
-            <Select>
-              <Option value="Scheduled">Scheduled</Option>
-              <Option value="In Transit">In Transit</Option>
-              <Option value="Delivered">Delivered</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="Dispatch Date"
-            name="dispatchDate"
-            rules={[{ required: true, message: 'Please select a dispatch date' }]}
-          >
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item
-            label="Quantity"
+            label="Số lượng phân bổ thêm"
             name="quantity"
-            rules={[{ required: true, message: 'Please enter the quantity' }]}
+            rules={[
+              { required: true, message: 'Vui lòng nhập số lượng' },
+              { type: 'number', min: 1, message: 'Số lượng phải ≥ 1' }
+            ]}
           >
             <InputNumber min={1} style={{ width: '100%' }} />
           </Form.Item>
+
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                {editingKey ? 'Update' : 'Add'}
+                Xác nhận phân bổ
               </Button>
-              <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
+              <Button onClick={() => setIsAllocateModalOpen(false)}>Hủy</Button>
             </Space>
           </Form.Item>
         </Form>

@@ -1,6 +1,6 @@
+ // hiển thị đúng quantity
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Descriptions, Image, Typography, Tabs, Carousel, Tag, Divider } from 'antd';
-import ManageStoreService from '../../../../services/ManageStore/ManageStoreService.jsx';
 import ManageVehicleService from '../../../../services/ManageVehicleService/ManageVehicleService.jsx';
 import ManageStorageService from '../../../../services/ManageStorage/ManageStorageService.jsx';
 import { toast } from 'react-toastify';
@@ -13,70 +13,63 @@ const ViewDetailBrandVehicle = ({
   vehicleId,
   isDetailModalVisible,
   handleDetailCancel,
-  vehicles, // Nhận danh sách vehicles để lấy brandId
+  vehicles, // Dùng để lấy brandId
 }) => {
   const [vehicle, setVehicle] = useState(null);
-  const [storeName, setStoreName] = useState('N/A');
   const [storageInfo, setStorageInfo] = useState({
     quantityAvailable: 'Loading...',
     lastUpdated: 'N/A',
   });
   const [loading, setLoading] = useState(false);
-console.log(storeName);
+
   useEffect(() => {
     if (!vehicleId || !isDetailModalVisible) {
       setVehicle(null);
-      setStoreName('N/A');
-      setStorageInfo({ quantityAvailable: 'N/A', lastUpdated: 'N/A' });
+      setStorageInfo({ quantityAvailable: 'Loading...', lastUpdated: 'N/A' });
       return;
     }
 
     const fetchData = async () => {
       setLoading(true);
       try {
+        // 1. Lấy thông tin xe
         const vehicleData = await ManageVehicleService.GetVehicleById(vehicleId);
         const fullVehicle = { ...vehicleData, status: vehicleData.status || 'Active' };
         setVehicle(fullVehicle);
 
+        // 2. Lấy brandId từ danh sách vehicles (đã có trong parent)
         const currentVehicle = vehicles.find(v => v.vehicleId === vehicleId);
         if (!currentVehicle?.brandId) {
-          setStoreName('N/A');
           setStorageInfo({ quantityAvailable: 'N/A', lastUpdated: 'N/A' });
           return;
         }
 
+        // 3. LẤY CHỈ BẢN GHI storeId === null → KHO TRUNG TÂM
         const data = await ManageStorageService.filterStorageByBrandIdAndVehicleId(
           currentVehicle.brandId,
           vehicleId
         );
 
-        if (data && data.length > 0) {
-          const info = data[0];
-          setStorageInfo({
-            quantityAvailable: info.quantityAvailable,
-            lastUpdated: info.lastUpdated || 'N/A',
-          });
+        let quantityAvailable = 0;
+        let lastUpdated = 'N/A';
 
-          if (info.storeId) {
-            try {
-              const storeData = await ManageStoreService.getStoreById(info.storeId);
-              setStoreName(storeData.storeName || 'N/A');
-            } catch (err) {
-              console.error('Failed to fetch store name:', err);
-              setStoreName('N/A');
-            }
-          } else {
-            setStoreName('N/A');
+        if (data && Array.isArray(data) && data.length > 0) {
+          const centralRecord = data.find(record => record.storeId === null);
+          if (centralRecord) {
+            quantityAvailable = centralRecord.quantityAvailable ?? 0;
+            lastUpdated = centralRecord.lastUpdated ?? 'N/A';
           }
-        } else {
-          setStorageInfo({ quantityAvailable: 'N/A', lastUpdated: 'N/A' });
-          setStoreName('N/A');
+          // Nếu không có → vẫn là 0
         }
+
+        setStorageInfo({
+          quantityAvailable: quantityAvailable.toString(),
+          lastUpdated,
+        });
       } catch (error) {
         console.error('Failed to fetch details:', error);
         toast.error('Failed to load vehicle details');
         setVehicle(null);
-        setStoreName('N/A');
         setStorageInfo({ quantityAvailable: 'Error', lastUpdated: 'N/A' });
       } finally {
         setLoading(false);
@@ -87,9 +80,10 @@ console.log(storeName);
   }, [vehicleId, isDetailModalVisible, vehicles]);
 
   const getStockTagClass = (quantity) => {
-    if (typeof quantity !== 'number') return 'out-of-stock';
-    if (quantity > 1) return 'available';
-    if (quantity === 1) return 'limited';
+    const qty = parseInt(quantity);
+    if (isNaN(qty)) return 'out-of-stock';
+    if (qty > 1) return 'available';
+    if (qty === 1) return 'limited';
     return 'out-of-stock';
   };
 
@@ -179,9 +173,8 @@ console.log(storeName);
             </TabPane>
           </Tabs>
 
-          <Divider orientation="left">Storage Information</Divider>
+          <Divider orientation="left">Central Warehouse</Divider>
           <Descriptions bordered column={2}>
-            {/* <Descriptions.Item label="Store Name">{storeName}</Descriptions.Item> */}
             <Descriptions.Item label="Quantity Available">
               <Tag className={getStockTagClass(storageInfo.quantityAvailable)}>
                 {storageInfo.quantityAvailable} Available

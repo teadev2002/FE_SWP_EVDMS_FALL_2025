@@ -396,6 +396,10 @@ function App() {
           path: "brands-management",
           element: <BrandManage />,
         },
+        {
+          path: "store-management",
+          element: <StoreManage />,
+        },
       ]
     },
     

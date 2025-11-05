@@ -21,18 +21,18 @@ const BrandVehicleManage = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
   const [isStockModalVisible, setIsStockModalVisible] = useState(false);
-  const [isAllocateModalVisible, setIsAllocateModalVisible] = useState(false); // ✅ New
+  const [isAllocateModalVisible, setIsAllocateModalVisible] = useState(false);  
   const [editingVehicle, setEditingVehicle] = useState(null);
   const [selectedVehicleId, setSelectedVehicleId] = useState(null);
   const [selectedStockVehicle, setSelectedStockVehicle] = useState(null);
-  const [selectedAllocateVehicle, setSelectedAllocateVehicle] = useState(null); // ✅ New
+  const [selectedAllocateVehicle, setSelectedAllocateVehicle] = useState(null);  
   const [form] = Form.useForm();
   const [stockForm] = Form.useForm();
-  const [allocateForm] = Form.useForm(); // ✅ New
+  const [allocateForm] = Form.useForm();  
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [brands, setBrands] = useState([]);
-  const [stores, setStores] = useState([]); // ✅ New: list of stores
+  const [stores, setStores] = useState([]);   
 
   // Cache lưu trữ dữ liệu storage theo vehicleId
   const [storageCache, setStorageCache] = useState({});
@@ -137,29 +137,37 @@ useEffect(() => {
     setFilteredVehicles(filtered);
   }, [searchTerm, vehicles]);
 
-  // Hàm lấy storage info
-  const fetchStorageInfo = useCallback(async (vehicleId, brandId) => {
-    if (storageCache[vehicleId]) return storageCache[vehicleId];
+   const fetchStorageInfo = useCallback(async (vehicleId, brandId) => {
+  if (storageCache[vehicleId]) return storageCache[vehicleId];
 
-    try {
-      const data = await ManageStorageService.filterStorageByBrandIdAndVehicleId(brandId, vehicleId);
-      const storageInfo = data && data.length > 0
-        ? {
-            quantityAvailable: data[0].quantityAvailable,
-            storeId: data[0].storeId || 'N/A',
-            lastUpdated: data[0].lastUpdated || 'N/A',
-          }
-        : { quantityAvailable: 'N/A', storeId: 'N/A', lastUpdated: 'N/A' };
+  try {
+    const data = await ManageStorageService.filterStorageByBrandIdAndVehicleId(brandId, vehicleId);
 
-      setStorageCache(prev => ({ ...prev, [vehicleId]: storageInfo }));
-      return storageInfo;
-    } catch (error) {
-      console.error(`Error fetching storage for vehicle ${vehicleId}:`, error);
-      const fallback = { quantityAvailable: 'Error', storeId: 'N/A', lastUpdated: 'N/A' };
-      setStorageCache(prev => ({ ...prev, [vehicleId]: fallback }));
-      return fallback;
+    let storageInfo = { quantityAvailable: 0, storeId: 'N/A', lastUpdated: 'N/A' };
+
+    if (data && Array.isArray(data) && data.length > 0) {
+      // Tìm bản ghi có storeId === null
+      const centralRecord = data.find(record => record.storeId === null);
+
+      if (centralRecord) {
+        storageInfo = {
+          quantityAvailable: centralRecord.quantityAvailable ?? 0,
+          storeId: 'Central', // hoặc 'N/A' nếu muốn
+          lastUpdated: centralRecord.lastUpdated ?? 'N/A',
+        };
+      }
+      // Nếu không có storeId null → vẫn giữ mặc định '0'
     }
-  }, [storageCache]);
+
+    setStorageCache(prev => ({ ...prev, [vehicleId]: storageInfo }));
+    return storageInfo;
+  } catch (error) {
+    console.error(`Error fetching storage for vehicle ${vehicleId}:`, error);
+    const fallback = { quantityAvailable: 'Error', storeId: 'N/A', lastUpdated: 'N/A' };
+    setStorageCache(prev => ({ ...prev, [vehicleId]: fallback }));
+    return fallback;
+  }
+}, [storageCache]);
 
   const getStorageInfo = useCallback((vehicleId) => {
     return storageCache[vehicleId] || { quantityAvailable: 'Loading...', storeId: 'N/A', lastUpdated: 'N/A' };
@@ -180,51 +188,48 @@ useEffect(() => {
   };
 
   const handleStockSave = async () => {
-    try {
-      const values = await stockForm.validateFields();
-      setLoading(true);
+  try {
+    const values = await stockForm.validateFields();
+    setLoading(true);
 
-      const today = new Date().toLocaleDateString('en-GB');
+    const today = new Date().toLocaleDateString('en-GB');
 
-      const currentStorage = storageCache[selectedStockVehicle.vehicleId];
-      let storeId = null;
+    // Luôn gửi storeId = null (theo yêu cầu)
+    const payload = {
+      vehicleId: selectedStockVehicle.vehicleId,
+      storeId: null, // CỐ ĐỊNH NULL
+      brandId: selectedStockVehicle.brandId,
+      quantityAvailable: values.quantityAvailable,
+      lastUpdated: today,
+    };
 
-      if (currentStorage?.storeId && currentStorage.storeId !== 'N/A' && !isNaN(currentStorage.storeId)) {
-        storeId = currentStorage.storeId;
-      } else {
-        storeId = null;
-      }
+    const result = await ManageStorageService.addToStock(payload);
 
-      const payload = {
-        vehicleId: selectedStockVehicle.vehicleId,
-        storeId: storeId,
-        brandId: selectedStockVehicle.brandId,
-        quantityAvailable: values.quantityAvailable,
-        lastUpdated: today,
-      };
+    // Cập nhật cache với thông tin mới nhất (storeId có thể vẫn là null)
+    setStorageCache(prev => ({
+      ...prev,
+      [selectedStockVehicle.vehicleId]: {
+        quantityAvailable: result.quantityAvailable ?? values.quantityAvailable,
+        storeId: result.storeId ?? 'N/A',
+        lastUpdated: result.lastUpdated ?? today,
+      },
+    }));
 
-      const result = await ManageStorageService.addToStock(payload);
+    toast.success(`Đã thêm ${values.quantityAvailable} xe vào kho trung tâm!`);
+    setIsStockModalVisible(false);
+    setSelectedStockVehicle(null);
+    stockForm.resetFields();
 
-      setStorageCache(prev => ({
-        ...prev,
-        [selectedStockVehicle.vehicleId]: {
-          quantityAvailable: result.quantityAvailable,
-          storeId: result.storeId || 'N/A',
-          lastUpdated: result.lastUpdated,
-        }
-      }));
+    // Tùy chọn: reload lại thông tin mới nhất từ server
+     await fetchStorageInfo(selectedStockVehicle.vehicleId, selectedStockVehicle.brandId);
 
-      toast.success(`Đã thêm ${values.quantityAvailable} xe vào kho!`);
-      setIsStockModalVisible(false);
-      setSelectedStockVehicle(null);
-      stockForm.resetFields();
-    } catch (error) {
-      toast.error('Thêm vào kho thất bại: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  } catch (error) {
+    console.error('Add to stock failed:', error);
+    toast.error('Thêm vào kho thất bại: ' + (error.message || 'Lỗi không xác định'));
+  } finally {
+    setLoading(false);
+  }
+};
   const handleStockCancel = () => {
     setIsStockModalVisible(false);
     setSelectedStockVehicle(null);
@@ -232,52 +237,71 @@ useEffect(() => {
   };
 
   // 🔑 NEW: Open Allocate Modal
-  const handleAllocate = (e, vehicle) => {
-    e.stopPropagation();
-    if (vehicle.isAllocation) {
-      toast.warn('This vehicle is already allocated.');
+const handleAllocate = (e, vehicle) => {
+  e.stopPropagation();
+ 
+  setSelectedAllocateVehicle(vehicle);
+  allocateForm.resetFields();
+  allocateForm.setFieldsValue({ quantity: 1 }); // Mặc định 1 xe
+  setIsAllocateModalVisible(true);
+};
+
+ 
+  // ko reload
+  const handleAllocateSubmit = async () => {
+  try {
+    const values = await allocateForm.validateFields();
+    const { storeId, quantity } = values;
+    const vehicleId = selectedAllocateVehicle.vehicleId;
+
+    if (quantity <= 0) {
+      toast.error('Số lượng phải lớn hơn 0!');
       return;
     }
-    setSelectedAllocateVehicle(vehicle);
-    allocateForm.resetFields();
-    setIsAllocateModalVisible(true);
-  };
 
-  // 🔑 NEW: Submit Allocation
-  const handleAllocateSubmit = async () => {
-    try {
-      const values = await allocateForm.validateFields();
-      const { storeId } = values;
-      const vehicleId = selectedAllocateVehicle.vehicleId;
-
-      setLoading(true);
-
-      // ✅ Correct payload format
-      await ManageStorageService.vehicleAllocate({
-        vehicleIds: [vehicleId],
-        storeId: storeId,
-      });
-
-      // Update UI: mark as allocated
-      const updatedVehicles = vehicles.map((v) =>
-        v.vehicleId === vehicleId ? { ...v, isAllocation: true } : v
-      );
-      setVehicles(updatedVehicles);
-      setFilteredVehicles((prev) =>
-        prev.map((v) => (v.vehicleId === vehicleId ? { ...v, isAllocation: true } : v))
-      );
-
-      toast.success(`Allocated "${selectedAllocateVehicle.modelName} - ${selectedAllocateVehicle.version}" to store!`);
-      setIsAllocateModalVisible(false);
-      setSelectedAllocateVehicle(null);
-      allocateForm.resetFields();
-    } catch (error) {
-      console.error('Allocation failed:', error);
-      toast.error('Allocation failed: ' + (error.message || 'Unknown error'));
-    } finally {
-      setLoading(false);
+    // Lấy quantityAvailable từ cache
+    const storageInfo = storageCache[vehicleId];
+    if (!storageInfo || storageInfo.quantityAvailable === 'Loading...') {
+      toast.warn('Đang tải dữ liệu kho, vui lòng thử lại...');
+      return;
     }
-  };
+
+    const available = parseInt(storageInfo.quantityAvailable, 10);
+    if (isNaN(available) || available < quantity) {
+      toast.error(`Chỉ còn ${available} xe trong kho trung tâm!`);
+      return;
+    }
+
+    setLoading(true);
+
+    const payload = {
+      vehicleId,
+      stores: [{ storeId, quantity }],
+    };
+
+    await ManageStorageService.vehicleAllocate(payload);
+
+    // Cập nhật cache: giảm số lượng kho trung tâm
+    setStorageCache(prev => ({
+      ...prev,
+      [vehicleId]: {
+        ...prev[vehicleId],
+        quantityAvailable: available - quantity,
+      },
+    }));
+
+    toast.success(`Đã phân bổ ${quantity} xe tới cửa hàng!`);
+    setIsAllocateModalVisible(false);
+    setSelectedAllocateVehicle(null);
+    allocateForm.resetFields();
+
+    // Không reload trang → UX mượt
+  } catch (error) {
+    toast.error('Phân bổ thất bại: ' + (error.message || 'Lỗi'));
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleAllocateCancel = () => {
     setIsAllocateModalVisible(false);
@@ -287,61 +311,79 @@ useEffect(() => {
 
   // Các hàm CRUD
   const handleSave = async () => {
-    try {
-      const values = await form.validateFields();
-      setLoading(true);
+  try {
+    const values = await form.validateFields();
+    setLoading(true);
 
-      const vehicleData = {
-        ...values,
-        imageUrls: editingVehicle
-          ? values.imageUrls || ''
-          : values.imageUrls ? [values.imageUrls] : [],
-      };
-
-      if (editingVehicle) {
-        const updatedVehicle = await ManageVehicleService.updateVehicle(editingVehicle.vehicleId, vehicleData);
-        const newVehicleData = {
-          ...updatedVehicle,
-          key: updatedVehicle.vehicleId.toString(),
-          status: updatedVehicle.status || 'Active',
-          imageUrls: Array.isArray(updatedVehicle.imageUrls) ? updatedVehicle.imageUrls.join(', ') : updatedVehicle.imageUrls || '',
-        };
-        setVehicles(vehicles.map(v => v.vehicleId === editingVehicle.vehicleId ? newVehicleData : v));
-        setFilteredVehicles(filteredVehicles.map(v => v.vehicleId === editingVehicle.vehicleId ? newVehicleData : v));
-        toast.success('Vehicle updated successfully');
-      } else {
-        const newVehicle = await ManageVehicleService.AddVehicle(vehicleData);
-        const newVehicleData = {
-          ...newVehicle,
-          key: newVehicle.vehicleId.toString(),
-          status: newVehicle.status || 'Active',
-          createDate: new Date().toLocaleDateString('en-GB'),
-          imageUrls: Array.isArray(newVehicle.imageUrls) ? newVehicle.imageUrls.join(', ') : newVehicle.imageUrls || '',
-        };
-        setVehicles([...vehicles, newVehicleData]);
-        setFilteredVehicles([...filteredVehicles, newVehicleData]);
-        toast.success('Vehicle added successfully');
-      }
-      setIsModalVisible(false);
-      setEditingVehicle(null);
-      form.resetFields();
-    } catch (error) {
-      toast.error('Failed to save vehicle: ' + error.message);
-    } finally {
-      setLoading(false);
+    // ✅ Chuẩn hóa imageUrls thành mảng
+    let imageUrlsArray = [];
+    if (values.imageUrls) {
+      // Tách chuỗi theo dấu phẩy, xuống dòng, khoảng trắng thừa
+      imageUrlsArray = values.imageUrls
+        .split(/[\n,]+/)
+        .map(url => url.trim())
+        .filter(url => url.length > 0);
     }
-  };
 
-  const handleEdit = (e, vehicle) => {
-    e.stopPropagation();
-    if (!vehicle.vehicleId) return toast.error('Invalid vehicle ID');
-    setEditingVehicle(vehicle);
-    form.setFieldsValue({
-      ...vehicle,
-      imageUrls: Array.isArray(vehicle.imageUrls) ? vehicle.imageUrls.join(', ') : vehicle.imageUrls || '',
-    });
-    setIsModalVisible(true);
-  };
+    const vehicleData = {
+      ...values,
+      imageUrls: imageUrlsArray, // Luôn là mảng
+    };
+
+    if (editingVehicle) {
+      const updatedVehicle = await ManageVehicleService.updateVehicle(editingVehicle.vehicleId, vehicleData);
+      const newVehicleData = {
+        ...updatedVehicle,
+        key: updatedVehicle.vehicleId.toString(),
+        status: updatedVehicle.status || 'Active',
+        imageUrls: Array.isArray(updatedVehicle.imageUrls)
+          ? updatedVehicle.imageUrls.join(', ')
+          : updatedVehicle.imageUrls || '',
+      };
+      setVehicles(vehicles.map(v => v.vehicleId === editingVehicle.vehicleId ? newVehicleData : v));
+      setFilteredVehicles(filteredVehicles.map(v => v.vehicleId === editingVehicle.vehicleId ? newVehicleData : v));
+      toast.success('Vehicle updated successfully');
+    } else {
+      const newVehicle = await ManageVehicleService.AddVehicle(vehicleData);
+      const newVehicleData = {
+        ...newVehicle,
+        key: newVehicle.vehicleId.toString(),
+        status: newVehicle.status || 'Active',
+        createDate: new Date().toLocaleDateString('en-GB'),
+        imageUrls: Array.isArray(newVehicle.imageUrls)
+          ? newVehicle.imageUrls.join(', ')
+          : newVehicle.imageUrls || '',
+      };
+      setVehicles([...vehicles, newVehicleData]);
+      setFilteredVehicles([...filteredVehicles, newVehicleData]);
+      toast.success('Vehicle added successfully');
+    }
+    setIsModalVisible(false);
+    setEditingVehicle(null);
+    form.resetFields();
+  } catch (error) {
+    toast.error('Failed to save vehicle: ' + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+   const handleEdit = (e, vehicle) => {
+  e.stopPropagation();
+  if (!vehicle.vehicleId) return toast.error('Invalid vehicle ID');
+  setEditingVehicle(vehicle);
+
+  // ✅ Chuyển mảng URL thành chuỗi để hiển thị trong input
+  const imageUrlsString = Array.isArray(vehicle.imageUrls)
+    ? vehicle.imageUrls.join('\n')  // Mỗi URL 1 dòng cho dễ đọc
+    : vehicle.imageUrls || '';
+
+  form.setFieldsValue({
+    ...vehicle,
+    imageUrls: imageUrlsString,
+  });
+  setIsModalVisible(true);
+};
 
   const handleDelete = async (e, id) => {
     e.stopPropagation();
@@ -409,26 +451,7 @@ useEffect(() => {
         return <span onMouseEnter={() => preloadStorageOnHover(record)}>{info.quantityAvailable}</span>;
       },
     },
-    {
-      title: 'Allocation',
-      key: 'isAllocation',
-      render: (_, record) => {
-        const isAllocated = record.isAllocation === true;
-        return (
-          <span style={{ color: isAllocated ? '#52c41a' : '#ff4d4f', fontWeight: 'bold' }}>
-            {isAllocated ? 'Xe đã gửi tới store' : 'Xe chưa gửi tới store'}
-          </span>
-        );
-      },
-      sorter: (a, b) => (a.isAllocation === true) - (b.isAllocation === true),
-      filters: [
-        { text: 'Đã gửi', value: true },
-        { text: 'Chưa gửi', value: false },
-      ],
-      onFilter: (value, record) => record.isAllocation === value,
-    },
-    
-     {
+        {
     title: 'Actions',
     key: 'actions',
     render: (_, record) => (
@@ -445,7 +468,6 @@ useEffect(() => {
           items: [
             {
               key: 'edit',
-              icon: <EditOutlined />,
               label: 'Edit',
               onClick: (e) => {
                 e.domEvent.stopPropagation();
@@ -454,8 +476,7 @@ useEffect(() => {
             },
             {
               key: 'addToStock',
-              icon: <StockOutlined />,
-              label: 'Add to Stock',
+              label: 'Add Stock',
               onClick: (e) => {
                 e.domEvent.stopPropagation();
                 handleAddToStock(e.domEvent, record);
@@ -464,11 +485,8 @@ useEffect(() => {
             {
               key: 'allocate',
               label: 'Allocate',
-              disabled: record.isAllocation,
-              style: {
-                backgroundColor: record.isAllocation ? '#d9d9d9' : '#722ed1',
-                color: record.isAllocation ? 'rgba(0,0,0,0.25)' : '#fff',
-              },
+              disabled: getStorageInfo(record.vehicleId).quantityAvailable < 1,
+              
               onClick: (e) => {
                 e.domEvent.stopPropagation();
                 handleAllocate(e.domEvent, record);
@@ -588,6 +606,7 @@ useEffect(() => {
       </Modal>
 
       {/* ✅ NEW: Allocate Modal */}
+   {/* ✅ Modal Allocate - Cập nhật để có quantity */}
       <Modal
         title="Allocate Vehicle to Store"
         open={isAllocateModalVisible}
@@ -602,12 +621,13 @@ useEffect(() => {
             <Form.Item label="Vehicle" style={{ marginBottom: 8, fontWeight: 'bold' }}>
               <span>{selectedAllocateVehicle.modelName} - {selectedAllocateVehicle.version}</span>
             </Form.Item>
+
             <Form.Item
               name="storeId"
               label="Select Store"
-              rules={[{ required: true, message: 'Please select a store!' }]}
+              rules={[{ required: true, message: 'Vui lòng chọn cửa hàng!' }]}
             >
-              <Select placeholder="Choose a store">
+              <Select placeholder="Chọn cửa hàng">
                 {stores.map((store) => (
                   <Option key={store.storeId} value={store.storeId}>
                     {store.storeName || `Store ${store.storeId}`}
@@ -615,10 +635,20 @@ useEffect(() => {
                 ))}
               </Select>
             </Form.Item>
+
+            <Form.Item
+              name="quantity"
+              label="Quantity to Allocate"
+              rules={[
+                { required: true, message: 'Vui lòng nhập số lượng!' },
+                { type: 'number', min: 1, message: 'Số lượng phải ≥ 1' },
+              ]}
+            >
+              <InputNumber min={1} style={{ width: '100%' }} placeholder="Số lượng xe phân bổ" />
+            </Form.Item>
           </Form>
         )}
       </Modal>
-
       <ModalVehicle
         isModalVisible={isModalVisible}
         editingVehicle={editingVehicle}
