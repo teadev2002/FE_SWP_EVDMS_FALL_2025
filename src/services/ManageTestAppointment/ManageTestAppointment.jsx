@@ -2,10 +2,22 @@
 import { apiClient } from "../../api/apiClient";
 
 const ManageTestAppointment = {
-    // LẤY TẤT CẢ YÊU CẦU TỪ KHÁCH
+    // LẤY TẤT CẢ YÊU CẦU TỪ KHÁCH THEO STORE
     getAllRequests: async () => {
         try {
-            const response = await apiClient.get("Customer");
+            // Lấy storeId từ localStorage (key là 'dealerInfo' chứa object dealer/staff)
+            const dealerInfoStr = localStorage.getItem('dealerInfo');
+            if (!dealerInfoStr) {
+                throw new Error('No dealerInfo in localStorage');
+            }
+            const dealerInfo = JSON.parse(dealerInfoStr);
+            const storeId = dealerInfo.storeId;
+            if (!storeId) {
+                throw new Error('No storeId found in dealerInfo');
+            }
+
+            // Gọi API với path param storeId
+            const response = await apiClient.get(`Customer/store/${storeId}/customers`);
             return response.data;
         } catch (error) {
             console.error("Error fetching requests:", error);
@@ -49,13 +61,22 @@ const ManageTestAppointment = {
     // LẤY THÔNG TIN DEALER
     getDealerById: async (id) => {
         try {
-            const response = await apiClient.get(`Dealers/${id}`); // ← Bỏ params
-            return response.data;
+            // Sử dụng query param để khớp với API spec: /api/Dealers?id={id}
+            const response = await apiClient.get("Dealers", {
+                params: { id }
+            });
+            // Nếu response là array (filtered list), lấy item đầu tiên
+            const dealerData = Array.isArray(response.data) ? response.data[0] : response.data;
+            if (!dealerData) {
+                throw new Error(`No dealer found for id ${id}`);
+            }
+            return dealerData;
         } catch (error) {
-            console.error("Error fetching dealer:", error.response?.data || error);
+            console.error(`Error fetching dealer ${id}:`, error.response?.data || error);
             throw error;
         }
     },
+
     // TẠO LỊCH HẸN
     createAppointment: async (data) => {
         try {

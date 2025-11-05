@@ -595,6 +595,34 @@ const TestAppointment = () => {
     const [dealers, setDealers] = useState([]);
     const [submitting, setSubmitting] = useState(false);
 
+    // Helper để lấy storeId từ localStorage
+    const getCurrentStoreId = () => {
+        const dealerInfoStr = localStorage.getItem('dealerInfo');
+        if (!dealerInfoStr) {
+            throw new Error('No dealerInfo in localStorage');
+        }
+        const dealerInfo = JSON.parse(dealerInfoStr);
+        const storeId = dealerInfo.storeId;
+        if (!storeId) {
+            throw new Error('No storeId found in dealerInfo');
+        }
+        return storeId;
+    };
+
+    // Helper để lấy dealerId từ localStorage
+    const getCurrentDealerId = () => {
+        const dealerInfoStr = localStorage.getItem('dealerInfo');
+        if (!dealerInfoStr) {
+            throw new Error('No dealerInfo in localStorage');
+        }
+        const dealerInfo = JSON.parse(dealerInfoStr);
+        const dealerId = dealerInfo.dealerId;
+        if (!dealerId) {
+            throw new Error('No dealerId found in dealerInfo');
+        }
+        return dealerId;
+    };
+
     useEffect(() => {
         if (activeTab === 'requests') fetchRequests();
         if (activeTab === 'appointments') fetchAppointments();
@@ -618,9 +646,20 @@ const TestAppointment = () => {
         setLoading(prev => ({ ...prev, appointments: true }));
         setError(prev => ({ ...prev, appointments: '' }));
         try {
+            const currentStoreId = getCurrentStoreId();
             const data = await ManageTestAppointment.getAllAppointments();
+
+            // Fetch all dealers and filter by storeId to get storeDealerIds
+            const allDealersResponse = await fetch('https://localhost:7269/api/Dealers');
+            const allDealers = await allDealersResponse.json();
+            const storeDealers = Array.isArray(allDealers) ? allDealers.filter(d => d.storeId === currentStoreId) : [];
+            const storeDealerIds = storeDealers.map(d => d.dealerId);
+
+            // Filter appointments for the store
+            const storeAppointments = data.filter(apt => storeDealerIds.includes(apt.dealerId));
+
             const enriched = await Promise.all(
-                data.map(async (apt) => {
+                storeAppointments.map(async (apt) => {
                     let customerName = 'Unknown';
                     let vehicleName = 'Unknown';
                     let dealerName = 'Unknown';
@@ -651,6 +690,7 @@ const TestAppointment = () => {
                 })
             );
             setAppointments(enriched);
+            console.log(`Filtered appointments for store ${currentStoreId}:`, enriched.length); // Debug
         } catch (err) {
             console.error("fetchAppointments error:", err);
             setError(prev => ({ ...prev, appointments: 'Failed to load appointments.' }));
@@ -667,12 +707,16 @@ const TestAppointment = () => {
 
     const fetchVehiclesAndDealers = async () => {
         try {
+            const currentStoreId = getCurrentStoreId();
             const [veh, deal] = await Promise.all([
                 fetch('https://localhost:7269/api/Vehicles').then(r => r.json()),
                 fetch('https://localhost:7269/api/Dealers').then(r => r.json()),
             ]);
             setVehicles(Array.isArray(veh) ? veh : []);
-            setDealers(Array.isArray(deal) ? deal : []);
+            // Filter dealers chỉ thuộc store hiện tại
+            const filteredDealers = Array.isArray(deal) ? deal.filter(d => d.storeId === currentStoreId) : [];
+            setDealers(filteredDealers);
+            console.log(`Filtered dealers for store ${currentStoreId}:`, filteredDealers.length); // Debug
         } catch (err) {
             console.error("Load vehicles/dealers error:", err);
         }

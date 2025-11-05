@@ -1,169 +1,183 @@
-import React, { useState } from 'react';
-import { Table, Button, Modal, Form, Input, Select, Space, Typography, Card, message, DatePicker, InputNumber } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, FilterOutlined } from '@ant-design/icons';
+// src/pages/evmStaffAdmin/Agency/SalesManagement/SalesManagement.jsx
+import React, { useState, useEffect } from 'react';
+import {
+  Table,
+  Typography,
+  Button,
+  Input,
+  Tag,
+  Modal,
+  Descriptions,
+  Row,
+  Col,
+  Space,
+  Card,
+  message,
+} from 'antd';
 import dayjs from 'dayjs';
+import ManageOrdersByBrand from '../../../../services/ManageOrdersByBrand/ManageOrdersByBrand';
 
 const { Title } = Typography;
-const { Option } = Select;
 
 const SalesManagement = () => {
-  // Sample sales data
-  const [salesData, setSalesData] = useState([
-    {
-      key: '1',
-      orderId: 'EV-ORD789012',
-      customer: 'John Doe',
-      vehicleModel: 'EcoVolt X1',
-      amount: 45000.00,
-      status: 'Completed',
-      saleDate: '2025-09-15',
-    },
-    {
-      key: '2',
-      orderId: 'EV-ORD789013',
-      customer: 'Jane Smith',
-      vehicleModel: 'EcoVolt S2',
-      amount: 38000.00,
-      status: 'Pending',
-      saleDate: '2025-09-20',
-    },
-    {
-      key: '3',
-      orderId: 'EV-ORD789014',
-      customer: 'City Y Dealership',
-      vehicleModel: 'EcoVolt Z3',
-      amount: 52000.00,
-      status: 'Cancelled',
-      saleDate: '2025-09-10',
-    },
-  ]);
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchText, setSearchText] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isDetailModalVisible, setIsDetailModalVisible] = useState(false);
 
-  // State for modal, form, and filters
-  const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingKey, setEditingKey] = useState(null);
-  const [statusFilter, setStatusFilter] = useState(null);
-  const [customerFilter, setCustomerFilter] = useState(null);
-  const [form] = Form.useForm();
-
-  // Show modal for adding or editing
-  const showModal = (record = null) => {
-    if (record) {
-      form.setFieldsValue({
-        ...record,
-        saleDate: record.saleDate ? dayjs(record.saleDate) : null,
-      });
-      setEditingKey(record.key);
-    } else {
-      form.resetFields();
-      setEditingKey(null);
+  // Lấy brandId từ localStorage (staffInfo)
+  const getCurrentBrandId = () => {
+    try {
+      const staffInfoStr = localStorage.getItem('staffInfo');
+      if (!staffInfoStr) {
+        throw new Error('No staffInfo in localStorage');
+      }
+      const staffInfo = JSON.parse(staffInfoStr);
+      const brandId = staffInfo.brandId;
+      if (!brandId) {
+        throw new Error('No brandId found in staffInfo');
+      }
+      return Number(brandId); // Đảm bảo là number
+    } catch (error) {
+      console.error('Error getting brandId from localStorage:', error);
+      return null;
     }
-    setIsModalVisible(true);
   };
 
-  // Handle form submission
-  const handleSubmit = (values) => {
-    const formattedValues = {
-      ...values,
-      saleDate: values.saleDate ? values.saleDate.format('YYYY-MM-DD') : null,
+  // Tải orders theo brandId (không cần filter store, chỉ theo brand)
+  useEffect(() => {
+    const fetchOrders = async () => {
+      const brandId = getCurrentBrandId();
+
+      if (!brandId) {
+        message.error('No brandId found from staff info. Please log in again.');
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const rawOrders = await ManageOrdersByBrand.getOrdersByBrandId(brandId);
+
+        // Enrich data cho table: chỉ hiển thị info cơ bản
+        const enrichedOrders = rawOrders.map(order => ({
+          key: order.orderId,
+          orderId: order.orderId,
+          customerName: order.customer?.fullName || 'N/A',
+          vehicleName: order.quotes && order.quotes.length > 0
+            ? order.quotes.map(q => `${q.vehicle?.modelName} ${q.vehicle?.version}`).join(', ')
+            : 'N/A', // Hiển thị tất cả vehicles nếu nhiều, hoặc N/A
+          dealerName: order.dealer?.fullName || 'N/A',
+          orderDate: order.orderDate ? order.orderDate.replace(/-/g, '/') : 'N/A', // Chuyển DD-MM-YYYY → DD/MM/YYYY
+          totalPrice: order.totalPrice || 0,
+          status: order.status || 'N/A',
+          // Lưu full data cho detail
+          fullData: order,
+        }));
+
+        setOrders(enrichedOrders);
+        setFilteredOrders(enrichedOrders);
+        if (enrichedOrders.length === 0) {
+          message.info('No orders found for this brand.');
+        }
+      } catch (error) {
+        console.error('Error loading orders:', error);
+        message.error('Failed to load orders list. Please try again.');
+      } finally {
+        setLoading(false);
+      }
     };
-    if (editingKey) {
-      // Update existing record
-      setSalesData((prev) =>
-        prev.map((item) =>
-          item.key === editingKey ? { ...item, ...formattedValues } : item
-        )
-      );
-      message.success('Sale record updated successfully');
-    } else {
-      // Add new record
-      setSalesData((prev) => [
-        ...prev,
-        { key: `${prev.length + 1}`, ...formattedValues },
-      ]);
-      message.success('Sale record added successfully');
-    }
-    setIsModalVisible(false);
-    form.resetFields();
+
+    fetchOrders();
+  }, []); // Chỉ load once
+
+  // Tìm kiếm
+  useEffect(() => {
+    const filtered = orders.filter(
+      (order) =>
+        order.customerName.toLowerCase().includes(searchText.toLowerCase()) ||
+        order.vehicleName.toLowerCase().includes(searchText.toLowerCase()) ||
+        order.dealerName.toLowerCase().includes(searchText.toLowerCase()) ||
+        order.orderDate.includes(searchText)
+    );
+    setFilteredOrders(filtered);
+    setCurrentPage(1);
+  }, [searchText, orders]);
+
+  // Mở modal detail
+  const handleViewDetail = (order) => {
+    setSelectedOrder(order.fullData);
+    setIsDetailModalVisible(true);
   };
 
-  // Handle delete
-  const handleDelete = (key) => {
-    setSalesData((prev) => prev.filter((item) => item.key !== key));
-    message.success('Sale record deleted successfully');
+  // Đóng modal
+  const handleCloseDetail = () => {
+    setIsDetailModalVisible(false);
+    setSelectedOrder(null);
   };
 
-  // Handle filters
-  const handleStatusFilter = (value) => {
-    setStatusFilter(value);
-    applyFilters(value, customerFilter);
-  };
-
-  const handleCustomerFilter = (value) => {
-    setCustomerFilter(value);
-    applyFilters(statusFilter, value);
-  };
-
-  // Apply filters
-  const applyFilters = (status, customer) => {
-    let filteredData = [...salesData]; // Create a copy of the original data
-    if (status) {
-      filteredData = filteredData.filter((item) => item.status === status);
-    }
-    if (customer) {
-      filteredData = filteredData.filter((item) => item.customer === customer);
-    }
-    setSalesData(filteredData);
-  };
-
-  // Table columns
+  // Cột table: Chỉ hiển thị info cơ bản
   const columns = [
     {
       title: 'Order ID',
       dataIndex: 'orderId',
       key: 'orderId',
-      sorter: (a, b) => a.orderId.localeCompare(b.orderId),
+      sorter: (a, b) => a.orderId - b.orderId,
     },
     {
       title: 'Customer',
-      dataIndex: 'customer',
-      key: 'customer',
-      sorter: (a, b) => a.customer.localeCompare(b.customer),
-      filters: [
-        { text: 'John Doe', value: 'John Doe' },
-        { text: 'Jane Smith', value: 'Jane Smith' },
-        { text: 'City Y Dealership', value: 'City Y Dealership' },
-      ],
-      onFilter: (value, record) => record.customer === value,
+      dataIndex: 'customerName',
+      key: 'customerName',
+      sorter: (a, b) => a.customerName.localeCompare(b.customerName),
     },
     {
-      title: 'Vehicle Model',
-      dataIndex: 'vehicleModel',
-      key: 'vehicleModel',
-      sorter: (a, b) => a.vehicleModel.localeCompare(b.vehicleModel),
+      title: 'Vehicle',
+      dataIndex: 'vehicleName',
+      key: 'vehicleName',
+      ellipsis: true,
+      sorter: (a, b) => a.vehicleName.localeCompare(b.vehicleName),
     },
     {
-      title: 'Amount (USD)',
-      dataIndex: 'amount',
-      key: 'amount',
-      sorter: (a, b) => a.amount - b.amount,
-      render: (value) => `$${value.toFixed(2)}`,
+      title: 'Dealer',
+      dataIndex: 'dealerName',
+      key: 'dealerName',
+      sorter: (a, b) => a.dealerName.localeCompare(b.dealerName),
+    },
+    {
+      title: 'Order Date',
+      dataIndex: 'orderDate',
+      key: 'orderDate',
+      sorter: (a, b) => {
+        const parseDate = (d) => {
+          if (!d || d === 'N/A') return 0;
+          const [day, month, year] = d.split('/').map(Number);
+          return new Date(year, month - 1, day).getTime();
+        };
+        return parseDate(a.orderDate) - parseDate(b.orderDate);
+      },
+    },
+    {
+      title: 'Total Price (VND)',
+      dataIndex: 'totalPrice',
+      key: 'totalPrice',
+      sorter: (a, b) => a.totalPrice - b.totalPrice,
+      render: (value) => value ? value.toLocaleString('vi-VN') : '0',
     },
     {
       title: 'Status',
       dataIndex: 'status',
       key: 'status',
-      filters: [
-        { text: 'Completed', value: 'Completed' },
-        { text: 'Pending', value: 'Pending' },
-        { text: 'Cancelled', value: 'Cancelled' },
-      ],
-      onFilter: (value, record) => record.status === value,
-    },
-    {
-      title: 'Sale Date',
-      dataIndex: 'saleDate',
-      key: 'saleDate',
-      sorter: (a, b) => dayjs(a.saleDate).unix() - dayjs(b.saleDate).unix(),
+      render: (status) => (
+        <Tag color={status === 'Completed' ? 'green' : status === 'Pending' ? 'blue' : status === 'Cancelled' ? 'red' : 'default'}>
+          {status}
+        </Tag>
+      ),
+      sorter: (a, b) => a.status.localeCompare(b.status),
     },
     {
       title: 'Actions',
@@ -172,146 +186,161 @@ const SalesManagement = () => {
         <Space>
           <Button
             type="link"
-            icon={<EditOutlined />}
-            onClick={() => showModal(record)}
+            onClick={() => handleViewDetail(record)}
           >
-            Edit
-          </Button>
-          <Button
-            type="link"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.key)}
-          >
-            Delete
+            Detail
           </Button>
         </Space>
       ),
     },
   ];
 
+  const totalOrders = filteredOrders.length;
+  const startIndex = (currentPage - 1) * pageSize + 1;
+  const endIndex = Math.min(currentPage * pageSize, totalOrders);
+
+  // Modal detail: Hiển thị read-only với Descriptions
+  const renderDetailModal = () => {
+    if (!selectedOrder) return null;
+
+    const order = selectedOrder;
+    const formatDate = (dateStr) => dateStr ? dateStr.replace(/-/g, '/') : 'N/A';
+
+    return (
+      <Modal
+        title={`Order Detail #${order.orderId}`}
+        open={isDetailModalVisible}
+        onCancel={handleCloseDetail}
+        footer={null}
+        width={800}
+      >
+        <Descriptions bordered column={1} size="small">
+          {/* Order Info */}
+          <Descriptions.Item label="Order ID">{order.orderId}</Descriptions.Item>
+          <Descriptions.Item label="Order Date">{formatDate(order.orderDate)}</Descriptions.Item>
+          <Descriptions.Item label="Total Price (VND)">{order.totalPrice ? order.totalPrice.toLocaleString('vi-VN') : '0'}</Descriptions.Item>
+          <Descriptions.Item label="Status">
+            <Tag color={order.status === 'Completed' ? 'green' : order.status === 'Pending' ? 'blue' : order.status === 'Cancelled' ? 'red' : 'default'}>
+              {order.status}
+            </Tag>
+          </Descriptions.Item>
+          <Descriptions.Item label="Note">{order.note || 'N/A'}</Descriptions.Item>
+
+          {/* Customer Info */}
+          <Descriptions.Item label="Customer Name" span={3}>
+            {order.customer?.fullName || 'N/A'}
+          </Descriptions.Item>
+          <Descriptions.Item label="Email">{order.customer?.email || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Phone">{order.customer?.phone || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Address">{order.customer?.address || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Date of Birth">
+            {order.customer?.dateOfBirth ? dayjs(order.customer.dateOfBirth).format('DD/MM/YYYY') : 'N/A'}
+          </Descriptions.Item>
+
+          {/* Dealer Info */}
+          <Descriptions.Item label="Dealer Name" span={3}>
+            {order.dealer?.fullName || 'N/A'}
+          </Descriptions.Item>
+          <Descriptions.Item label="Role">{order.dealer?.role || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Phone">{order.dealer?.phone || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Email">{order.dealer?.email || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Address">{order.dealer?.address || 'N/A'}</Descriptions.Item>
+          <Descriptions.Item label="Dealer Status">{order.dealer?.status || 'N/A'}</Descriptions.Item>
+
+          {/* Quotes/Vehicles */}
+          {order.quotes && order.quotes.length > 0 && (
+            <>
+              <Descriptions.Item label="Quotes/Vehicles" span={3}>
+                <ul>
+                  {order.quotes.map((quote, index) => (
+                    <li key={quote.quoteId}>
+                      <strong>Quote #{quote.quoteId} - Date: {formatDate(quote.quoteDate)} - Status: {quote.status}</strong>
+                      <br />
+                      Vehicle: {quote.vehicle?.modelName} {quote.vehicle?.version} ({quote.vehicle?.year}, Color: {quote.vehicle?.color})
+                      <br />
+                      Price: {quote.vehicle?.price ? quote.vehicle.price.toLocaleString('vi-VN') : 'N/A'} VND
+                      <br />
+                      Details: {quote.vehicle?.vehicleType}, Range: {quote.vehicle?.rangePerCharge}, Horsepower: {quote.vehicle?.horsepower} HP
+                      <br />
+                      Battery: {quote.vehicle?.batteryCapacity}, Seats: {quote.vehicle?.seatingCapacity}, Transmission: {quote.vehicle?.transmission}
+                    </li>
+                  ))}
+                </ul>
+              </Descriptions.Item>
+            </>
+          )}
+        </Descriptions>
+
+        <div style={{ textAlign: 'right', marginTop: 16 }}>
+          <Space>
+            <Button onClick={handleCloseDetail} type="primary">
+              Close
+            </Button>
+          </Space>
+        </div>
+      </Modal>
+    );
+  };
+
   return (
     <div>
       <Title level={2}>Sales Management</Title>
       <Card
-        title="Sales Records"
-     variant="borderless"
+        title="Orders Records"
         style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
         extra={
           <Space>
-            <Select
-              placeholder="Filter by Customer"
-              allowClear
-              style={{ width: 200 }}
-              onChange={handleCustomerFilter}
-            >
-              <Option value="John Doe">John Doe</Option>
-              <Option value="Jane Smith">Jane Smith</Option>
-              <Option value="City Y Dealership">City Y Dealership</Option>
-            </Select>
-            <Select
-              placeholder="Filter by Status"
-              allowClear
-              style={{ width: 200 }}
-              onChange={handleStatusFilter}
-            >
-              <Option value="Completed">Completed</Option>
-              <Option value="Pending">Pending</Option>
-              <Option value="Cancelled">Cancelled</Option>
-            </Select>
             <Button
               type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => showModal()}
+              onClick={() => window.location.reload()}
             >
-              Add New Sale
+              Refresh
             </Button>
           </Space>
         }
       >
+        <Row gutter={16} style={{ marginBottom: 16 }}>
+          <Col span={20}>
+            <Input
+              placeholder="Search by customer name, vehicle, dealer or date"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              allowClear
+            />
+          </Col>
+          <Col span={4}>
+            <Button
+              type="primary"
+              onClick={() => window.location.reload()}
+              style={{ width: '100%' }}
+            >
+              Refresh
+            </Button>
+          </Col>
+        </Row>
+
+        <div style={{ marginBottom: 16, fontSize: 14, color: '#666' }}>
+          Showing {startIndex} to {endIndex} of {totalOrders} orders
+        </div>
+
         <Table
           columns={columns}
-          dataSource={salesData}
+          dataSource={filteredOrders}
+          loading={loading}
           rowKey="key"
-          pagination={{ pageSize: 10 }}
-          style={{ marginTop: 16 }}
+          pagination={{
+            pageSize,
+            current: currentPage,
+            total: totalOrders,
+            onChange: (page) => setCurrentPage(page),
+            showTotal: (total, range) => `Showing ${range[0]}-${range[1]} of ${total} orders`,
+          }}
+          bordered
+          scroll={{ x: 800 }}
         />
       </Card>
 
-      <Modal
-        title={editingKey ? 'Edit Sale Record' : 'Add Sale Record'}
-        open={isModalVisible}
-        onCancel={() => setIsModalVisible(false)}
-        footer={null}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{ status: 'Pending' }}
-        >
-          <Form.Item
-            label="Order ID"
-            name="orderId"
-            rules={[{ required: true, message: 'Please enter the order ID' }]}
-          >
-            <Input placeholder="e.g., EV-ORD789012" />
-          </Form.Item>
-          <Form.Item
-            label="Customer"
-            name="customer"
-            rules={[{ required: true, message: 'Please enter the customer name' }]}
-          >
-            <Input placeholder="e.g., John Doe" />
-          </Form.Item>
-          <Form.Item
-            label="Vehicle Model"
-            name="vehicleModel"
-            rules={[{ required: true, message: 'Please enter the vehicle model' }]}
-          >
-            <Input placeholder="e.g., EcoVolt X1" />
-          </Form.Item>
-          <Form.Item
-            label="Amount (USD)"
-            name="amount"
-            rules={[{ required: true, message: 'Please enter the amount' }]}
-          >
-            <InputNumber
-              min={0}
-              step={100}
-              formatter={(value) => `$ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-              parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-              style={{ width: '100%' }}
-            />
-          </Form.Item>
-          <Form.Item
-            label="Status"
-            name="status"
-            rules={[{ required: true, message: 'Please select a status' }]}
-          >
-            <Select>
-              <Option value="Completed">Completed</Option>
-              <Option value="Pending">Pending</Option>
-              <Option value="Cancelled">Cancelled</Option>
-            </Select>
-          </Form.Item>
-          <Form.Item
-            label="Sale Date"
-            name="saleDate"
-            rules={[{ required: true, message: 'Please select the sale date' }]}
-          >
-            <DatePicker style={{ width: '100%' }} />
-          </Form.Item>
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                {editingKey ? 'Update' : 'Add'}
-              </Button>
-              <Button onClick={() => setIsModalVisible(false)}>Cancel</Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
+      {renderDetailModal()}
     </div>
   );
 };
