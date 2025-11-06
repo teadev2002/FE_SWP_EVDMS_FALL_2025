@@ -2036,60 +2036,29 @@ const ManageVehicle = () => {
     fetchData();
   }, [storeId, fetchQuantityForVehicle]);
 
-  // MỞ CHI TIẾT XE – GỌI API GetVehicleById
- // MỞ CHI TIẾT XE – CHỈ DÙNG getVehicleById
- const openDetailModal = useCallback(async (vehicleId) => {
+   
+ 
+const openDetailModal = useCallback(async (vehicleId) => {
   try {
     setLoading(true);
     const rawData = await ManageVehicleService.GetVehicleById(vehicleId);
 
-    const brand = brandsData.find(b => b.brandId === rawData.brandId) || { brandName: 'Unknown' };
+  //  const brand = brandsData.find(b => b.brandId === rawData.brandId) || { brandName: 'Unknown' };
+    const qty = await fetchQuantityForVehicle(vehicleId, rawData.brandId);
 
-    const normalizedVehicle = {
-      vehicleId: rawData.vehicleId,
-      make: brand.brandName,
+    const vehicleForModal = {
+      id: rawData.vehicleId,
       model: rawData.modelName,
-      version: rawData.version,
       year: rawData.year,
-      color: rawData.color,
       price: rawData.price,
-      image: rawData.imageUrls?.[0] || 'https://via.placeholder.com/300',
-
-      batteryCapacity: rawData.batteryCapacity,
-      rangePerCharge: rawData.rangePerCharge,
-      warrantyPeriod: rawData.warrantyPeriod,
-      seatingCapacity: rawData.seatingCapacity,
-      transmission: rawData.transmission,
-      airbags: rawData.airbags,
-      horsepower: rawData.horsepower,
-      vehicleType: rawData.vehicleType,
-      trunkCapacity: rawData.trunkCapacity,
-      dailyDrivingLimit: rawData.dailyDrivingLimit,
-
-      screen: rawData.screen,
-      seatMaterial: rawData.seatMaterial,
-      interiorMaterial: rawData.interiorMaterial,
-      airConditioning: rawData.airConditioning,
-      speakerSystem: rawData.speakerSystem,
-      inVehicleCabinet: rawData.inVehicleCabinet,
-
-      lengthMm: rawData.lengthMm,
-      widthMm: rawData.widthMm,
-      heightMm: rawData.heightMm,
-      wheels: rawData.wheels,
-      headlights: rawData.headlights,
-      taillights: rawData.taillights,
-      frameChassis: rawData.frameChassis,
-      doorCount: rawData.doorCount,
-      glassWindows: rawData.glassWindows,
-      mirrors: rawData.mirrors,
-      cameras: rawData.cameras,
-
-      isAllocation: rawData.isAllocation,
-      createDate: rawData.createDate,
+      quantityAvailable: qty,
+      fullData: {
+        ...rawData,
+        imageUrls: rawData.imageUrls || [],
+      }
     };
 
-    setSelectedVehicle(normalizedVehicle);
+    setSelectedVehicle(vehicleForModal);
     setIsDetailModalVisible(true);
   } catch (error) {
     console.error('Lỗi lấy chi tiết xe:', error);
@@ -2097,7 +2066,8 @@ const ManageVehicle = () => {
   } finally {
     setLoading(false);
   }
-}, [brandsData]);
+}, [brandsData, fetchQuantityForVehicle]);
+
   // Statistics
   const totalModels = useMemo(() => new Set(vehicles.map(v => `${v.make} ${v.model}`)).size, [vehicles]);
   const onPromotion = useMemo(() => vehicles.filter(v => v.onPromotion).length, [vehicles]);
