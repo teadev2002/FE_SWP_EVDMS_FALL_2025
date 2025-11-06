@@ -185,6 +185,15 @@ const ViewOrder = ({ order }) => {
             <i>No quotations yet</i>
           )}
         </Descriptions.Item>
+        <Descriptions.Item label="Vehicle">
+          <div>
+            <div><strong>Name: {quotes[0]?.vehicle?.modelName || 'N/A'}</strong></div>
+            <div>Year: {quotes[0]?.vehicle?.year || 'N/A'}</div>
+            <div>Color: {quotes[0]?.vehicle?.color || 'N/A'}</div>
+            <div>Version: {quotes[0]?.vehicle?.version || 'N/A'}</div>
+            
+          </div>
+        </Descriptions.Item>
       </Descriptions>
     </Card>
   );

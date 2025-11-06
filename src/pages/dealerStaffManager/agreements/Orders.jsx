@@ -758,8 +758,8 @@ const Orders = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item label="Quantity" name="quantity" rules={[{ required: true, message: 'Please enter quantity!' }]}>
-            <InputNumber min={1} style={{ width: '100%' }} />
+          <Form.Item label="Quantity" name="quantity"  initialValue={1} rules={[{ required: true, message: 'Please enter quantity!' }]}>
+            <InputNumber min={1} readOnly style={{ width: '100%' }} />
           </Form.Item>
 
           <Form.Item label="Total Amount" name="totalPrice" rules={[{ required: true, message: 'Please enter total amount!' }]}>
