@@ -15,6 +15,10 @@ const ActionButtons = ({ vehicle, vehicleId, selectedVehicles, selectedCount, on
         onToggleCompare(vehicleId);
     };
 
+    const handleGetQuoteClick = () => {
+        navigate(`/quote-register?vehicle=${encodeURIComponent(vehicle.title)}`);
+    };
+
     const isSelected = selectedVehicles.some(v => v.id === vehicleId);
 
     const clearSelection = () => {
@@ -56,7 +60,7 @@ const ActionButtons = ({ vehicle, vehicleId, selectedVehicles, selectedCount, on
                     {isSelected && <span className="selected-indicator">✓</span>}
                 </Button>
             </OverlayTrigger>
-            <Button variant="eco-primary" size="sm">
+            <Button variant="eco-primary" size="sm" onClick={handleGetQuoteClick}>
                 Get Quote
             </Button>
         </div>

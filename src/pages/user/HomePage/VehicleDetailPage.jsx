@@ -418,6 +418,10 @@ const VehicleDetailPage = () => {
         navigate(`/test-drive-register?vehicle=${encodeURIComponent(vehicleData.title)}`);
     };
 
+    const handleGetQuoteClick = () => {
+        navigate(`/quote-register?vehicle=${encodeURIComponent(vehicleData.title)}`);
+    };
+
     const renderSpecsList = (specs, isOverview = false) => (
         <ListGroup variant="flush">
             {Object.entries(specs).map(([label, value]) => (
@@ -473,7 +477,7 @@ const VehicleDetailPage = () => {
                         >
                             Schedule Test Drive
                         </Button>
-                        <Button variant="outline-eco" size="lg">
+                        <Button variant="outline-eco" size="lg" onClick={handleGetQuoteClick}>
                             Get Quote
                         </Button>
                     </div>
