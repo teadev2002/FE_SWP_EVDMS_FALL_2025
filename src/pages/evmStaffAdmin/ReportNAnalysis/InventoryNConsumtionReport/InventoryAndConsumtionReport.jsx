@@ -10,16 +10,16 @@ const InventoryAndConsumtionReport = () => {
   return (
     <div>
       <Title level={2}>Inventory And Consumtion Speed Report</Title>
-   
-        <Tabs defaultActiveKey="1" type="card">
-          <TabPane tab="Inventory Report" key="1">
-            <InventoryReport />
-          </TabPane>
-          <TabPane tab="Consumption Speed Report" key="2">
-            <ConsumptionSpeedReport />
-          </TabPane>
-        </Tabs>
-      
+
+      <Tabs defaultActiveKey="1" type="card">
+        <TabPane tab="Inventory Report" key="1">
+          <InventoryReport />
+        </TabPane>
+        <TabPane tab="Consumption Speed Report" key="2">
+          <ConsumptionSpeedReport />
+        </TabPane>
+      </Tabs>
+
     </div>
   );
 };

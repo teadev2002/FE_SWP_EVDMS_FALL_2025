@@ -91,11 +91,11 @@ const Footer = () => {
               onClick={handleBusinessPortal}
             >
               <Briefcase size={20} className="me-2" />
-              Dành cho Doanh nghiệp →
+              For Businesses →
             </Button>
-            <p className="mt-3 text-muted small">
+            {/* <p className="mt-3 text-muted small">
               For business inquiries and partnerships
-            </p>
+            </p> */}
           </Col>
         </Row>
 

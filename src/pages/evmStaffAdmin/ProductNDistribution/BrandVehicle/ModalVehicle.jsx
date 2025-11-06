@@ -62,8 +62,8 @@ const ModalVehicle = ({
     const cameras = ['360° Camera', 'Rear & Side Cameras', 'Full Surround Sensors'];
 
     // ✅ Lấy brandId từ localStorage khi thêm mới
-    const currentBrandId = editingVehicle 
-      ? editingVehicle.brandId 
+    const currentBrandId = editingVehicle
+      ? editingVehicle.brandId
       : getBrandIdFromStorage();
 
     const randomData = {
@@ -342,7 +342,7 @@ const ModalVehicle = ({
               <InputNumber min={0} style={{ width: '100%' }} />
             </Form.Item>
             <br />
-            
+
             <Divider orientation="left">
               <Title level={5}>Exterior</Title>
             </Divider>

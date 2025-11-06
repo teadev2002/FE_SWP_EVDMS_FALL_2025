@@ -384,7 +384,7 @@ const { Title, Text } = Typography;
 const VehicleDetailModal = ({ vehicle, brandsData, onClose }) => {
     const [activeTab, setActiveTab] = useState('overview');
 
-    if (!vehicle || !brandsData ) {
+    if (!vehicle || !brandsData) {
         return <div>Data Not Found</div>;
     }
 
@@ -395,7 +395,7 @@ const VehicleDetailModal = ({ vehicle, brandsData, onClose }) => {
         website: 'No Data',
         founderYear: 'No Data',
     };
-     
+
 
     // Helper to handle null/undefined values
     const getValueOrNoData = (val) => val || 'No Data';
@@ -439,9 +439,9 @@ const VehicleDetailModal = ({ vehicle, brandsData, onClose }) => {
     };
 
     // Stock status
- //   const quantity = storage.quantityAvailable || 0;
- //   const stockType = quantity > 1 ? 'available' : quantity === 1 ? 'limited' : 'out-of-stock';
-  // const stockText = `${quantity} Available`;
+    //   const quantity = storage.quantityAvailable || 0;
+    //   const stockType = quantity > 1 ? 'available' : quantity === 1 ? 'limited' : 'out-of-stock';
+    // const stockText = `${quantity} Available`;
 
     // Images: Pad to at least 3 for carousel
     const apiImages = vehicle.fullData.imageUrls || [];

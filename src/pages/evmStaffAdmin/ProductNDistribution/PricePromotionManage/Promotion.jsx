@@ -77,13 +77,13 @@ const Promotion = () => {
           prev.map((item) =>
             item.key === editingKey
               ? {
-                  key: editingKey,
-                  title: response.title,
-                  description: response.description,
-                  discountPercent: response.discountPercent,
-                  startDate: dayjs(response.startDate).format('DD/MM/YYYY'),
-                  endDate: dayjs(response.endDate).format('DD/MM/YYYY'),
-                }
+                key: editingKey,
+                title: response.title,
+                description: response.description,
+                discountPercent: response.discountPercent,
+                startDate: dayjs(response.startDate).format('DD/MM/YYYY'),
+                endDate: dayjs(response.endDate).format('DD/MM/YYYY'),
+              }
               : item
           )
         );

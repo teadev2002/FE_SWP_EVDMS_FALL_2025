@@ -393,7 +393,7 @@ const Login = () => {
                     className="w-100 login-button"
                     disabled={!email || !password || loading}
                   >
-                    {loading ? 'Đang đăng nhập...' : 'Login'}
+                    {loading ? 'Loging in...' : 'Login'}
                   </Button>
                 </Form>
 

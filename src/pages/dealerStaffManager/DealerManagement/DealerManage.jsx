@@ -1,4 +1,4 @@
- //fix searchh
+//fix searchh
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Table, Button, Modal, Form, Input, Space, Typography, Popconfirm, Row, Col, Select,
@@ -217,7 +217,7 @@ const DealerManage = () => {
       key: 'storeId',
       render: (storeId) => storeNames[storeId] || `Store ${storeId}`,
     },
-     {
+    {
       title: 'Phone',
       dataIndex: 'phone',
       key: 'phone',
@@ -234,7 +234,7 @@ const DealerManage = () => {
       dataIndex: 'address',
       key: 'address',
     },
-    
+
     {
       title: 'Actions',
       key: 'actions',

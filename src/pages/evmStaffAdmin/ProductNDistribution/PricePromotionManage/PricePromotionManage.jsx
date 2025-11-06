@@ -12,7 +12,7 @@ const PricePromotionManage = () => {
     <div>
       <Title level={2}>Price & Promotion Management</Title>
       <Card
-       variant="borderless"
+        variant="borderless"
         style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
       >
         <Tabs defaultActiveKey="1" type="card">

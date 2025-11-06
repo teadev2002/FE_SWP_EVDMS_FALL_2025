@@ -1,14 +1,14 @@
 import React from 'react';
 import { Card, Tabs, Typography } from 'antd';
 import StaffManagement from './StaffManagement';
- import DealerManage from '../../../dealerStaffManager/DealerManagement/DealerManage';
- const { Title } = Typography;
+import DealerManage from '../../../dealerStaffManager/DealerManagement/DealerManage';
+const { Title } = Typography;
 const { TabPane } = Tabs;
 
 const AccountManagement = () => {
   return (
     <div>
-       <Title level={2}>Account Management</Title>
+      <Title level={2}>Account Management</Title>
       <Tabs defaultActiveKey="1" type="card" >
         <TabPane tab="Staff Management" key="1">
           <StaffManagement />
@@ -17,7 +17,7 @@ const AccountManagement = () => {
           <DealerManage />
         </TabPane>
       </Tabs>
-      
+
     </div>
   );
 };

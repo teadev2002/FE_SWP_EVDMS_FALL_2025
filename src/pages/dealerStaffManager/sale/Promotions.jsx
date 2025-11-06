@@ -67,17 +67,17 @@ const Promotions = () => {
 
       if (editingPromo) {
         const response = await ManageServicePromotions.editPromotion(editingPromo.id, promoData);
-        setPromotions(promotions.map(p => 
-          p.id === editingPromo.id 
-            ? { 
-                id: response.promotionId ? response.promotionId.toString() : p.id,
-                title: response.title,
-                description: response.description,
-                validFrom: dayjs(response.startDate).format('DD-MM-YYYY'),
-                validTo: dayjs(response.endDate).format('DD-MM-YYYY'),
-                cta: `Save ${response.discountPercent}%`,
-                hidden: p.hidden,
-              } 
+        setPromotions(promotions.map(p =>
+          p.id === editingPromo.id
+            ? {
+              id: response.promotionId ? response.promotionId.toString() : p.id,
+              title: response.title,
+              description: response.description,
+              validFrom: dayjs(response.startDate).format('DD-MM-YYYY'),
+              validTo: dayjs(response.endDate).format('DD-MM-YYYY'),
+              cta: `Save ${response.discountPercent}%`,
+              hidden: p.hidden,
+            }
             : p
         ));
         toast.success('Promotion updated successfully');
@@ -147,8 +147,36 @@ const Promotions = () => {
       key: 'actions',
       render: (_, record) => (
         <>
-          <Button type="link" onClick={() => showModal(record)}>Edit</Button>
-          <Button type="link" onClick={() => deletePromotion(record.id)}>Delete</Button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button
+              onClick={() => showModal(record)}
+              style={{
+                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                color: 'white'  // ← Thêm/confirm màu chữ trắng
+              }}
+            // ... onMouseEnter/onMouseLeave
+            >
+              Edit
+            </Button>
+            <Button
+              onClick={() => deletePromotion(record.id)}
+              style={{
+                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                color: 'white'  // ← Thêm/confirm màu chữ trắng
+              }}
+            // ... onMouseEnter/onMouseLeave
+            >
+              Delete
+            </Button>
+          </div>
         </>
       ),
     },
@@ -157,8 +185,8 @@ const Promotions = () => {
   return (
     <>
       <Title level={2}>Sale Promotion</Title>
-      <Button 
-        type="primary" 
+      <Button
+        type="primary"
         style={{ marginBottom: 16 }}
         onClick={() => showModal()}
       >
@@ -192,40 +220,40 @@ const Promotions = () => {
           >
             <Input />
           </Form.Item>
-        
+
           <Form.Item
             name="discountPercent"
             label="Discount Percent"
           >
             <Input type="number" min={0} step={1} />
           </Form.Item>
-            <div style={{display: "flex", justifyContent: "space-between"}}>
-   <Form.Item
-            name="validFrom"
-            label="Valid From"
-            rules={[{ required: true, message: 'Please select start date' }]}
-          >
-            <DatePicker format="DD-MM-YYYY" />
-          </Form.Item>
-          <Form.Item
-            name="validTo"
-            label="Valid To"
-            rules={[
-              { required: true, message: 'Please select end date' },
-              ({ getFieldValue }) => ({
-                validator(_, value) {
-                  if (!value || getFieldValue('validFrom') <= value) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('End date must be after start date'));
-                },
-              }),
-            ]}
-          >
-            <DatePicker format="DD-MM-YYYY" />
-          </Form.Item>
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <Form.Item
+              name="validFrom"
+              label="Valid From"
+              rules={[{ required: true, message: 'Please select start date' }]}
+            >
+              <DatePicker format="DD-MM-YYYY" />
+            </Form.Item>
+            <Form.Item
+              name="validTo"
+              label="Valid To"
+              rules={[
+                { required: true, message: 'Please select end date' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('validFrom') <= value) {
+                      return Promise.resolve();
+                    }
+                    return Promise.reject(new Error('End date must be after start date'));
+                  },
+                }),
+              ]}
+            >
+              <DatePicker format="DD-MM-YYYY" />
+            </Form.Item>
           </div>
-       
+
         </Form>
       </Modal>
     </>

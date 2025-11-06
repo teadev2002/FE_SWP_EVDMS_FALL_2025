@@ -52,7 +52,7 @@ const StoreManage = () => {
         setStores(mappedData);
         setFilteredStores(mappedData); // Initialize filteredStores
       } catch (error) {
-        toast.error('Failed to load stores',error);
+        toast.error('Failed to load stores', error);
       }
       setLoading(false);
     };
@@ -67,7 +67,7 @@ const StoreManage = () => {
           const data = await ManageServicePromotions.getAllPromotions();
           setPromotions(data);
         } catch (error) {
-          toast.error('Failed to load promotions',error);
+          toast.error('Failed to load promotions', error);
         }
       };
       fetchPromotions();
@@ -314,30 +314,30 @@ const StoreManage = () => {
       <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
         Store Management
       </Title>
-         <Row gutter={16} style={{ marginBottom: 16 }}>
-  <Col span={20}>
-    <Input.Search
-      placeholder="Search by Store Name, Address, Email, or Discount Percent"
-      value={searchText}
-      onChange={(e) => handleSearch(e.target.value)}
-      style={{ borderRadius: 8 }}
-      allowClear
-      prefix={<SearchOutlined />}
-    />
-  </Col>
-  <Col span={4}>
-    <Button
-      type="primary"
-      icon={<PlusOutlined />}
-      onClick={handleCreate}
-      style={{ ...buttonStyle, background: '#007BFF', borderColor: '#007BFF', width: '100%' }}
-      onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-      onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-    >
-      Add Store
-    </Button>
-  </Col>
-</Row>
+      <Row gutter={16} style={{ marginBottom: 16 }}>
+        <Col span={20}>
+          <Input.Search
+            placeholder="Search by Store Name, Address, Email, or Discount Percent"
+            value={searchText}
+            onChange={(e) => handleSearch(e.target.value)}
+            style={{ borderRadius: 8 }}
+            allowClear
+            prefix={<SearchOutlined />}
+          />
+        </Col>
+        <Col span={4}>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleCreate}
+            style={{ ...buttonStyle, background: '#007BFF', borderColor: '#007BFF', width: '100%' }}
+            onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+          >
+            Add Store
+          </Button>
+        </Col>
+      </Row>
       <Table
         columns={columns}
         dataSource={filteredStores}
@@ -363,7 +363,7 @@ const StoreManage = () => {
         <Form
           form={form}
           layout="vertical"
-        
+
         >
           <Form.Item
             name="storeName"
@@ -416,7 +416,7 @@ const StoreManage = () => {
               style={inputStyle}
               allowClear
             >
-             
+
               {promotions.map((promotion) => (
                 <Option key={promotion.promotionId} value={promotion.promotionId}>
                   {`${promotion.title} (${promotion.discountPercent}%)`}

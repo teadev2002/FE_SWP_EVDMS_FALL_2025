@@ -568,6 +568,441 @@
 
 // export default TestAppointment;
 
+//----------------------------------------------------------------------------------//
+
+// import React, { useState, useEffect } from 'react';
+// import {
+//     Container, Row, Col, Card, Table, Badge, Button, Modal, Form,
+//     Tabs, Tab, Spinner, Alert, InputGroup, FormControl
+// } from 'react-bootstrap';
+// import '../../../styles/dealerStaffManager/TestAppointment.scss';
+// import ManageTestAppointment from '../../../services/ManageTestAppointment/ManageTestAppointment';
+
+// const TestAppointment = () => {
+//     const [activeTab, setActiveTab] = useState('requests');
+//     const [requests, setRequests] = useState([]);
+//     const [appointments, setAppointments] = useState([]);
+//     const [loading, setLoading] = useState({ requests: true, appointments: true });
+//     const [error, setError] = useState({ requests: '', appointments: '' });
+//     const [searchTerm, setSearchTerm] = useState('');
+//     const [showModal, setShowModal] = useState(false);
+//     const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+//     const [formData, setFormData] = useState({
+//         vehicleId: '',
+//         dealerId: '',
+//         appointmentDate: ''
+//     });
+//     const [vehicles, setVehicles] = useState([]);
+//     const [dealers, setDealers] = useState([]);
+//     const [submitting, setSubmitting] = useState(false);
+
+//     // Helper để lấy storeId từ localStorage
+//     const getCurrentStoreId = () => {
+//         const dealerInfoStr = localStorage.getItem('dealerInfo');
+//         if (!dealerInfoStr) {
+//             throw new Error('No dealerInfo in localStorage');
+//         }
+//         const dealerInfo = JSON.parse(dealerInfoStr);
+//         const storeId = dealerInfo.storeId;
+//         if (!storeId) {
+//             throw new Error('No storeId found in dealerInfo');
+//         }
+//         return storeId;
+//     };
+
+//     // Helper để lấy dealerId từ localStorage
+//     const getCurrentDealerId = () => {
+//         const dealerInfoStr = localStorage.getItem('dealerInfo');
+//         if (!dealerInfoStr) {
+//             throw new Error('No dealerInfo in localStorage');
+//         }
+//         const dealerInfo = JSON.parse(dealerInfoStr);
+//         const dealerId = dealerInfo.dealerId;
+//         if (!dealerId) {
+//             throw new Error('No dealerId found in dealerInfo');
+//         }
+//         return dealerId;
+//     };
+
+//     useEffect(() => {
+//         if (activeTab === 'requests') fetchRequests();
+//         if (activeTab === 'appointments') fetchAppointments();
+//     }, [activeTab]);
+
+//     const fetchRequests = async () => {
+//         setLoading(prev => ({ ...prev, requests: true }));
+//         setError(prev => ({ ...prev, requests: '' }));
+//         try {
+//             const data = await ManageTestAppointment.getAllRequests();
+//             const pending = data.filter(c => !c.testAppointments || c.testAppointments.length === 0);
+//             setRequests(pending);
+//         } catch (err) {
+//             setError(prev => ({ ...prev, requests: 'Failed to load requests.' }));
+//         } finally {
+//             setLoading(prev => ({ ...prev, requests: false }));
+//         }
+//     };
+
+//     const fetchAppointments = async () => {
+//         setLoading(prev => ({ ...prev, appointments: true }));
+//         setError(prev => ({ ...prev, appointments: '' }));
+//         try {
+//             const currentStoreId = getCurrentStoreId();
+//             const data = await ManageTestAppointment.getAllAppointments();
+
+//             // Fetch all dealers and filter by storeId to get storeDealerIds
+//             const allDealersResponse = await fetch('https://localhost:7269/api/Dealers');
+//             const allDealers = await allDealersResponse.json();
+//             const storeDealers = Array.isArray(allDealers) ? allDealers.filter(d => d.storeId === currentStoreId) : [];
+//             const storeDealerIds = storeDealers.map(d => d.dealerId);
+
+//             // Filter appointments for the store
+//             const storeAppointments = data.filter(apt => storeDealerIds.includes(apt.dealerId));
+
+//             const enriched = await Promise.all(
+//                 storeAppointments.map(async (apt) => {
+//                     let customerName = 'Unknown';
+//                     let vehicleName = 'Unknown';
+//                     let dealerName = 'Unknown';
+
+//                     try {
+//                         const customer = await ManageTestAppointment.getCustomerById(apt.customerId);
+//                         customerName = customer.fullName;
+//                     } catch (e) { console.warn(`Customer ${apt.customerId} not found`); }
+
+//                     try {
+//                         const vehicle = await ManageTestAppointment.getVehicleById(apt.vehicleId);
+//                         vehicleName = `${vehicle.modelName} ${vehicle.version}`;
+//                     } catch (e) { console.warn(`Vehicle ${apt.vehicleId} not found`); }
+
+//                     try {
+//                         const dealer = await ManageTestAppointment.getDealerById(apt.dealerId);
+//                         dealerName = dealer.fullName;
+//                     } catch (e) { console.warn(`Dealer ${apt.dealerId} not found`); }
+
+//                     return {
+//                         ...apt,
+//                         customerName,
+//                         vehicleName,
+//                         dealerName,
+//                         // Chuyển DD-MM-YYYY → DD/MM/YYYY
+//                         appointmentDate: apt.appointmentDate.replace(/-/g, '/')
+//                     };
+//                 })
+//             );
+//             setAppointments(enriched);
+//             console.log(`Filtered appointments for store ${currentStoreId}:`, enriched.length); // Debug
+//         } catch (err) {
+//             console.error("fetchAppointments error:", err);
+//             setError(prev => ({ ...prev, appointments: 'Failed to load appointments.' }));
+//         } finally {
+//             setLoading(prev => ({ ...prev, appointments: false }));
+//         }
+//     };
+
+//     const handleCreateAppointment = (customer) => {
+//         setSelectedCustomer(customer);
+//         setShowModal(true);
+//         fetchVehiclesAndDealers();
+//     };
+
+//     const fetchVehiclesAndDealers = async () => {
+//         try {
+//             const currentStoreId = getCurrentStoreId();
+//             const [veh, deal] = await Promise.all([
+//                 fetch('https://localhost:7269/api/Vehicles').then(r => r.json()),
+//                 fetch('https://localhost:7269/api/Dealers').then(r => r.json()),
+//             ]);
+//             setVehicles(Array.isArray(veh) ? veh : []);
+//             // Filter dealers chỉ thuộc store hiện tại
+//             const filteredDealers = Array.isArray(deal) ? deal.filter(d => d.storeId === currentStoreId) : [];
+//             setDealers(filteredDealers);
+//             console.log(`Filtered dealers for store ${currentStoreId}:`, filteredDealers.length); // Debug
+//         } catch (err) {
+//             console.error("Load vehicles/dealers error:", err);
+//         }
+//     };
+
+//     const formatDateForAPI = (dateString) => {
+//         if (!dateString) return '';
+//         const [year, month, day] = dateString.split('-');
+//         return `${day}/${month}/${year}`; // "03/11/2025"
+//     };
+
+//     const handleSubmitAppointment = async (e) => {
+//         e.preventDefault();
+//         setSubmitting(true);
+//         try {
+//             await ManageTestAppointment.createAppointment({
+//                 customerId: selectedCustomer.customerId,
+//                 vehicleId: parseInt(formData.vehicleId),
+//                 dealerId: parseInt(formData.dealerId),
+//                 appointmentDate: formatDateForAPI(formData.appointmentDate),
+//                 status: 'Draft'
+//             });
+
+//             // ẨN REQUEST ĐÃ TẠO LỊCH
+//             setRequests(prev => prev.filter(r => r.customerId !== selectedCustomer.customerId));
+
+//             setShowModal(false);
+//             setFormData({ vehicleId: '', dealerId: '', appointmentDate: '' });
+//             setSelectedCustomer(null);
+
+//             // Reload appointments nếu đang ở tab đó
+//             if (activeTab === 'appointments') {
+//                 fetchAppointments();
+//             }
+//         } catch (err) {
+//             alert('Failed to create appointment.');
+//         } finally {
+//             setSubmitting(false);
+//         }
+//     };
+
+//     const filteredRequests = requests.filter(r =>
+//         r.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         r.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         r.phone.includes(searchTerm)
+//     );
+
+//     const filteredAppointments = appointments.filter(a =>
+//         a.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         a.vehicleName.toLowerCase().includes(searchTerm.toLowerCase())
+//     );
+
+//     return (
+//         <div className="admin-page">
+//             <Container fluid className="py-4">
+//                 <Row className="align-items-center mb-4">
+//                     <Col md={6}>
+//                         <div className="page-header">
+//                             <h1 className="page-title">Test Drive Management</h1>
+//                             <p className="page-subtitle">Manage customer requests and test drive appointments</p>
+//                         </div>
+//                     </Col>
+//                     <Col md={6} className="text-end">
+//                         <Button variant="outline-primary" onClick={() => window.location.reload()}>
+//                             Refresh
+//                         </Button>
+//                     </Col>
+//                 </Row>
+
+//                 <Tabs activeKey={activeTab} onSelect={setActiveTab} className="mb-4" fill>
+//                     <Tab
+//                         eventKey="requests"
+//                         title={
+//                             <span>
+//                                 Requests <Badge bg="warning" text="dark">{requests.length}</Badge>
+//                             </span>
+//                         }
+//                     >
+//                         <Card className="filter-card mb-3">
+//                             <Card.Body>
+//                                 <InputGroup>
+//                                     <InputGroup.Text>Search</InputGroup.Text>
+//                                     <FormControl
+//                                         placeholder="Name, email, phone..."
+//                                         value={searchTerm}
+//                                         onChange={(e) => setSearchTerm(e.target.value)}
+//                                     />
+//                                 </InputGroup>
+//                             </Card.Body>
+//                         </Card>
+
+//                         {loading.requests ? (
+//                             <div className="text-center py-5"><Spinner animation="border" /></div>
+//                         ) : error.requests ? (
+//                             <Alert variant="danger">{error.requests}</Alert>
+//                         ) : filteredRequests.length === 0 ? (
+//                             <Alert variant="info">No pending requests.</Alert>
+//                         ) : (
+//                             <Card className="main-card">
+//                                 <Card.Body className="p-0">
+//                                     <Table hover responsive className="appointment-table mb-0">
+//                                         <thead>
+//                                             <tr>
+//                                                 <th>Name</th>
+//                                                 <th>Phone</th>
+//                                                 <th>Email</th>
+//                                                 <th>Address</th>
+//                                                 <th>Request Date</th>
+//                                                 <th>Action</th>
+//                                             </tr>
+//                                         </thead>
+//                                         <tbody>
+//                                             {filteredRequests.map((req) => (
+//                                                 <tr key={req.customerId}>
+//                                                     <td><strong>{req.fullName}</strong></td>
+//                                                     <td>{req.phone}</td>
+//                                                     <td>{req.email}</td>
+//                                                     <td>{req.address}</td>
+//                                                     <td>{req.createDate}</td>
+//                                                     <td>
+//                                                         <Button
+//                                                             size="sm"
+//                                                             variant="primary"
+//                                                             className="d-flex align-items-center gap-1 px-3 py-2 fw-medium"
+//                                                             style={{
+//                                                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+//                                                                 border: 'none',
+//                                                                 borderRadius: '8px',
+//                                                                 fontSize: '0.875rem',
+//                                                                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+//                                                             }}
+//                                                             onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+//                                                             onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+//                                                             onClick={() => handleCreateAppointment(req)}
+//                                                         >
+//                                                             Create
+//                                                         </Button>
+//                                                     </td>
+//                                                 </tr>
+//                                             ))}
+//                                         </tbody>
+//                                     </Table>
+//                                 </Card.Body>
+//                             </Card>
+//                         )}
+//                     </Tab>
+
+//                     <Tab
+//                         eventKey="appointments"
+//                         title={
+//                             <span>
+//                                 Appointments <Badge bg="success">{appointments.length}</Badge>
+//                             </span>
+//                         }
+//                     >
+//                         <Card className="filter-card mb-3">
+//                             <Card.Body>
+//                                 <InputGroup>
+//                                     <InputGroup.Text>Search</InputGroup.Text>
+//                                     <FormControl
+//                                         placeholder="Customer, vehicle..."
+//                                         value={searchTerm}
+//                                         onChange={(e) => setSearchTerm(e.target.value)}
+//                                     />
+//                                 </InputGroup>
+//                             </Card.Body>
+//                         </Card>
+
+//                         {loading.appointments ? (
+//                             <div className="text-center py-5"><Spinner animation="border" /></div>
+//                         ) : error.appointments ? (
+//                             <Alert variant="danger">{error.appointments}</Alert>
+//                         ) : filteredAppointments.length === 0 ? (
+//                             <Alert variant="info">No appointments created.</Alert>
+//                         ) : (
+//                             <Card className="main-card">
+//                                 <Card.Body className="p-0">
+//                                     <Table hover responsive className="appointment-table mb-0">
+//                                         <thead>
+//                                             <tr>
+//                                                 <th>Customer</th>
+//                                                 <th>Vehicle</th>
+//                                                 <th>Dealer</th>
+//                                                 <th>Date</th>
+//                                             </tr>
+//                                         </thead>
+//                                         <tbody>
+//                                             {filteredAppointments.map((apt) => (
+//                                                 <tr key={apt.testAppointmentId}>
+//                                                     <td><strong>{apt.customerName}</strong></td>
+//                                                     <td>{apt.vehicleName}</td>
+//                                                     <td>{apt.dealerName}</td>
+//                                                     <td>{apt.appointmentDate}</td>
+//                                                 </tr>
+//                                             ))}
+//                                         </tbody>
+//                                     </Table>
+//                                 </Card.Body>
+//                             </Card>
+//                         )}
+//                     </Tab>
+//                 </Tabs>
+//             </Container>
+
+//             <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+//                 <Modal.Header closeButton>
+//                     <Modal.Title>Create Test Drive Appointment</Modal.Title>
+//                 </Modal.Header>
+//                 <Modal.Body>
+//                     <p><strong>Customer:</strong> {selectedCustomer?.fullName}</p>
+//                     <Form onSubmit={handleSubmitAppointment}>
+//                         <Form.Group className="mb-3">
+//                             <Form.Label>Vehicle</Form.Label>
+//                             <Form.Select
+//                                 value={formData.vehicleId}
+//                                 onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+//                                 required
+//                             >
+//                                 <option value="">Select vehicle</option>
+//                                 {vehicles.map(v => (
+//                                     <option key={v.vehicleId} value={v.vehicleId}>
+//                                         {v.modelName} {v.version}
+//                                     </option>
+//                                 ))}
+//                             </Form.Select>
+//                         </Form.Group>
+
+//                         <Form.Group className="mb-3">
+//                             <Form.Label>Dealer</Form.Label>
+//                             <Form.Select
+//                                 value={formData.dealerId}
+//                                 onChange={(e) => setFormData({ ...formData, dealerId: e.target.value })}
+//                                 required
+//                             >
+//                                 <option value="">Select dealer</option>
+//                                 {dealers.map(d => (
+//                                     <option key={d.dealerId} value={d.dealerId}>
+//                                         {d.fullName}
+//                                     </option>
+//                                 ))}
+//                             </Form.Select>
+//                         </Form.Group>
+
+//                         <Form.Group className="mb-3">
+//                             <Form.Label>Date</Form.Label>
+//                             <Form.Control
+//                                 type="date"
+//                                 value={formData.appointmentDate}
+//                                 onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
+//                                 required
+//                             />
+//                             <Form.Text className="text-muted">
+//                                 Will send: {formData.appointmentDate ? formatDateForAPI(formData.appointmentDate) : 'None'}
+//                             </Form.Text>
+//                         </Form.Group>
+
+//                         <div className="d-flex justify-content-end gap-2">
+//                             <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitting}>
+//                                 Cancel
+//                             </Button>
+//                             <Button
+//                                 variant="primary"
+//                                 type="submit"
+//                                 disabled={submitting}
+//                                 style={{
+//                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+//                                     border: 'none',
+//                                     borderRadius: '8px'
+//                                 }}
+//                             >
+//                                 {submitting ? 'Creating...' : 'Create Appointment'}
+//                             </Button>
+//                         </div>
+//                     </Form>
+//                 </Modal.Body>
+//             </Modal>
+//         </div>
+//     );
+// };
+
+// export default TestAppointment;
+
+//----------------------------------------------------------------------------------//
+
 import React, { useState, useEffect } from 'react';
 import {
     Container, Row, Col, Card, Table, Badge, Button, Modal, Form,
@@ -584,6 +1019,7 @@ const TestAppointment = () => {
     const [error, setError] = useState({ requests: '', appointments: '' });
     const [searchTerm, setSearchTerm] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
 
     const [formData, setFormData] = useState({
@@ -728,22 +1164,61 @@ const TestAppointment = () => {
         return `${day}/${month}/${year}`; // "03/11/2025"
     };
 
+    // Validation function
+    const validateForm = () => {
+        const errors = [];
+        if (!formData.vehicleId) {
+            errors.push('Please select a vehicle.');
+        }
+        if (!formData.dealerId) {
+            errors.push('Please select a dealer.');
+        }
+        if (!formData.appointmentDate) {
+            errors.push('Please select an appointment date.');
+        } else {
+            const selectedDate = new Date(formData.appointmentDate);
+            const today = new Date('2025-11-06'); // Current date as per context
+            if (selectedDate <= today) {
+                errors.push('Appointment date must be in the future.');
+            }
+        }
+        return errors;
+    };
+
     const handleSubmitAppointment = async (e) => {
         e.preventDefault();
+        const validationErrors = validateForm();
+        if (validationErrors.length > 0) {
+            alert('Validation Errors:\n' + validationErrors.join('\n'));
+            return;
+        }
+        // Set form data for confirmation
+        setFormData({
+            ...formData,
+            customerName: selectedCustomer.fullName,
+            vehicleName: vehicles.find(v => v.vehicleId === parseInt(formData.vehicleId))?.modelName || 'Unknown',
+            dealerName: dealers.find(d => d.dealerId === parseInt(formData.dealerId))?.fullName || 'Unknown',
+            formattedDate: formatDateForAPI(formData.appointmentDate)
+        });
+        setShowModal(false);
+        setShowConfirmModal(true);
+    };
+
+    const confirmAndCreate = async () => {
         setSubmitting(true);
         try {
             await ManageTestAppointment.createAppointment({
                 customerId: selectedCustomer.customerId,
                 vehicleId: parseInt(formData.vehicleId),
                 dealerId: parseInt(formData.dealerId),
-                appointmentDate: formatDateForAPI(formData.appointmentDate),
+                appointmentDate: formData.formattedDate,
                 status: 'Draft'
             });
 
             // ẨN REQUEST ĐÃ TẠO LỊCH
             setRequests(prev => prev.filter(r => r.customerId !== selectedCustomer.customerId));
 
-            setShowModal(false);
+            setShowConfirmModal(false);
             setFormData({ vehicleId: '', dealerId: '', appointmentDate: '' });
             setSelectedCustomer(null);
 
@@ -791,11 +1266,11 @@ const TestAppointment = () => {
                         eventKey="requests"
                         title={
                             <span>
-                                Requests <Badge bg="warning" text="dark">{requests.length}</Badge>
+                                Requests <Badge bg="warning" text="dark">{filteredRequests.length}</Badge>
                             </span>
                         }
                     >
-                        <Card className="filter-card mb-3">
+                        <Card className="filter-card mb-4">
                             <Card.Body>
                                 <InputGroup>
                                     <InputGroup.Text>Search</InputGroup.Text>
@@ -851,6 +1326,7 @@ const TestAppointment = () => {
                                                             onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
                                                             onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
                                                             onClick={() => handleCreateAppointment(req)}
+                                                            disabled={submitting}
                                                         >
                                                             Create
                                                         </Button>
@@ -868,11 +1344,11 @@ const TestAppointment = () => {
                         eventKey="appointments"
                         title={
                             <span>
-                                Appointments <Badge bg="success">{appointments.length}</Badge>
+                                Appointments <Badge bg="success">{filteredAppointments.length}</Badge>
                             </span>
                         }
                     >
-                        <Card className="filter-card mb-3">
+                        <Card className="filter-card mb-4">
                             <Card.Body>
                                 <InputGroup>
                                     <InputGroup.Text>Search</InputGroup.Text>
@@ -987,11 +1463,42 @@ const TestAppointment = () => {
                                     borderRadius: '8px'
                                 }}
                             >
-                                {submitting ? 'Creating...' : 'Create Appointment'}
+                                {submitting ? 'Validating...' : 'Next: Confirm'}
                             </Button>
                         </div>
                     </Form>
                 </Modal.Body>
+            </Modal>
+
+            {/* Confirmation Modal */}
+            <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirm Appointment Creation</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p><strong>Customer:</strong> {formData.customerName}</p>
+                    <p><strong>Vehicle:</strong> {formData.vehicleName}</p>
+                    <p><strong>Dealer:</strong> {formData.dealerName}</p>
+                    <p><strong>Date:</strong> {formData.formattedDate}</p>
+                    <p>Do you want to create this test drive appointment?</p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={confirmAndCreate}
+                        disabled={submitting}
+                        style={{
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            border: 'none',
+                            borderRadius: '8px'
+                        }}
+                    >
+                        {submitting ? 'Creating...' : 'Confirm & Create'}
+                    </Button>
+                </Modal.Footer>
             </Modal>
         </div>
     );

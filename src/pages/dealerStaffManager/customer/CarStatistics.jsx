@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Table, Button } from 'antd';
- 
+
 // Mock data for car statistics
 const carStatsData = [
   { key: 1, carModel: 'Tesla Model 3', status: 'Sold' },

@@ -31,7 +31,7 @@ const CustomerOverview = () => {
   return (
     <div className="dashboard">
       <Title level={2} className="dashboard-title">EV Dealer Dashboard</Title>
-      
+
       {/* Top Area: Summary Cards */}
       <Row gutter={[16, 16]} className="dashboard-summary-row">
         {summaryData.map((item, index) => (
@@ -47,7 +47,7 @@ const CustomerOverview = () => {
           </Col>
         ))}
       </Row>
-      <Row  style={{ marginBottom: 20 }}>
+      <Row style={{ marginBottom: 20 }}>
         <Col span={24}>
           <Card
             title={
@@ -77,7 +77,7 @@ const CustomerOverview = () => {
 
       {/* Middle Area: Side by Side Sections */}
       <Row gutter={16} className="dashboard-middle-row">
-        
+
 
         {/* Right: Calendar + Appointments List */}
         <Col xs={24} lg={12}>
@@ -88,39 +88,39 @@ const CustomerOverview = () => {
           </Row>
         </Col>
         {/* Left: Appointments List */}
-       
+
         <Col xs={24} lg={12}>
-         <Card
-          title={
-                  <span>
-                    <ClockCircleOutlined /> Upcoming Test Drive Appointments
-                  </span>
-                }
-                className="dashboard-appointments-card"
-              >
-                <List
-                  size="small"
-                  bordered={false}
-                  dataSource={appointmentsData}
-                  renderItem={(item) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={<div className="dashboard-avatar">{item.avatar}</div>}
-                        title={item.title}
-                        description={item.description}
-                      />
-                    </List.Item>
-                  )}
-                />
-                <Button type="link" className="dashboard-view-all-btn">
-                  View All Appointments
-                </Button>
-              </Card>
+          <Card
+            title={
+              <span>
+                <ClockCircleOutlined /> Upcoming Test Drive Appointments
+              </span>
+            }
+            className="dashboard-appointments-card"
+          >
+            <List
+              size="small"
+              bordered={false}
+              dataSource={appointmentsData}
+              renderItem={(item) => (
+                <List.Item>
+                  <List.Item.Meta
+                    avatar={<div className="dashboard-avatar">{item.avatar}</div>}
+                    title={item.title}
+                    description={item.description}
+                  />
+                </List.Item>
+              )}
+            />
+            <Button type="link" className="dashboard-view-all-btn">
+              View All Appointments
+            </Button>
+          </Card>
         </Col>
       </Row>
 
       {/* Bottom Area: Notifications List */}
-      
+
     </div>
   );
 };

@@ -194,7 +194,7 @@ const DebtManagement = () => {
       <Title level={2}>Debt Management</Title>
       <Card
         title="Debt Records"
-      variant="borderless"
+        variant="borderless"
         style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
         extra={
           <Space>

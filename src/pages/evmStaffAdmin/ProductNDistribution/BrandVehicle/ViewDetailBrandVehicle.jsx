@@ -1,4 +1,4 @@
- // hiển thị đúng quantity
+// hiển thị đúng quantity
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Descriptions, Image, Typography, Tabs, Carousel, Tag, Divider } from 'antd';
 import ManageVehicleService from '../../../../services/ManageVehicleService/ManageVehicleService.jsx';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Calendar } from 'antd';
 import { ClockCircleOutlined } from '@ant-design/icons';
- 
+
 const UpcomingEventsCalendar = () => {
   const getListData = (value) => {
     let listData;

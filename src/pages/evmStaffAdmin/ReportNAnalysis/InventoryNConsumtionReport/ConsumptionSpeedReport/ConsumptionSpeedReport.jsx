@@ -122,7 +122,7 @@ const ConsumptionSpeedReport = () => {
     <div>
       <Card
         title="Consumption Speed Summary"
-          variant='borderless'
+        variant='borderless'
         style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)', marginBottom: 16 }}
       >
         <Space size="large">

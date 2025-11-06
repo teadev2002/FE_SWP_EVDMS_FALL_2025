@@ -673,7 +673,7 @@ const StaffManagement = () => {
       ],
       onFilter: (value, record) => record.status === value,
     },
- 
+
     {
       title: 'Actions',
       key: 'actions',
@@ -717,7 +717,7 @@ const StaffManagement = () => {
       </Title>
       <Row gutter={16} style={{ marginBottom: 16 }}>
         <Col span={20}>
-          <Input 
+          <Input
             prefix={<SearchOutlined style={{ color: '#007BFF' }} />}
             placeholder="Search by Name, Phone, or Email"
             style={{ ...inputStyle }}
