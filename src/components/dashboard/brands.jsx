@@ -93,6 +93,7 @@ import {
 import { Layout, Menu, theme } from 'antd';
 import { Link, Outlet, useParams, useNavigate } from 'react-router-dom';
 import DashboardHeader from '../DashboardHeader';
+import CompactChatbox from '../boxchatai/CompactChatbox';
 
 const { Header, Content, Footer, Sider } = Layout;
 
@@ -174,6 +175,7 @@ const Brands = () => {
           </Footer>
         </Layout>
       </Layout>
+      <CompactChatbox />
     </Layout>
   );
 };
