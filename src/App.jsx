@@ -225,6 +225,7 @@ import Promotions from './pages/dealerStaffManager/sale/Promotions.jsx';
 import VehicleDetailPage from './pages/user/HomePage/VehicleDetailPage.jsx';
 import TestDriveHistoryPage from './pages/user/HomePage/TestDriveHistoryPage.jsx'; // New for history
 import TestDriveRegisterPage from './pages/user/HomePage/TestDriveRegisterPage.jsx'; // New for form
+import QuoteRegisterPage from './pages/user/HomePage/QuoteRegisterPage.jsx'; // New for quote
 import FactoryOrder from './pages/dealerStaffManager/sale/FactoryOrder.jsx';
 import DeliveryTracking from './pages/dealerStaffManager/sale/DeliveryTracking.jsx';
 import PaymentManagement from './pages/dealerStaffManager/sale/PaymentManagement.jsx';
@@ -422,6 +423,10 @@ function App() {
         {
           path: "test-drive-register",
           element: <TestDriveRegisterPage />,
+        },
+        {
+          path: "quote-register",
+          element: <QuoteRegisterPage />,
         },
       ],
     },
