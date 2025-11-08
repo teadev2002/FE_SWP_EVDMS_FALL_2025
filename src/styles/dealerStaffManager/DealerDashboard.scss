@@ -1,0 +1,180 @@
+// src/styles/dealerStaffManager/DealerDashboard.scss
+.dashboard-page {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    min-height: 100vh;
+    padding: 2rem 0;
+
+    .page-header {
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            margin: 0.5rem 0 0 0;
+            font-size: 1rem;
+        }
+    }
+
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #e2e8f0;
+    }
+
+    .stat-card {
+        background: white;
+        border: none;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+        height: 100%;
+
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        &.total {
+            border-left: 4px solid #3b82f6;
+        }
+
+        &.today {
+            border-left: 4px solid #10b981;
+        }
+
+        &.week {
+            border-left: 4px solid #f59e0b;
+        }
+
+        &.month {
+            border-left: 4px solid #8b5cf6;
+        }
+
+        &.year {
+            border-left: 4px solid #ef4444;
+        }
+
+        &.sales {
+            border-left: 4px solid #06b6d4;
+        }
+
+        &.bestseller {
+            border-left: 4px solid #10b981;
+        }
+
+        &.worstseller {
+            border-left: 4px solid #ef4444;
+        }
+
+        &.top-dealer {
+            border-left: 4px solid #059669;
+        }
+
+        &.top-customer {
+            border-left: 4px solid #7c3aed;
+        }
+
+        &.comparison {
+            border-left: 4px solid #6b7280;
+        }
+
+        &.year-large {
+            height: 100%;
+        }
+
+        .stat-number,
+        .stat-number-large {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.2;
+        }
+
+        .stat-number-large {
+            font-size: 2.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
+        .stat-subtext {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 0.25rem;
+        }
+
+        small {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+    }
+
+    .chart-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        height: 100%;
+
+        .card-body {
+            padding: 1.5rem;
+        }
+    }
+
+    .main-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+
+    .transaction-table {
+        th {
+            background: #f8fafc;
+            border: none;
+            font-weight: 600;
+            color: #374151;
+            padding: 1.25rem 1rem;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        td {
+            padding: 1.25rem 1rem;
+            vertical-align: middle;
+            border-color: #f1f5f9;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+        }
+    }
+
+    // Responsive
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 1.5rem;
+        }
+
+        .stat-card {
+            margin-bottom: 1rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+        }
+    }
+}

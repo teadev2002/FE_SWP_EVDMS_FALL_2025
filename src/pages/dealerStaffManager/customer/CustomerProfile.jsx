@@ -287,12 +287,19 @@ const CustomerProfile = () => {
       render: (_, record) => (
         <Space size="middle">
           <Button
-            icon={<EditOutlined />}
             onClick={(e) => {
               e.stopPropagation();
               handleEdit(record);
             }}
-            style={{ ...buttonStyle, color: '#007BFF', borderColor: '#007BFF' }}
+            style={{
+              ...buttonStyle,
+              background: 'linear-gradient(135deg, #ec6e07ff 0%, #ceb24fff 100%)',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              color: 'white',
+            }}
             onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
             onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
           >
@@ -310,9 +317,16 @@ const CustomerProfile = () => {
             cancelButtonProps={{ style: buttonStyle }}
           >
             <Button
-              icon={<DeleteOutlined />}
               onClick={(e) => e.stopPropagation()}
-              style={{ ...buttonStyle, color: '#FF4D4F', borderColor: '#FF4D4F' }}
+              style={{
+                ...buttonStyle,
+                background: 'linear-gradient(135deg, #b13d3dff 0%, #fb6161ff 100%)',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.875rem',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                color: 'white',
+              }}
               onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
               onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
             >

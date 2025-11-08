@@ -41,7 +41,7 @@
 //   ]
 
 //   ),
-   
+
 //   getItem('Report', 'report', <FileOutlined />, [
 //     getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),
 //     getItem('Customer Debt Report', 'report/customer-debt-report', <FileOutlined />),
@@ -95,6 +95,8 @@ import {
   TeamOutlined,
   UserOutlined,
   CarOutlined,
+  DashboardOutlined
+  ,
 } from '@ant-design/icons';
 import { Layout, Menu, theme } from 'antd';
 import { Link, Outlet, useParams, useNavigate } from 'react-router-dom';
@@ -150,6 +152,8 @@ const Store = () => {
       getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),
       getItem('Customer Debt Report', 'report/customer-debt-report', <FileOutlined />),
     ]),
+    getItem('Dashboard', 'dealer_dashboard', <DashboardOutlined />),
+
   ];
 
   return (

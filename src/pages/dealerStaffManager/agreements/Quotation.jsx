@@ -971,7 +971,7 @@ const Quotation = () => {
             <Button
               onClick={() => handleEdit(record.quoteId)}
               style={{
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',  // Tím cho Edit
+                background: 'linear-gradient(135deg, #ec6e07ff 0%, #ceb24fff 100%)',
                 border: 'none',
                 borderRadius: '8px',
                 color: 'white',

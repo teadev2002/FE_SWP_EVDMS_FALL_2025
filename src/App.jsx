@@ -246,6 +246,7 @@ import Login from './pages/Login.jsx';
 import Admin from './components/dashboard/admin.jsx';
 import StoreManage from './pages/evmStaffAdmin/StoreManage/StoreManage.jsx';
 import TestAppointment from './pages/dealerStaffManager/TestAppointment/TestAppointment.jsx';
+import DealerDashboard from './pages/dealerStaffManager/DealerDashboard/DealerDashboard.jsx';
 import BrandManage from './pages/evmStaffAdmin/BrandManage/BrandManage.jsx';
 import BrandVehicleManage from './pages/evmStaffAdmin/ProductNDistribution/BrandVehicle/BrandVehicleManage.jsx';
 import PaymentSuccess from './pages/dealerStaffManager/sale/PaymentSuccess.jsx';
@@ -264,6 +265,10 @@ function App() {
         {
           path: "testappointment",
           element: <TestAppointment />,
+        },
+        {
+          path: "dealer_dashboard",
+          element: <DealerDashboard />,
         },
         {
           path: "sales",

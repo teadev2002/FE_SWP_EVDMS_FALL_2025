@@ -207,7 +207,7 @@ const Promotions = () => {
         <Button
           onClick={() => showModal(record)}
           style={{
-            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+            background: 'linear-gradient(135deg, #ec6e07ff 0%, #ceb24fff 100%)',
             border: 'none',
             borderRadius: '8px',
             fontSize: '0.875rem',
@@ -220,7 +220,7 @@ const Promotions = () => {
         <Button
           onClick={() => deletePromotion(record.id)}
           style={{
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+            background: 'linear-gradient(135deg, #b13d3dff 0%, #fb6161ff 100%)',
             border: 'none',
             borderRadius: '8px',
             fontSize: '0.875rem',
