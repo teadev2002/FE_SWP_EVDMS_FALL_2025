@@ -1111,11 +1111,11 @@ const BrandVehicleManage = () => {
     { title: 'Version', dataIndex: 'version', key: 'version', sorter: (a, b) => a.version.localeCompare(b.version) },
     { title: 'Color', dataIndex: 'color', key: 'color', sorter: (a, b) => a.color.localeCompare(b.color) },
     {
-      title: 'Price',
+      title: 'Price (VND)',
       dataIndex: 'price',
       key: 'price',
       sorter: (a, b) => a.price - b.price,
-      render: (value) => value >= 1000000 ? `${(value / 1000000).toFixed(2)}M` : `$${value?.toFixed(2) || 'N/A'}`,
+      render: (value) => value >= 1000000 ? `${(value / 1000000).toFixed(2)}M` : `${value?.toFixed(1) || 'N/A'}`,
     },
     { title: 'Type', dataIndex: 'vehicleType', key: 'vehicleType', sorter: (a, b) => a.vehicleType.localeCompare(b.vehicleType) },
     {
