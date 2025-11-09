@@ -153,6 +153,7 @@ const Store = () => {
       getItem('Customer Debt Report', 'report/customer-debt-report', <FileOutlined />),
     ]),
     getItem('Dashboard', 'dealer_dashboard', <DashboardOutlined />),
+    getItem('Dealer Account', 'dealer_account', <DesktopOutlined />),
 
   ];
 
