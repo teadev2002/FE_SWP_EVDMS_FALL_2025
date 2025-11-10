@@ -139,6 +139,7 @@ const Brands = () => {
       getItem('Debt', 'agency-management/debt-management', <FileOutlined />),
     ]),
     getItem('Store Management', 'store-management', <FileOutlined />),
+    getItem('Staff Account', 'staff-account', <DesktopOutlined />),
   ];
 
   return (

@@ -252,6 +252,8 @@ import BrandVehicleManage from './pages/evmStaffAdmin/ProductNDistribution/Brand
 import PaymentSuccess from './pages/dealerStaffManager/sale/PaymentSuccess.jsx';
 import PaymentCancel from './pages/dealerStaffManager/sale/PaymentCancel.jsx';
 import DealerAccountManage from './pages/dealerStaffManager/DealerAccount/DealerAccountManage.jsx';
+import StaffAccount from './pages/evmStaffAdmin/StaffAccount/StaffAccountManage.jsx';
+import StaffAccountManage from './pages/evmStaffAdmin/StaffAccount/StaffAccountManage.jsx';
 function App() {
 
   const router = createBrowserRouter([
@@ -328,7 +330,7 @@ function App() {
           element: <PaymentCancel />,
         },
         {
-          path: "dealer_account",
+          path: "dealer-account",
           element: <DealerAccountManage />,
         }
       ],
@@ -384,7 +386,10 @@ function App() {
         {
           path: "store-management",
           element: <StoreManage />,
-        },
+        },{
+          path: "staff-account",
+          element: <StaffAccountManage />,
+        }
       ],
     },
     {
