@@ -132,11 +132,11 @@ const Brands = () => {
       getItem('Inventory Management', 'inventory-allocation/inventory', <FileOutlined />),
       getItem('Vehicle Allocation', 'inventory-allocation/vehicle-allocation', <FileOutlined />),
     ]),
-    getItem('Price Promotion', 'price-promotion-manage', <UserOutlined />),
-    getItem('Agency Management', 'agency-management', <FileOutlined />, [
+//    getItem('Price Promotion', 'price-promotion-manage', <UserOutlined />),
+    getItem('Sale Store', 'agency-management', <FileOutlined />, [
       getItem('Agreements', 'agency-management/agreements-management', <FileOutlined />),
       getItem('Sales', 'agency-management/sales-management', <FileOutlined />),
-      getItem('Debt', 'agency-management/debt-management', <FileOutlined />),
+    //  getItem('Debt', 'agency-management/debt-management', <FileOutlined />),
     ]),
     getItem('Store Management', 'store-management', <FileOutlined />),
     getItem('Staff Account', 'staff-account', <DesktopOutlined />),

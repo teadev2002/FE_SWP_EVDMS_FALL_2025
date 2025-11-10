@@ -1179,12 +1179,14 @@ const ManageSaleAgreements = () => {
           />
         </TabPane>
 
+
+          <TabPane tab="Orders" key="orders">
+          <Orders />
+        </TabPane>
         <TabPane tab="Quotations" key="quotations">
           <Quotation />
         </TabPane>
-        <TabPane tab="Orders" key="orders">
-          <Orders />
-        </TabPane>
+        
       </Tabs>
 
       {/* ADD / EDIT MODAL */}

@@ -138,11 +138,11 @@ const Store = () => {
     getItem('E-Vehicles', 'vehicle', <PieChartOutlined />),
     getItem('Test Appointment', 'testappointment', <CarOutlined />),
     getItem('Sales', 'sales', <TeamOutlined />, [
-      getItem('Promotions', 'sales/promotions', <FileOutlined />),
-      getItem('Sale Agreements', 'sales/agreements', <UserOutlined />),
-      getItem('Factory Orders', 'sales/factory-order', <DesktopOutlined />),
-      getItem('Delivery Tracking', 'sales/delivery-tracking', <DesktopOutlined />),
-      getItem('Payment Management', 'sales/payment-management', <DesktopOutlined />),
+    getItem('Sale Agreements', 'sales/agreements', <UserOutlined />),
+   //   getItem('Factory Orders', 'sales/factory-order', <DesktopOutlined />),
+    getItem('Payment Management', 'sales/payment-management', <DesktopOutlined />),
+    getItem('Delivery Tracking', 'sales/delivery-tracking', <DesktopOutlined />),
+    getItem('Promotions', 'sales/promotions', <FileOutlined />),
     ]),
     getItem('Customer', 'customer', <UserOutlined />, [
       getItem('Overview', 'customer-overview', <FileOutlined />),
@@ -150,7 +150,7 @@ const Store = () => {
     ]),
     getItem('Report', 'report', <FileOutlined />, [
       getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),
-      getItem('Customer Debt Report', 'report/customer-debt-report', <FileOutlined />),
+ //     getItem('Customer Debt Report', 'report/customer-debt-report', <FileOutlined />),
     ]),
     getItem('Dashboard', 'dealer_dashboard', <DashboardOutlined />),
     getItem('Dealer Account', 'dealer-account', <DesktopOutlined />),
