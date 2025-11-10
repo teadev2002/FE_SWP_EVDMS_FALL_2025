@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert, Row, Col, Spinner } from 'react-bootstrap';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import '../../../styles/TestDriveForm.scss';
 import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
 import TestDriveService from '../../../services/TestDriveService/TestDriveService';
 
 const QuoteForm = () => {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         fullName: '',
         phone: '',
@@ -136,6 +137,7 @@ const QuoteForm = () => {
         setErrors({});
         setShowSuccess(false);
         setShowError(false);
+        navigate(-1);
     };
 
     return (
