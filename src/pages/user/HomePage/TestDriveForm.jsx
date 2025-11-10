@@ -297,7 +297,7 @@ const TestDriveForm = () => {
             try {
                 const data = await TestDriveService.getAllStores();
                 setStores(data);
-            } catch (error) {
+            } catch {
                 setErrorMessage('Unable to load stores. Please try again.');
                 setShowError(true);
             } finally {
