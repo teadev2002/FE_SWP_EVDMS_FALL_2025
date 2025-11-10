@@ -458,8 +458,15 @@ const Login = () => {
       const { nameid: userId, role } = decoded;
       console.log('Decoded JWT:', decoded); // Để debug, xóa sau
 
-      // Gọi AuthContext để sync (nếu cần set user basic)
-      login('User', email); // Giữ nguyên call cũ nếu nó cần, hoặc modify AuthContext để nhận token
+      // Đồng bộ thông tin cơ bản vào AuthContext để hiển thị trên header
+      const displayRole = role
+        ? role
+            .toLowerCase()
+            .split('_')
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(' ')
+        : 'User';
+      login(displayRole, email);
 
       // Phân role và xử lý
       if (role === 'Dealer_staff' || role === 'Dealer_manager') {
