@@ -212,12 +212,13 @@
 // src/pages/user/TestDriveRegisterPage/TestDriveForm.jsx
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Alert, Row, Col, Spinner } from 'react-bootstrap';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import '../../../styles/TestDriveForm.scss';
 import TestDriveService from '../../../services/TestDriveService/TestDriveService';
 
 const TestDriveForm = () => {
     const [searchParams] = useSearchParams();
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         fullName: '',
         phone: '',
@@ -347,6 +348,7 @@ const TestDriveForm = () => {
         setErrors({});
         setShowSuccess(false);
         setShowError(false);
+        navigate(-1);
     };
 
     return (
