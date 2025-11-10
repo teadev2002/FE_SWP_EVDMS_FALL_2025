@@ -210,11 +210,12 @@
 // export default TestDriveForm;
 
 // src/pages/user/TestDriveRegisterPage/TestDriveForm.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Button, Alert, Row, Col, Spinner } from 'react-bootstrap';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import '../../../styles/TestDriveForm.scss';
 import TestDriveService from '../../../services/TestDriveService/TestDriveService';
+import ManageHomePageService from '../../../services/ManageHomePageService/ManageHomePageService';
 
 const TestDriveForm = () => {
     const [searchParams] = useSearchParams();
@@ -228,6 +229,7 @@ const TestDriveForm = () => {
         storeId: ''
     });
     const [stores, setStores] = useState([]);
+    const [vehicleOptions, setVehicleOptions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -235,13 +237,58 @@ const TestDriveForm = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [errors, setErrors] = useState({});
 
+    const mergeVehicleOptions = useCallback((options) => {
+        if (!options?.length) return;
+        setVehicleOptions(prev => {
+            const merged = new Set(prev);
+            options.forEach(opt => {
+                if (opt) {
+                    merged.add(opt);
+                }
+            });
+            return Array.from(merged);
+        });
+    }, []);
+
+    useEffect(() => {
+        const fetchVehicles = async () => {
+            try {
+                const [vehiclesData, brandsData] = await Promise.all([
+                    ManageHomePageService.getAllVehicles(),
+                    ManageHomePageService.getAllBrands()
+                ]);
+                const formatted = vehiclesData.map(vehicle => {
+                    const brand = brandsData.find(b => b.brandId === vehicle.brandId) || {};
+                    const brandName = brand.brandName || 'Unknown';
+                    return vehicle.modelName?.startsWith(brandName)
+                        ? vehicle.modelName
+                        : `${brandName} ${vehicle.modelName}`;
+                });
+                mergeVehicleOptions(formatted);
+            } catch (error) {
+                console.error('Error fetching vehicles:', error);
+            }
+        };
+        fetchVehicles();
+    }, [mergeVehicleOptions]);
+
     // Load vehicle title from URL
     useEffect(() => {
         const vehicleTitle = searchParams.get('vehicle');
         if (vehicleTitle && !formData.preferredVehicle) {
-            setFormData(prev => ({ ...prev, preferredVehicle: decodeURIComponent(vehicleTitle) }));
+            const decoded = decodeURIComponent(vehicleTitle);
+            setFormData(prev => ({ ...prev, preferredVehicle: decoded }));
+            mergeVehicleOptions([decoded]);
         }
-    }, [searchParams, formData.preferredVehicle]);
+    }, [searchParams, formData.preferredVehicle, mergeVehicleOptions]);
+
+    useEffect(() => {
+        const historyTestDrives = JSON.parse(localStorage.getItem('testDrives') || '[]');
+        const collected = historyTestDrives
+            .map(item => item.preferredVehicle)
+            .filter(Boolean);
+        mergeVehicleOptions(collected);
+    }, [mergeVehicleOptions]);
 
     // Load stores
     useEffect(() => {
@@ -316,6 +363,7 @@ const TestDriveForm = () => {
             const saved = JSON.parse(localStorage.getItem('testDrives') || '[]');
             saved.push(historyItem);
             localStorage.setItem('testDrives', JSON.stringify(saved));
+            mergeVehicleOptions([formData.preferredVehicle]);
 
             setShowSuccess(true);
             setTimeout(() => {
@@ -414,12 +462,20 @@ const TestDriveForm = () => {
                     <Col md={6}>
                         <Form.Group className="mb-3">
                             <Form.Label className="eco-label">Preferred Vehicle *</Form.Label>
-                            <Form.Control
-                                type="text"
+                            <Form.Select
+                                name="preferredVehicle"
                                 value={formData.preferredVehicle}
-                                readOnly
-                                className="eco-input"
-                            />
+                                onChange={handleChange}
+                                className={`eco-select ${errors.preferredVehicle ? 'is-invalid' : ''}`}
+                            >
+                                <option value="">-- Select a vehicle --</option>
+                                {vehicleOptions.map(option => (
+                                    <option key={option} value={option}>
+                                        {option}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                            {errors.preferredVehicle && <div className="invalid-feedback d-block">{errors.preferredVehicle}</div>}
                         </Form.Group>
                     </Col>
 

@@ -72,17 +72,21 @@ const DashboardHeader = () => {
         <Space
           style={{
             cursor: 'pointer',
-            padding: '8px 16px',
-            background: 'rgba(255, 255, 255, 0.15)',
-            borderRadius: '20px',
+            padding: '4px 14px',
+            background: 'rgba(255, 255, 255, 0.12)',
+            borderRadius: '18px',
             color: '#fff',
             transition: 'all 0.3s ease',
+            display: 'inline-flex',
+            alignItems: 'center',
+            height: 36,
+            lineHeight: 1,
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.12)';
           }}
         >
           <UserOutlined style={{ fontSize: '16px' }} />

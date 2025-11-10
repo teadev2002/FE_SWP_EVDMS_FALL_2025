@@ -73,8 +73,6 @@ const Footer = () => {
               <li><a href="/">Vehicle Catalog</a></li>
               <li><a href="/test-drive-register">Schedule Test Drive</a></li>
               <li><a href="/quote-register">Request a Quote</a></li>
-              <li><a href="#about">About Us</a></li>
-              <li><a href="#contact">Contact Support</a></li>
             </ul>
           </Col>
 

@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Form, Button, Alert, Row, Col, Spinner } from 'react-bootstrap';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import '../../../styles/TestDriveForm.scss';
 import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
 import TestDriveService from '../../../services/TestDriveService/TestDriveService';
+import ManageHomePageService from '../../../services/ManageHomePageService/ManageHomePageService';
 
 const QuoteForm = () => {
     const [searchParams] = useSearchParams();
@@ -17,6 +18,7 @@ const QuoteForm = () => {
         storeId: ''
     });
     const [stores, setStores] = useState([]);
+    const [vehicleOptions, setVehicleOptions] = useState([]);
     const [loading, setLoading] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
@@ -24,12 +26,62 @@ const QuoteForm = () => {
     const [errorMessage, setErrorMessage] = useState('');
     const [errors, setErrors] = useState({});
 
+    const mergeVehicleOptions = useCallback((options) => {
+        if (!options?.length) return;
+        setVehicleOptions(prev => {
+            const merged = new Set(prev);
+            options.forEach(opt => {
+                if (opt) {
+                    merged.add(opt);
+                }
+            });
+            return Array.from(merged);
+        });
+    }, []);
+
+    useEffect(() => {
+        const fetchVehicles = async () => {
+            try {
+                const [vehiclesData, brandsData] = await Promise.all([
+                    ManageHomePageService.getAllVehicles(),
+                    ManageHomePageService.getAllBrands()
+                ]);
+                const formatted = vehiclesData.map(vehicle => {
+                    const brand = brandsData.find(b => b.brandId === vehicle.brandId) || {};
+                    const brandName = brand.brandName || 'Unknown';
+                    return vehicle.modelName?.startsWith(brandName)
+                        ? vehicle.modelName
+                        : `${brandName} ${vehicle.modelName}`;
+                });
+                mergeVehicleOptions(formatted);
+            } catch (error) {
+                console.error('Error loading vehicles:', error);
+            }
+        };
+        fetchVehicles();
+    }, [mergeVehicleOptions]);
+
     useEffect(() => {
         const vehicleTitle = searchParams.get('vehicle');
         if (vehicleTitle && !formData.preferredVehicle) {
-            setFormData(prev => ({ ...prev, preferredVehicle: decodeURIComponent(vehicleTitle) }));
+            const decoded = decodeURIComponent(vehicleTitle);
+            setFormData(prev => ({ ...prev, preferredVehicle: decoded }));
+            mergeVehicleOptions([decoded]);
         }
-    }, [searchParams, formData.preferredVehicle]);
+    }, [searchParams, formData.preferredVehicle, mergeVehicleOptions]);
+
+    useEffect(() => {
+        const historyQuotes = JSON.parse(localStorage.getItem('quotes') || '[]');
+        const historyTestDrives = JSON.parse(localStorage.getItem('testDrives') || '[]');
+        const collected = new Set();
+        historyQuotes.forEach(item => {
+            if (item.preferredVehicle) collected.add(item.preferredVehicle);
+        });
+        historyTestDrives.forEach(item => {
+            if (item.preferredVehicle) collected.add(item.preferredVehicle);
+        });
+        mergeVehicleOptions(Array.from(collected));
+    }, [mergeVehicleOptions]);
 
     useEffect(() => {
         const fetchStores = async () => {
@@ -105,6 +157,7 @@ const QuoteForm = () => {
             const saved = JSON.parse(localStorage.getItem('quotes') || '[]');
             saved.push(historyItem);
             localStorage.setItem('quotes', JSON.stringify(saved));
+            mergeVehicleOptions([formData.preferredVehicle]);
 
             setShowSuccess(true);
             setTimeout(() => {
@@ -203,12 +256,20 @@ const QuoteForm = () => {
                     <Col md={6}>
                         <Form.Group className="mb-3">
                             <Form.Label className="eco-label">Preferred Vehicle *</Form.Label>
-                            <Form.Control
-                                type="text"
+                            <Form.Select
+                                name="preferredVehicle"
                                 value={formData.preferredVehicle}
-                                readOnly
-                                className="eco-input"
-                            />
+                                onChange={handleChange}
+                                className={`eco-select ${errors.preferredVehicle ? 'is-invalid' : ''}`}
+                            >
+                                <option value="">-- Select a vehicle --</option>
+                                {vehicleOptions.map(option => (
+                                    <option key={option} value={option}>
+                                        {option}
+                                    </option>
+                                ))}
+                            </Form.Select>
+                            {errors.preferredVehicle && <Form.Control.Feedback type="invalid">{errors.preferredVehicle}</Form.Control.Feedback>}
                         </Form.Group>
                     </Col>
 
