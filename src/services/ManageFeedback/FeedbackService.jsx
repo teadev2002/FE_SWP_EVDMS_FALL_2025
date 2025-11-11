@@ -38,6 +38,15 @@ const FeedbackService = {
       throw error;
     }
   },
+  getFeedbackByStoreId: async (storeId) => {
+    try {
+      const response = await apiClient.get(`Feedbacks/store/${storeId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching feedback by store ID:", error);
+      throw error;
+    }
+  },
 };
 
 export default FeedbackService;

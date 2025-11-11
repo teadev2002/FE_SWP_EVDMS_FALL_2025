@@ -145,8 +145,9 @@ const Store = () => {
     getItem('Promotions', 'sales/promotions', <FileOutlined />),
     ]),
     getItem('Customer', 'customer', <UserOutlined />, [
-      getItem('Overview', 'customer-overview', <FileOutlined />),
+ //     getItem('Overview', 'customer-overview', <FileOutlined />),
       getItem('Profile', 'customer-profile', <FileOutlined />),
+      getItem('Feedback', 'customer-feedback', <FileOutlined />),
     ]),
     getItem('Report', 'report', <FileOutlined />, [
       getItem('Staff Sales Report', 'report/staff-sales-report', <FileOutlined />),

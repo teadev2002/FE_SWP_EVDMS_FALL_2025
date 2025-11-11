@@ -254,6 +254,7 @@ import PaymentCancel from './pages/dealerStaffManager/sale/PaymentCancel.jsx';
 import DealerAccountManage from './pages/dealerStaffManager/DealerAccount/DealerAccountManage.jsx';
 import StaffAccount from './pages/evmStaffAdmin/StaffAccount/StaffAccountManage.jsx';
 import StaffAccountManage from './pages/evmStaffAdmin/StaffAccount/StaffAccountManage.jsx';
+import CustomerFeedback from './pages/dealerStaffManager/customer/CustomerFeedback.jsx';
 function App() {
 
   const router = createBrowserRouter([
@@ -332,7 +333,11 @@ function App() {
         {
           path: "dealer-account",
           element: <DealerAccountManage />,
-        }
+        },
+        {
+          path: "customer-feedback",
+          element: <CustomerFeedback />,
+        },
       ],
     },
     {
