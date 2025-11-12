@@ -191,6 +191,14 @@ const ListCusGetQuote = forwardRef((props, ref) => {
     }
   }, [storeId]);
 
+  const handleAfterAdd = useCallback(
+    (customerId) => {
+      setCustomers((prev) => prev.filter((item) => item.customerId !== customerId));
+      loadData();
+    },
+    [loadData]
+  );
+
   // === GỌI LẦN ĐẦU ===
   useEffect(() => {
     loadData();
@@ -242,7 +250,7 @@ const ListCusGetQuote = forwardRef((props, ref) => {
               boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
             }}
             actions={[
-              <AddQuotationButton key="add-quote" customer={c} onSuccess={loadData} />,
+              <AddQuotationButton key="add-quote" customer={c} onSuccess={handleAfterAdd} />,
             ]}
           >
             <List.Item.Meta
