@@ -141,6 +141,7 @@ const QuoteForm = () => {
                 phone: formData.phone,
                 email: formData.email,
                 address: formData.address,
+                description: 'Get Quote',
                 licenseUp: null,
                 licenseDown: null,
                 storeId: parseInt(formData.storeId)
