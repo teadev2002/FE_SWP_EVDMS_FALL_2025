@@ -139,12 +139,13 @@
 // auto cap nhat sau khi add quote thanh cong
 
 // ListCusGetQuote.js
-import React, { useState, useEffect, forwardRef, useImperativeHandle } from 'react';
+import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { List, Avatar, Typography, Spin, Empty, Tag, Space } from 'antd';
 import { UserOutlined, MailOutlined } from '@ant-design/icons';
 import { toast } from 'react-toastify';
 import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
 import ManageQuoteService from '../../../services/ManageQuotes/ManageQuoteService';
+import AddQuotationButton from './AddQuotationButton';
 
 const { Title, Text } = Typography;
 
@@ -165,7 +166,7 @@ const ListCusGetQuote = forwardRef((props, ref) => {
   }, []);
 
   // === HÀM LOAD DATA (CÓ THỂ GỌI LẠI) ===
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!storeId) return;
 
     setLoading(true);
@@ -188,12 +189,12 @@ const ListCusGetQuote = forwardRef((props, ref) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [storeId]);
 
   // === GỌI LẦN ĐẦU ===
   useEffect(() => {
     loadData();
-  }, [storeId]);
+  }, [loadData]);
 
   // === CHO PHÉP GỌI LẠI TỪ BÊN NGOÀI ===
   useImperativeHandle(ref, () => ({
@@ -240,6 +241,9 @@ const ListCusGetQuote = forwardRef((props, ref) => {
               margin: '0 8px 8px',
               boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
             }}
+            actions={[
+              <AddQuotationButton key="add-quote" customer={c} onSuccess={loadData} />,
+            ]}
           >
             <List.Item.Meta
               avatar={
