@@ -61,6 +61,16 @@ const DealerDashboardService = {
             throw error;
         }
     },
+
+    getRecentOrders: async (storeId) => {
+        try {
+            const response = await apiClient.get(`Order/store/${storeId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching recent orders:", error);
+            throw error;
+        }
+    },
 };
 
 export default DealerDashboardService;
