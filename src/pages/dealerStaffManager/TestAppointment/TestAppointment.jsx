@@ -1003,10 +1003,515 @@
 
 //----------------------------------------------------------------------------------//
 
+// import React, { useState, useEffect } from 'react';
+// import {
+//     Container, Row, Col, Card, Table, Badge, Button, Modal, Form,
+//     Tabs, Tab, Spinner, Alert, InputGroup, FormControl
+// } from 'react-bootstrap';
+// import '../../../styles/dealerStaffManager/TestAppointment.scss';
+// import ManageTestAppointment from '../../../services/ManageTestAppointment/ManageTestAppointment';
+
+// const TestAppointment = () => {
+//     const [activeTab, setActiveTab] = useState('requests');
+//     const [requests, setRequests] = useState([]);
+//     const [appointments, setAppointments] = useState([]);
+//     const [loading, setLoading] = useState({ requests: true, appointments: true });
+//     const [error, setError] = useState({ requests: '', appointments: '' });
+//     const [searchTerm, setSearchTerm] = useState('');
+//     const [showModal, setShowModal] = useState(false);
+//     const [showConfirmModal, setShowConfirmModal] = useState(false);
+//     const [selectedCustomer, setSelectedCustomer] = useState(null);
+
+//     const [formData, setFormData] = useState({
+//         vehicleId: '',
+//         dealerId: '',
+//         appointmentDate: ''
+//     });
+//     const [vehicles, setVehicles] = useState([]);
+//     const [dealers, setDealers] = useState([]);
+//     const [submitting, setSubmitting] = useState(false);
+
+//     // Helper để lấy storeId từ localStorage
+//     const getCurrentStoreId = () => {
+//         const dealerInfoStr = localStorage.getItem('dealerInfo');
+//         if (!dealerInfoStr) {
+//             throw new Error('No dealerInfo in localStorage');
+//         }
+//         const dealerInfo = JSON.parse(dealerInfoStr);
+//         const storeId = dealerInfo.storeId;
+//         if (!storeId) {
+//             throw new Error('No storeId found in dealerInfo');
+//         }
+//         return storeId;
+//     };
+
+//     // Helper để lấy dealerId từ localStorage
+//     const getCurrentDealerId = () => {
+//         const dealerInfoStr = localStorage.getItem('dealerInfo');
+//         if (!dealerInfoStr) {
+//             throw new Error('No dealerInfo in localStorage');
+//         }
+//         const dealerInfo = JSON.parse(dealerInfoStr);
+//         const dealerId = dealerInfo.dealerId;
+//         if (!dealerId) {
+//             throw new Error('No dealerId found in dealerInfo');
+//         }
+//         return dealerId;
+//     };
+
+//     useEffect(() => {
+//         if (activeTab === 'requests') fetchRequests();
+//         if (activeTab === 'appointments') fetchAppointments();
+//     }, [activeTab]);
+
+//     const fetchRequests = async () => {
+//         setLoading(prev => ({ ...prev, requests: true }));
+//         setError(prev => ({ ...prev, requests: '' }));
+//         try {
+//             const data = await ManageTestAppointment.getAllRequests();
+//             const pending = data.filter(c => !c.testAppointments || c.testAppointments.length === 0);
+//             setRequests(pending);
+//         } catch (err) {
+//             setError(prev => ({ ...prev, requests: 'Failed to load requests.' }));
+//         } finally {
+//             setLoading(prev => ({ ...prev, requests: false }));
+//         }
+//     };
+
+//     const fetchAppointments = async () => {
+//         setLoading(prev => ({ ...prev, appointments: true }));
+//         setError(prev => ({ ...prev, appointments: '' }));
+//         try {
+//             const currentStoreId = getCurrentStoreId();
+//             const data = await ManageTestAppointment.getAllAppointments();
+
+//             // Fetch all dealers and filter by storeId to get storeDealerIds
+//             const allDealersResponse = await fetch('https://localhost:7269/api/Dealers');
+//             const allDealers = await allDealersResponse.json();
+//             const storeDealers = Array.isArray(allDealers) ? allDealers.filter(d => d.storeId === currentStoreId) : [];
+//             const storeDealerIds = storeDealers.map(d => d.dealerId);
+
+//             // Filter appointments for the store
+//             const storeAppointments = data.filter(apt => storeDealerIds.includes(apt.dealerId));
+
+//             const enriched = await Promise.all(
+//                 storeAppointments.map(async (apt) => {
+//                     let customerName = 'Unknown';
+//                     let vehicleName = 'Unknown';
+//                     let dealerName = 'Unknown';
+
+//                     try {
+//                         const customer = await ManageTestAppointment.getCustomerById(apt.customerId);
+//                         customerName = customer.fullName;
+//                     } catch (e) { console.warn(`Customer ${apt.customerId} not found`); }
+
+//                     try {
+//                         const vehicle = await ManageTestAppointment.getVehicleById(apt.vehicleId);
+//                         vehicleName = `${vehicle.modelName} ${vehicle.version}`;
+//                     } catch (e) { console.warn(`Vehicle ${apt.vehicleId} not found`); }
+
+//                     try {
+//                         const dealer = await ManageTestAppointment.getDealerById(apt.dealerId);
+//                         dealerName = dealer.fullName;
+//                     } catch (e) { console.warn(`Dealer ${apt.dealerId} not found`); }
+
+//                     return {
+//                         ...apt,
+//                         customerName,
+//                         vehicleName,
+//                         dealerName,
+//                         // Chuyển DD-MM-YYYY → DD/MM/YYYY
+//                         appointmentDate: apt.appointmentDate.replace(/-/g, '/')
+//                     };
+//                 })
+//             );
+//             setAppointments(enriched);
+//             console.log(`Filtered appointments for store ${currentStoreId}:`, enriched.length); // Debug
+//         } catch (err) {
+//             console.error("fetchAppointments error:", err);
+//             setError(prev => ({ ...prev, appointments: 'Failed to load appointments.' }));
+//         } finally {
+//             setLoading(prev => ({ ...prev, appointments: false }));
+//         }
+//     };
+
+//     const handleCreateAppointment = (customer) => {
+//         setSelectedCustomer(customer);
+//         setShowModal(true);
+//         fetchVehiclesAndDealers();
+//     };
+
+//     const fetchVehiclesAndDealers = async () => {
+//         try {
+//             const currentStoreId = getCurrentStoreId();
+//             const [veh, deal] = await Promise.all([
+//                 fetch('https://localhost:7269/api/Vehicles').then(r => r.json()),
+//                 fetch('https://localhost:7269/api/Dealers').then(r => r.json()),
+//             ]);
+//             setVehicles(Array.isArray(veh) ? veh : []);
+//             // Filter dealers chỉ thuộc store hiện tại
+//             const filteredDealers = Array.isArray(deal) ? deal.filter(d => d.storeId === currentStoreId) : [];
+//             setDealers(filteredDealers);
+//             console.log(`Filtered dealers for store ${currentStoreId}:`, filteredDealers.length); // Debug
+//         } catch (err) {
+//             console.error("Load vehicles/dealers error:", err);
+//         }
+//     };
+
+//     const formatDateForAPI = (dateString) => {
+//         if (!dateString) return '';
+//         const [year, month, day] = dateString.split('-');
+//         return `${day}/${month}/${year}`; // "03/11/2025"
+//     };
+
+//     // Validation function
+//     const validateForm = () => {
+//         const errors = [];
+//         if (!formData.vehicleId) {
+//             errors.push('Please select a vehicle.');
+//         }
+//         if (!formData.dealerId) {
+//             errors.push('Please select a dealer.');
+//         }
+//         if (!formData.appointmentDate) {
+//             errors.push('Please select an appointment date.');
+//         } else {
+//             const selectedDate = new Date(formData.appointmentDate);
+//             const today = new Date('2025-11-06'); // Current date as per context
+//             if (selectedDate <= today) {
+//                 errors.push('Appointment date must be in the future.');
+//             }
+//         }
+//         return errors;
+//     };
+
+//     const handleSubmitAppointment = async (e) => {
+//         e.preventDefault();
+//         const validationErrors = validateForm();
+//         if (validationErrors.length > 0) {
+//             alert('Validation Errors:\n' + validationErrors.join('\n'));
+//             return;
+//         }
+//         // Set form data for confirmation
+//         setFormData({
+//             ...formData,
+//             customerName: selectedCustomer.fullName,
+//             vehicleName: vehicles.find(v => v.vehicleId === parseInt(formData.vehicleId))?.modelName || 'Unknown',
+//             dealerName: dealers.find(d => d.dealerId === parseInt(formData.dealerId))?.fullName || 'Unknown',
+//             formattedDate: formatDateForAPI(formData.appointmentDate)
+//         });
+//         setShowModal(false);
+//         setShowConfirmModal(true);
+//     };
+
+//     const confirmAndCreate = async () => {
+//         setSubmitting(true);
+//         try {
+//             await ManageTestAppointment.createAppointment({
+//                 customerId: selectedCustomer.customerId,
+//                 vehicleId: parseInt(formData.vehicleId),
+//                 dealerId: parseInt(formData.dealerId),
+//                 appointmentDate: formData.formattedDate,
+//                 status: 'Draft'
+//             });
+
+//             // ẨN REQUEST ĐÃ TẠO LỊCH
+//             setRequests(prev => prev.filter(r => r.customerId !== selectedCustomer.customerId));
+
+//             setShowConfirmModal(false);
+//             setFormData({ vehicleId: '', dealerId: '', appointmentDate: '' });
+//             setSelectedCustomer(null);
+
+//             // Reload appointments nếu đang ở tab đó
+//             if (activeTab === 'appointments') {
+//                 fetchAppointments();
+//             }
+//         } catch (err) {
+//             alert('Failed to create appointment.');
+//         } finally {
+//             setSubmitting(false);
+//         }
+//     };
+
+//     const filteredRequests = requests.filter(r =>
+//         r.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         r.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         r.phone.includes(searchTerm)
+//     );
+
+//     const filteredAppointments = appointments.filter(a =>
+//         a.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         a.vehicleName.toLowerCase().includes(searchTerm.toLowerCase())
+//     );
+
+//     return (
+//         <div className="admin-page">
+//             <Container fluid className="py-4">
+//                 <Row className="align-items-center mb-4">
+//                     <Col md={6}>
+//                         <div className="page-header">
+//                             <h1 className="page-title">Test Drive Management</h1>
+//                             <p className="page-subtitle">Manage customer requests and test drive appointments</p>
+//                         </div>
+//                     </Col>
+//                     <Col md={6} className="text-end">
+//                         <Button variant="outline-primary" onClick={() => window.location.reload()}>
+//                             Refresh
+//                         </Button>
+//                     </Col>
+//                 </Row>
+
+//                 <Tabs activeKey={activeTab} onSelect={setActiveTab} className="mb-4" fill>
+//                     <Tab
+//                         eventKey="requests"
+//                         title={
+//                             <span>
+//                                 Requests <Badge bg="warning" text="dark">{filteredRequests.length}</Badge>
+//                             </span>
+//                         }
+//                     >
+//                         <Card className="filter-card mb-4">
+//                             <Card.Body>
+//                                 <InputGroup>
+//                                     <InputGroup.Text>Search</InputGroup.Text>
+//                                     <FormControl
+//                                         placeholder="Name, email, phone..."
+//                                         value={searchTerm}
+//                                         onChange={(e) => setSearchTerm(e.target.value)}
+//                                     />
+//                                 </InputGroup>
+//                             </Card.Body>
+//                         </Card>
+
+//                         {loading.requests ? (
+//                             <div className="text-center py-5"><Spinner animation="border" /></div>
+//                         ) : error.requests ? (
+//                             <Alert variant="danger">{error.requests}</Alert>
+//                         ) : filteredRequests.length === 0 ? (
+//                             <Alert variant="info">No pending requests.</Alert>
+//                         ) : (
+//                             <Card className="main-card">
+//                                 <Card.Body className="p-0">
+//                                     <Table hover responsive className="appointment-table mb-0">
+//                                         <thead>
+//                                             <tr>
+//                                                 <th>Name</th>
+//                                                 <th>Phone</th>
+//                                                 <th>Email</th>
+//                                                 <th>Address</th>
+//                                                 <th>Request Date</th>
+//                                                 <th>Action</th>
+//                                             </tr>
+//                                         </thead>
+//                                         <tbody>
+//                                             {filteredRequests.map((req) => (
+//                                                 <tr key={req.customerId}>
+//                                                     <td><strong>{req.fullName}</strong></td>
+//                                                     <td>{req.phone}</td>
+//                                                     <td>{req.email}</td>
+//                                                     <td>{req.address}</td>
+//                                                     <td>{req.createDate}</td>
+//                                                     <td>
+//                                                         <Button
+//                                                             size="sm"
+//                                                             variant="primary"
+//                                                             className="d-flex align-items-center gap-1 px-3 py-2 fw-medium"
+//                                                             style={{
+//                                                                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+//                                                                 border: 'none',
+//                                                                 borderRadius: '8px',
+//                                                                 fontSize: '0.875rem',
+//                                                                 boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+//                                                             }}
+//                                                             onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+//                                                             onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+//                                                             onClick={() => handleCreateAppointment(req)}
+//                                                             disabled={submitting}
+//                                                         >
+//                                                             Create
+//                                                         </Button>
+//                                                     </td>
+//                                                 </tr>
+//                                             ))}
+//                                         </tbody>
+//                                     </Table>
+//                                 </Card.Body>
+//                             </Card>
+//                         )}
+//                     </Tab>
+
+//                     <Tab
+//                         eventKey="appointments"
+//                         title={
+//                             <span>
+//                                 Appointments <Badge bg="success">{filteredAppointments.length}</Badge>
+//                             </span>
+//                         }
+//                     >
+//                         <Card className="filter-card mb-4">
+//                             <Card.Body>
+//                                 <InputGroup>
+//                                     <InputGroup.Text>Search</InputGroup.Text>
+//                                     <FormControl
+//                                         placeholder="Customer, vehicle..."
+//                                         value={searchTerm}
+//                                         onChange={(e) => setSearchTerm(e.target.value)}
+//                                     />
+//                                 </InputGroup>
+//                             </Card.Body>
+//                         </Card>
+
+//                         {loading.appointments ? (
+//                             <div className="text-center py-5"><Spinner animation="border" /></div>
+//                         ) : error.appointments ? (
+//                             <Alert variant="danger">{error.appointments}</Alert>
+//                         ) : filteredAppointments.length === 0 ? (
+//                             <Alert variant="info">No appointments created.</Alert>
+//                         ) : (
+//                             <Card className="main-card">
+//                                 <Card.Body className="p-0">
+//                                     <Table hover responsive className="appointment-table mb-0">
+//                                         <thead>
+//                                             <tr>
+//                                                 <th>Customer</th>
+//                                                 <th>Vehicle</th>
+//                                                 <th>Dealer</th>
+//                                                 <th>Date</th>
+//                                             </tr>
+//                                         </thead>
+//                                         <tbody>
+//                                             {filteredAppointments.map((apt) => (
+//                                                 <tr key={apt.testAppointmentId}>
+//                                                     <td><strong>{apt.customerName}</strong></td>
+//                                                     <td>{apt.vehicleName}</td>
+//                                                     <td>{apt.dealerName}</td>
+//                                                     <td>{apt.appointmentDate}</td>
+//                                                 </tr>
+//                                             ))}
+//                                         </tbody>
+//                                     </Table>
+//                                 </Card.Body>
+//                             </Card>
+//                         )}
+//                     </Tab>
+//                 </Tabs>
+//             </Container>
+
+//             <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+//                 <Modal.Header closeButton>
+//                     <Modal.Title>Create Test Drive Appointment</Modal.Title>
+//                 </Modal.Header>
+//                 <Modal.Body>
+//                     <p><strong>Customer:</strong> {selectedCustomer?.fullName}</p>
+//                     <Form onSubmit={handleSubmitAppointment}>
+//                         <Form.Group className="mb-3">
+//                             <Form.Label>Vehicle</Form.Label>
+//                             <Form.Select
+//                                 value={formData.vehicleId}
+//                                 onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+//                                 required
+//                             >
+//                                 <option value="">Select vehicle</option>
+//                                 {vehicles.map(v => (
+//                                     <option key={v.vehicleId} value={v.vehicleId}>
+//                                         {v.modelName} {v.version}
+//                                     </option>
+//                                 ))}
+//                             </Form.Select>
+//                         </Form.Group>
+
+//                         <Form.Group className="mb-3">
+//                             <Form.Label>Dealer</Form.Label>
+//                             <Form.Select
+//                                 value={formData.dealerId}
+//                                 onChange={(e) => setFormData({ ...formData, dealerId: e.target.value })}
+//                                 required
+//                             >
+//                                 <option value="">Select dealer</option>
+//                                 {dealers.map(d => (
+//                                     <option key={d.dealerId} value={d.dealerId}>
+//                                         {d.fullName}
+//                                     </option>
+//                                 ))}
+//                             </Form.Select>
+//                         </Form.Group>
+
+//                         <Form.Group className="mb-3">
+//                             <Form.Label>Date</Form.Label>
+//                             <Form.Control
+//                                 type="date"
+//                                 value={formData.appointmentDate}
+//                                 onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
+//                                 required
+//                             />
+//                             <Form.Text className="text-muted">
+//                                 Will send: {formData.appointmentDate ? formatDateForAPI(formData.appointmentDate) : 'None'}
+//                             </Form.Text>
+//                         </Form.Group>
+
+//                         <div className="d-flex justify-content-end gap-2">
+//                             <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitting}>
+//                                 Cancel
+//                             </Button>
+//                             <Button
+//                                 variant="primary"
+//                                 type="submit"
+//                                 disabled={submitting}
+//                                 style={{
+//                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+//                                     border: 'none',
+//                                     borderRadius: '8px'
+//                                 }}
+//                             >
+//                                 {submitting ? 'Validating...' : 'Next: Confirm'}
+//                             </Button>
+//                         </div>
+//                     </Form>
+//                 </Modal.Body>
+//             </Modal>
+
+//             {/* Confirmation Modal */}
+//             <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
+//                 <Modal.Header closeButton>
+//                     <Modal.Title>Confirm Appointment Creation</Modal.Title>
+//                 </Modal.Header>
+//                 <Modal.Body>
+//                     <p><strong>Customer:</strong> {formData.customerName}</p>
+//                     <p><strong>Vehicle:</strong> {formData.vehicleName}</p>
+//                     <p><strong>Dealer:</strong> {formData.dealerName}</p>
+//                     <p><strong>Date:</strong> {formData.formattedDate}</p>
+//                     <p>Do you want to create this test drive appointment?</p>
+//                 </Modal.Body>
+//                 <Modal.Footer>
+//                     <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+//                         Cancel
+//                     </Button>
+//                     <Button
+//                         variant="primary"
+//                         onClick={confirmAndCreate}
+//                         disabled={submitting}
+//                         style={{
+//                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+//                             border: 'none',
+//                             borderRadius: '8px'
+//                         }}
+//                     >
+//                         {submitting ? 'Creating...' : 'Confirm & Create'}
+//                     </Button>
+//                 </Modal.Footer>
+//             </Modal>
+//         </div>
+//     );
+// };
+
+// export default TestAppointment;
+
+//----------------------------------------------------------------//
+
 import React, { useState, useEffect } from 'react';
 import {
     Container, Row, Col, Card, Table, Badge, Button, Modal, Form,
-    Tabs, Tab, Spinner, Alert, InputGroup, FormControl
+    Tabs, Tab, Spinner, Alert, InputGroup, FormControl, Pagination
 } from 'react-bootstrap';
 import '../../../styles/dealerStaffManager/TestAppointment.scss';
 import ManageTestAppointment from '../../../services/ManageTestAppointment/ManageTestAppointment';
@@ -1018,11 +1523,19 @@ const TestAppointment = () => {
     const [loading, setLoading] = useState({ requests: true, appointments: true });
     const [error, setError] = useState({ requests: '', appointments: '' });
     const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [sortOrder, setSortOrder] = useState('asc'); // 'asc' for oldest first, 'desc' for newest first
+    const [currentPage, setCurrentPage] = useState(1);
+    const [appointmentSortOrder, setAppointmentSortOrder] = useState('asc');
+    const [appointmentCurrentPage, setAppointmentCurrentPage] = useState(1);
     const [showModal, setShowModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
 
+    const itemsPerPage = 10;
+
     const [formData, setFormData] = useState({
+        status: '',
         vehicleId: '',
         dealerId: '',
         appointmentDate: ''
@@ -1059,6 +1572,25 @@ const TestAppointment = () => {
         return dealerId;
     };
 
+    const getStatusVariant = (status) => {
+        if (!status || status === 'pending') return 'warning';
+        switch (status) {
+            case 'accepted': return 'primary';
+            case 'completed': return 'success';
+            case 'cancelled': return 'danger';
+            default: return 'secondary';
+        }
+    };
+
+    const getStatusDisplay = (status) => {
+        switch (status) {
+            case 'accepted': return 'Accepted';
+            case 'completed': return 'Completed';
+            case 'cancelled': return 'Cancelled';
+            default: return status || 'Pending';
+        }
+    };
+
     useEffect(() => {
         if (activeTab === 'requests') fetchRequests();
         if (activeTab === 'appointments') fetchAppointments();
@@ -1069,8 +1601,8 @@ const TestAppointment = () => {
         setError(prev => ({ ...prev, requests: '' }));
         try {
             const data = await ManageTestAppointment.getAllRequests();
-            const pending = data.filter(c => !c.testAppointments || c.testAppointments.length === 0);
-            setRequests(pending);
+            const nonCompleted = data.filter(c => c.status !== 'completed');
+            setRequests(nonCompleted);
         } catch (err) {
             setError(prev => ({ ...prev, requests: 'Failed to load requests.' }));
         } finally {
@@ -1097,12 +1629,18 @@ const TestAppointment = () => {
             const enriched = await Promise.all(
                 storeAppointments.map(async (apt) => {
                     let customerName = 'Unknown';
+                    let customerPhone = 'Unknown';
+                    let customerEmail = 'Unknown';
+                    let customerAddress = 'Unknown';
                     let vehicleName = 'Unknown';
                     let dealerName = 'Unknown';
 
                     try {
                         const customer = await ManageTestAppointment.getCustomerById(apt.customerId);
                         customerName = customer.fullName;
+                        customerPhone = customer.phone;
+                        customerEmail = customer.email;
+                        customerAddress = customer.address;
                     } catch (e) { console.warn(`Customer ${apt.customerId} not found`); }
 
                     try {
@@ -1118,6 +1656,9 @@ const TestAppointment = () => {
                     return {
                         ...apt,
                         customerName,
+                        customerPhone,
+                        customerEmail,
+                        customerAddress,
                         vehicleName,
                         dealerName,
                         // Chuyển DD-MM-YYYY → DD/MM/YYYY
@@ -1137,6 +1678,7 @@ const TestAppointment = () => {
 
     const handleCreateAppointment = (customer) => {
         setSelectedCustomer(customer);
+        setFormData({ status: '', vehicleId: '', dealerId: '', appointmentDate: '' });
         setShowModal(true);
         fetchVehiclesAndDealers();
     };
@@ -1167,19 +1709,24 @@ const TestAppointment = () => {
     // Validation function
     const validateForm = () => {
         const errors = [];
-        if (!formData.vehicleId) {
-            errors.push('Please select a vehicle.');
+        if (!formData.status) {
+            errors.push('Please select an action.');
         }
-        if (!formData.dealerId) {
-            errors.push('Please select a dealer.');
-        }
-        if (!formData.appointmentDate) {
-            errors.push('Please select an appointment date.');
-        } else {
-            const selectedDate = new Date(formData.appointmentDate);
-            const today = new Date('2025-11-06'); // Current date as per context
-            if (selectedDate <= today) {
-                errors.push('Appointment date must be in the future.');
+        if (formData.status === 'completed') {
+            if (!formData.vehicleId) {
+                errors.push('Please select a vehicle.');
+            }
+            if (!formData.dealerId) {
+                errors.push('Please select a dealer.');
+            }
+            if (!formData.appointmentDate) {
+                errors.push('Please select an appointment date.');
+            } else {
+                const selectedDate = new Date(formData.appointmentDate);
+                const today = new Date('2025-11-12'); // Current date as per context
+                if (selectedDate <= today) {
+                    errors.push('Appointment date must be in the future.');
+                }
             }
         }
         return errors;
@@ -1193,13 +1740,16 @@ const TestAppointment = () => {
             return;
         }
         // Set form data for confirmation
-        setFormData({
+        const updatedFormData = {
             ...formData,
-            customerName: selectedCustomer.fullName,
-            vehicleName: vehicles.find(v => v.vehicleId === parseInt(formData.vehicleId))?.modelName || 'Unknown',
-            dealerName: dealers.find(d => d.dealerId === parseInt(formData.dealerId))?.fullName || 'Unknown',
-            formattedDate: formatDateForAPI(formData.appointmentDate)
-        });
+            customerName: selectedCustomer.fullName
+        };
+        if (formData.status === 'completed') {
+            updatedFormData.vehicleName = vehicles.find(v => v.vehicleId === parseInt(formData.vehicleId))?.modelName || 'Unknown';
+            updatedFormData.dealerName = dealers.find(d => d.dealerId === parseInt(formData.dealerId))?.fullName || 'Unknown';
+            updatedFormData.formattedDate = formatDateForAPI(formData.appointmentDate);
+        }
+        setFormData(updatedFormData);
         setShowModal(false);
         setShowConfirmModal(true);
     };
@@ -1207,42 +1757,135 @@ const TestAppointment = () => {
     const confirmAndCreate = async () => {
         setSubmitting(true);
         try {
-            await ManageTestAppointment.createAppointment({
-                customerId: selectedCustomer.customerId,
-                vehicleId: parseInt(formData.vehicleId),
-                dealerId: parseInt(formData.dealerId),
-                appointmentDate: formData.formattedDate,
-                status: 'Draft'
-            });
+            // Update customer status
+            const updatedCustomerData = {
+                ...selectedCustomer,
+                status: formData.status
+            };
+            await ManageTestAppointment.updateCustomer(selectedCustomer.customerId, updatedCustomerData);
 
-            // ẨN REQUEST ĐÃ TẠO LỊCH
-            setRequests(prev => prev.filter(r => r.customerId !== selectedCustomer.customerId));
+            if (formData.status === 'completed') {
+                await ManageTestAppointment.createAppointment({
+                    customerId: selectedCustomer.customerId,
+                    vehicleId: parseInt(formData.vehicleId),
+                    dealerId: parseInt(formData.dealerId),
+                    appointmentDate: formData.formattedDate,
+                    status: 'Draft'
+                });
+            }
+
+            // Refresh requests
+            await fetchRequests();
+
+            // If completed and in appointments tab, refresh
+            if (formData.status === 'completed' && activeTab === 'appointments') {
+                await fetchAppointments();
+            }
 
             setShowConfirmModal(false);
-            setFormData({ vehicleId: '', dealerId: '', appointmentDate: '' });
+            setFormData({ status: '', vehicleId: '', dealerId: '', appointmentDate: '' });
             setSelectedCustomer(null);
-
-            // Reload appointments nếu đang ở tab đó
-            if (activeTab === 'appointments') {
-                fetchAppointments();
-            }
         } catch (err) {
-            alert('Failed to create appointment.');
+            alert(`Failed: ${err.response?.data?.message || err.message || 'Operation failed.'}`);
         } finally {
             setSubmitting(false);
         }
     };
 
-    const filteredRequests = requests.filter(r =>
+    // Filter and sort logic for requests
+    const statusFilteredRequests = statusFilter === 'all'
+        ? requests
+        : statusFilter === 'pending'
+            ? requests.filter(r => !r.status || r.status === 'pending')
+            : requests.filter(r => r.status === statusFilter);
+
+    const searchFilteredRequests = statusFilteredRequests.filter(r =>
         r.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.phone.includes(searchTerm)
     );
 
-    const filteredAppointments = appointments.filter(a =>
+    const sortedRequests = [...searchFilteredRequests].sort((a, b) => {
+        const dateA = new Date(a.createDate);
+        const dateB = new Date(b.createDate);
+        if (sortOrder === 'asc') {
+            return dateA - dateB;
+        } else {
+            return dateB - dateA;
+        }
+    });
+
+    const totalFilteredRequests = sortedRequests.length;
+    const paginatedRequests = sortedRequests.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const totalPagesRequests = Math.ceil(totalFilteredRequests / itemsPerPage);
+
+    const handlePageChangeRequests = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Filter and sort logic for appointments
+    const searchFilteredAppointments = appointments.filter(a =>
         a.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         a.vehicleName.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const sortedAppointments = [...searchFilteredAppointments].sort((a, b) => {
+        // Parse appointmentDate from DD/MM/YYYY to Date
+        const parseDate = (dateStr) => {
+            const [day, month, year] = dateStr.split('/');
+            return new Date(year, month - 1, day);
+        };
+        const dateA = parseDate(a.appointmentDate);
+        const dateB = parseDate(b.appointmentDate);
+        if (appointmentSortOrder === 'asc') {
+            return dateA - dateB;
+        } else {
+            return dateB - dateA;
+        }
+    });
+
+    const totalFilteredAppointments = sortedAppointments.length;
+    const paginatedAppointments = sortedAppointments.slice(
+        (appointmentCurrentPage - 1) * itemsPerPage,
+        appointmentCurrentPage * itemsPerPage
+    );
+
+    const totalPagesAppointments = Math.ceil(totalFilteredAppointments / itemsPerPage);
+
+    const handlePageChangeAppointments = (pageNumber) => {
+        setAppointmentCurrentPage(pageNumber);
+    };
+
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, statusFilter, sortOrder]);
+
+    useEffect(() => {
+        setAppointmentCurrentPage(1);
+    }, [searchTerm, appointmentSortOrder]);
+
+    const getActionOptions = () => {
+        const customerStatus = selectedCustomer?.status;
+        if (!customerStatus || customerStatus === 'pending') {
+            return [
+                { value: 'accepted', label: 'Accept' },
+                { value: 'cancelled', label: 'Cancel' }
+            ];
+        } else if (customerStatus === 'accepted') {
+            return [
+                { value: 'completed', label: 'Complete' },
+                { value: 'cancelled', label: 'Cancel' }
+            ];
+        }
+        return [];
+    };
+
+    const actionOptions = getActionOptions();
 
     return (
         <div className="admin-page">
@@ -1266,13 +1909,13 @@ const TestAppointment = () => {
                         eventKey="requests"
                         title={
                             <span>
-                                Requests <Badge bg="warning" text="dark">{filteredRequests.length}</Badge>
+                                Requests <Badge bg="warning" text="dark">{totalFilteredRequests}</Badge>
                             </span>
                         }
                     >
                         <Card className="filter-card mb-4">
-                            <Card.Body>
-                                <InputGroup>
+                            <Card.Body className="d-flex flex-wrap gap-3 align-items-center">
+                                <InputGroup style={{ minWidth: '250px' }}>
                                     <InputGroup.Text>Search</InputGroup.Text>
                                     <FormControl
                                         placeholder="Name, email, phone..."
@@ -1280,6 +1923,32 @@ const TestAppointment = () => {
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                 </InputGroup>
+
+                                <Form.Group>
+                                    <Form.Label className="mb-1">Status</Form.Label>
+                                    <Form.Select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        style={{ minWidth: '150px' }}
+                                    >
+                                        <option value="all">All</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="accepted">Accepted</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </Form.Select>
+                                </Form.Group>
+
+                                <Form.Group>
+                                    <Form.Label className="mb-1">Sort by Date</Form.Label>
+                                    <Form.Select
+                                        value={sortOrder}
+                                        onChange={(e) => setSortOrder(e.target.value)}
+                                        style={{ minWidth: '150px' }}
+                                    >
+                                        <option value="asc">Oldest First</option>
+                                        <option value="desc">Newest First</option>
+                                    </Form.Select>
+                                </Form.Group>
                             </Card.Body>
                         </Card>
 
@@ -1287,56 +1956,88 @@ const TestAppointment = () => {
                             <div className="text-center py-5"><Spinner animation="border" /></div>
                         ) : error.requests ? (
                             <Alert variant="danger">{error.requests}</Alert>
-                        ) : filteredRequests.length === 0 ? (
-                            <Alert variant="info">No pending requests.</Alert>
+                        ) : totalFilteredRequests === 0 ? (
+                            <Alert variant="info">No requests found.</Alert>
                         ) : (
-                            <Card className="main-card">
-                                <Card.Body className="p-0">
-                                    <Table hover responsive className="appointment-table mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Name</th>
-                                                <th>Phone</th>
-                                                <th>Email</th>
-                                                <th>Address</th>
-                                                <th>Request Date</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredRequests.map((req) => (
-                                                <tr key={req.customerId}>
-                                                    <td><strong>{req.fullName}</strong></td>
-                                                    <td>{req.phone}</td>
-                                                    <td>{req.email}</td>
-                                                    <td>{req.address}</td>
-                                                    <td>{req.createDate}</td>
-                                                    <td>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="primary"
-                                                            className="d-flex align-items-center gap-1 px-3 py-2 fw-medium"
-                                                            style={{
-                                                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                                                border: 'none',
-                                                                borderRadius: '8px',
-                                                                fontSize: '0.875rem',
-                                                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                                                            }}
-                                                            onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
-                                                            onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
-                                                            onClick={() => handleCreateAppointment(req)}
-                                                            disabled={submitting}
-                                                        >
-                                                            Create
-                                                        </Button>
-                                                    </td>
+                            <>
+                                <Card className="main-card">
+                                    <Card.Body className="p-0">
+                                        <Table hover responsive className="appointment-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Phone</th>
+                                                    <th>Email</th>
+                                                    <th>Address</th>
+                                                    <th>Status</th>
+                                                    <th>Request Date</th>
+                                                    <th>Action</th>
                                                 </tr>
+                                            </thead>
+                                            <tbody>
+                                                {paginatedRequests.map((req) => (
+                                                    <tr key={req.customerId}>
+                                                        <td><strong>{req.fullName}</strong></td>
+                                                        <td>{req.phone}</td>
+                                                        <td>{req.email}</td>
+                                                        <td>{req.address}</td>
+                                                        <td>
+                                                            <Badge bg={getStatusVariant(req.status)}>
+                                                                {getStatusDisplay(req.status)}
+                                                            </Badge>
+                                                        </td>
+                                                        <td>{req.createDate}</td>
+                                                        <td>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="primary"
+                                                                className="d-flex align-items-center gap-1 px-3 py-2 fw-medium"
+                                                                style={{
+                                                                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                                                    border: 'none',
+                                                                    borderRadius: '8px',
+                                                                    fontSize: '0.875rem',
+                                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                                }}
+                                                                onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+                                                                onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+                                                                onClick={() => handleCreateAppointment(req)}
+                                                                disabled={submitting || req.status === 'cancelled'}
+                                                            >
+                                                                Create
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    </Card.Body>
+                                </Card>
+
+                                {totalPagesRequests > 1 && (
+                                    <div className="d-flex justify-content-center mt-4">
+                                        <Pagination>
+                                            <Pagination.Prev
+                                                onClick={() => handlePageChangeRequests(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                            />
+                                            {[...Array(totalPagesRequests)].map((_, index) => (
+                                                <Pagination.Item
+                                                    key={index + 1}
+                                                    active={index + 1 === currentPage}
+                                                    onClick={() => handlePageChangeRequests(index + 1)}
+                                                >
+                                                    {index + 1}
+                                                </Pagination.Item>
                                             ))}
-                                        </tbody>
-                                    </Table>
-                                </Card.Body>
-                            </Card>
+                                            <Pagination.Next
+                                                onClick={() => handlePageChangeRequests(currentPage + 1)}
+                                                disabled={currentPage === totalPagesRequests}
+                                            />
+                                        </Pagination>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </Tab>
 
@@ -1344,13 +2045,13 @@ const TestAppointment = () => {
                         eventKey="appointments"
                         title={
                             <span>
-                                Appointments <Badge bg="success">{filteredAppointments.length}</Badge>
+                                Appointments <Badge bg="success">{totalFilteredAppointments}</Badge>
                             </span>
                         }
                     >
                         <Card className="filter-card mb-4">
-                            <Card.Body>
-                                <InputGroup>
+                            <Card.Body className="d-flex flex-wrap gap-3 align-items-center">
+                                <InputGroup style={{ minWidth: '250px' }}>
                                     <InputGroup.Text>Search</InputGroup.Text>
                                     <FormControl
                                         placeholder="Customer, vehicle..."
@@ -1358,6 +2059,18 @@ const TestAppointment = () => {
                                         onChange={(e) => setSearchTerm(e.target.value)}
                                     />
                                 </InputGroup>
+
+                                <Form.Group>
+                                    <Form.Label className="mb-1">Sort by Date</Form.Label>
+                                    <Form.Select
+                                        value={appointmentSortOrder}
+                                        onChange={(e) => setAppointmentSortOrder(e.target.value)}
+                                        style={{ minWidth: '150px' }}
+                                    >
+                                        <option value="asc">Oldest First</option>
+                                        <option value="desc">Newest First</option>
+                                    </Form.Select>
+                                </Form.Group>
                             </Card.Body>
                         </Card>
 
@@ -1365,33 +2078,69 @@ const TestAppointment = () => {
                             <div className="text-center py-5"><Spinner animation="border" /></div>
                         ) : error.appointments ? (
                             <Alert variant="danger">{error.appointments}</Alert>
-                        ) : filteredAppointments.length === 0 ? (
-                            <Alert variant="info">No appointments created.</Alert>
+                        ) : totalFilteredAppointments === 0 ? (
+                            <Alert variant="info">No appointments found.</Alert>
                         ) : (
-                            <Card className="main-card">
-                                <Card.Body className="p-0">
-                                    <Table hover responsive className="appointment-table mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Customer</th>
-                                                <th>Vehicle</th>
-                                                <th>Dealer</th>
-                                                <th>Date</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {filteredAppointments.map((apt) => (
-                                                <tr key={apt.testAppointmentId}>
-                                                    <td><strong>{apt.customerName}</strong></td>
-                                                    <td>{apt.vehicleName}</td>
-                                                    <td>{apt.dealerName}</td>
-                                                    <td>{apt.appointmentDate}</td>
+                            <>
+                                <Card className="main-card">
+                                    <Card.Body className="p-0">
+                                        <Table hover responsive className="appointment-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Customer</th>
+                                                    <th>Phone</th>
+                                                    <th>Email</th>
+                                                    <th>Address</th>
+                                                    <th>Vehicle</th>
+                                                    <th>Dealer</th>
+                                                    <th>Status</th>
+                                                    <th>Test Date</th>
                                                 </tr>
+                                            </thead>
+                                            <tbody>
+                                                {paginatedAppointments.map((apt) => (
+                                                    <tr key={apt.testAppointmentId}>
+                                                        <td><strong>{apt.customerName}</strong></td>
+                                                        <td>{apt.customerPhone}</td>
+                                                        <td>{apt.customerEmail}</td>
+                                                        <td>{apt.customerAddress}</td>
+                                                        <td>{apt.vehicleName}</td>
+                                                        <td>{apt.dealerName}</td>
+                                                        <td>
+                                                            <Badge bg="success">Completed</Badge>
+                                                        </td>
+                                                        <td>{apt.appointmentDate}</td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </Table>
+                                    </Card.Body>
+                                </Card>
+
+                                {totalPagesAppointments > 1 && (
+                                    <div className="d-flex justify-content-center mt-4">
+                                        <Pagination>
+                                            <Pagination.Prev
+                                                onClick={() => handlePageChangeAppointments(appointmentCurrentPage - 1)}
+                                                disabled={appointmentCurrentPage === 1}
+                                            />
+                                            {[...Array(totalPagesAppointments)].map((_, index) => (
+                                                <Pagination.Item
+                                                    key={index + 1}
+                                                    active={index + 1 === appointmentCurrentPage}
+                                                    onClick={() => handlePageChangeAppointments(index + 1)}
+                                                >
+                                                    {index + 1}
+                                                </Pagination.Item>
                                             ))}
-                                        </tbody>
-                                    </Table>
-                                </Card.Body>
-                            </Card>
+                                            <Pagination.Next
+                                                onClick={() => handlePageChangeAppointments(appointmentCurrentPage + 1)}
+                                                disabled={appointmentCurrentPage === totalPagesAppointments}
+                                            />
+                                        </Pagination>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </Tab>
                 </Tabs>
@@ -1399,55 +2148,75 @@ const TestAppointment = () => {
 
             <Modal show={showModal} onHide={() => setShowModal(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Create Test Drive Appointment</Modal.Title>
+                    <Modal.Title>Manage Test Drive Request</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <p><strong>Customer:</strong> {selectedCustomer?.fullName}</p>
                     <Form onSubmit={handleSubmitAppointment}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Vehicle</Form.Label>
+                            <Form.Label>Action *</Form.Label>
                             <Form.Select
-                                value={formData.vehicleId}
-                                onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                                value={formData.status}
+                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                                 required
                             >
-                                <option value="">Select vehicle</option>
-                                {vehicles.map(v => (
-                                    <option key={v.vehicleId} value={v.vehicleId}>
-                                        {v.modelName} {v.version}
+                                <option value="">Select action</option>
+                                {actionOptions.map(option => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
                                     </option>
                                 ))}
                             </Form.Select>
                         </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label>Dealer</Form.Label>
-                            <Form.Select
-                                value={formData.dealerId}
-                                onChange={(e) => setFormData({ ...formData, dealerId: e.target.value })}
-                                required
-                            >
-                                <option value="">Select dealer</option>
-                                {dealers.map(d => (
-                                    <option key={d.dealerId} value={d.dealerId}>
-                                        {d.fullName}
-                                    </option>
-                                ))}
-                            </Form.Select>
-                        </Form.Group>
+                        {formData.status === 'completed' && (
+                            <>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Vehicle *</Form.Label>
+                                    <Form.Select
+                                        value={formData.vehicleId}
+                                        onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                                        required
+                                    >
+                                        <option value="">Select vehicle</option>
+                                        {vehicles.map(v => (
+                                            <option key={v.vehicleId} value={v.vehicleId}>
+                                                {v.modelName} {v.version}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label>Date</Form.Label>
-                            <Form.Control
-                                type="date"
-                                value={formData.appointmentDate}
-                                onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
-                                required
-                            />
-                            <Form.Text className="text-muted">
-                                Will send: {formData.appointmentDate ? formatDateForAPI(formData.appointmentDate) : 'None'}
-                            </Form.Text>
-                        </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Dealer *</Form.Label>
+                                    <Form.Select
+                                        value={formData.dealerId}
+                                        onChange={(e) => setFormData({ ...formData, dealerId: e.target.value })}
+                                        required
+                                    >
+                                        <option value="">Select dealer</option>
+                                        {dealers.map(d => (
+                                            <option key={d.dealerId} value={d.dealerId}>
+                                                {d.fullName}
+                                            </option>
+                                        ))}
+                                    </Form.Select>
+                                </Form.Group>
+
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Date *</Form.Label>
+                                    <Form.Control
+                                        type="date"
+                                        value={formData.appointmentDate}
+                                        onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
+                                        required
+                                    />
+                                    <Form.Text className="text-muted">
+                                        Will send: {formData.appointmentDate ? formatDateForAPI(formData.appointmentDate) : 'None'}
+                                    </Form.Text>
+                                </Form.Group>
+                            </>
+                        )}
 
                         <div className="d-flex justify-content-end gap-2">
                             <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitting}>
@@ -1473,14 +2242,19 @@ const TestAppointment = () => {
             {/* Confirmation Modal */}
             <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Confirm Appointment Creation</Modal.Title>
+                    <Modal.Title>Confirm Action</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <p><strong>Customer:</strong> {formData.customerName}</p>
-                    <p><strong>Vehicle:</strong> {formData.vehicleName}</p>
-                    <p><strong>Dealer:</strong> {formData.dealerName}</p>
-                    <p><strong>Date:</strong> {formData.formattedDate}</p>
-                    <p>Do you want to create this test drive appointment?</p>
+                    {formData.status === 'completed' && (
+                        <>
+                            <p><strong>Vehicle:</strong> {formData.vehicleName}</p>
+                            <p><strong>Dealer:</strong> {formData.dealerName}</p>
+                            <p><strong>Date:</strong> {formData.formattedDate}</p>
+                        </>
+                    )}
+                    <p><strong>Action:</strong> Update status to {getStatusDisplay(formData.status)} {formData.status === 'completed' ? 'and create appointment' : ''}</p>
+                    <p>Do you want to proceed?</p>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
@@ -1496,7 +2270,7 @@ const TestAppointment = () => {
                             borderRadius: '8px'
                         }}
                     >
-                        {submitting ? 'Creating...' : 'Confirm & Create'}
+                        {submitting ? 'Processing...' : 'Confirm'}
                     </Button>
                 </Modal.Footer>
             </Modal>

@@ -36,6 +36,17 @@ const ManageTestAppointment = {
         }
     },
 
+    // CẬP NHẬT KHÁCH HÀNG (STATUS)
+    updateCustomer: async (id, customerData) => {
+        try {
+            const response = await apiClient.put(`Customer/${id}`, customerData);
+            return response.data;
+        } catch (error) {
+            console.error("Error updating customer:", error);
+            throw error;
+        }
+    },
+
     // LẤY THÔNG TIN KHÁCH HÀNG
     getCustomerById: async (id) => {
         try {
@@ -65,8 +76,8 @@ const ManageTestAppointment = {
             const response = await apiClient.get("Dealers", {
                 params: { id }
             });
-            // Nếu response là array (filtered list), lấy item đầu tiên
-            const dealerData = Array.isArray(response.data) ? response.data[0] : response.data;
+            // Response là single object
+            const dealerData = response.data;
             if (!dealerData) {
                 throw new Error(`No dealer found for id ${id}`);
             }
