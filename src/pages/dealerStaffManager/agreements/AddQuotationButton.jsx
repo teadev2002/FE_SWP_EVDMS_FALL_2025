@@ -148,7 +148,7 @@ const AddQuotationButton = ({ customer, onSuccess }) => {
 
       toast.success('Quotation added successfully!');
       setOpen(false);
-      onSuccess?.();
+      onSuccess?.(values.customerId);
     } catch (error) {
       console.error('Failed to add quotation:', error);
       toast.error('Failed to add quotation');
