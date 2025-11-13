@@ -2,11 +2,7 @@
 .login-page {
   min-height: 100vh;
   padding: 3rem 1rem;
-  background: radial-gradient(circle at top left, rgba(109, 184, 77, 0.35), transparent 45%),
-              radial-gradient(circle at bottom right, rgba(45, 80, 22, 0.35), transparent 50%),
-              linear-gradient(135deg, #1a3a0f 0%, #2d5016 25%, #4a7c2c 50%, #5a9c3c 75%, #6db84d 100%);
-  background-size: 200% 200%;
-  animation: gradientShift 15s ease infinite;
+  background: #10210a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,21 +12,34 @@
   &::before {
     content: '';
     position: absolute;
-    top: -40%;
-    left: -40%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-    background-size: 55px 55px;
+    inset: 0;
+    background-image:
+      radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+      linear-gradient(135deg, rgba(26, 58, 15, 0.82), rgba(109, 184, 77, 0.78));
+    background-size: 55px 55px, 100% 100%;
+    background-position: 0 0, center;
+    background-repeat: repeat, no-repeat;
+    opacity: 0.95;
+    z-index: 1;
     animation: backgroundMove 22s linear infinite;
-    opacity: 0.25;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -20px;
+    background: url('../assets/background.png') center / cover no-repeat fixed;
+    filter: blur(6px);
+    transform: scale(1.05);
+    opacity: 0.6;
+    z-index: 0;
   }
 
   .floating-shape {
     position: absolute;
     border-radius: 50%;
     opacity: 0.35;
-    z-index: 0;
+    z-index: 2;
     pointer-events: none;
 
     &.shape-1 {
@@ -85,7 +94,7 @@
     overflow: hidden;
     animation: fadeInUp 0.7s ease;
     position: relative;
-    z-index: 1;
+    z-index: 4;
     backdrop-filter: blur(10px);
     background: rgba(255, 255, 255, 0.97);
     box-shadow: 0 24px 60px rgba(26, 58, 15, 0.25);
