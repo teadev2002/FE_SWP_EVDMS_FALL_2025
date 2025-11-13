@@ -1,5 +1,5 @@
 import { apiClient } from "../../api/apiClient";
-const ManageStoreService =  {
+const ManageStoreService = {
   getAllStores: async () => {
     try {
       const response = await apiClient.get("Store");
@@ -34,8 +34,8 @@ const ManageStoreService =  {
     } catch (error) {
       console.error("Error deleting store:", error);
       throw error;
-    } 
-  }, 
+    }
+  },
   getStoreById: async (storeId) => {
     try {
       const response = await apiClient.get(`Store/${storeId}`);
@@ -43,8 +43,8 @@ const ManageStoreService =  {
     } catch (error) {
       console.error("Error fetching store by ID:", error);
       throw error;
-    } 
-  },      
+    }
+  },
 }
 
 export default ManageStoreService;
