@@ -57,6 +57,16 @@ vehicleAllocate: async (payload) => {
   }
 },
 
+    updateStorage: async (storageId, updatedStorage) => {
+        try {
+            const response = await apiClient.put(`Storages/${storageId}`, updatedStorage);
+            return response.data;
+        } catch (error) {
+            console.error("Error updating storage:", error);
+            throw error;
+        }
+    },
+
 
 
 };
