@@ -300,7 +300,7 @@ function App() {
         },
         {
           path: "customer",
-          element: <CustomerOverview />,
+          element: <CustomerProfile />,
         },
         {
           path: "customer-overview",
