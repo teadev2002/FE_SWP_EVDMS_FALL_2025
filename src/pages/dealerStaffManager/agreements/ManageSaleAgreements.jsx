@@ -839,7 +839,9 @@ const ManageSaleAgreements = () => {
             label="Agreement Date"
             rules={[{ required: true, message: 'Please select a date!' }]}
           >
-            <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }} />
+            <DatePicker format="DD/MM/YYYY" style={{ width: '100%' }}  disabledDate={(current) => {
+                return current && current < dayjs().startOf('day');
+              }} />
           </Form.Item>
 
           <Form.Item
