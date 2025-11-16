@@ -1,8 +1,6 @@
- 
-// search
 import { toast } from 'react-toastify';
 import React, { useEffect, useState, useMemo } from 'react';
-import { Table, Button, Modal, Form, Input, DatePicker, Typography, Row, Col} from 'antd';
+import { Table, Button, Modal, Form, Input, DatePicker, Typography, Row, Col } from 'antd';
 import dayjs from 'dayjs';
 import ManageServicePromotions from '../../../services/ManagePromotions/ManageServicePromotions.jsx';
 
@@ -22,15 +20,24 @@ const Promotions = () => {
       setLoading(true);
       try {
         const data = await ManageServicePromotions.getAllPromotions();
-        const mappedPromotions = data.map(promo => ({
-          id: promo.promotionId.toString(),
-          title: promo.title,
-          description: promo.description,
-          validFrom: dayjs(promo.startDate).format('DD-MM-YYYY'),
-          validTo: dayjs(promo.endDate).format('DD-MM-YYYY'),
-          cta: `Save ${promo.discountPercent}%`,
-          hidden: false,
-        }));
+
+        const mappedPromotions = data.map(promo => {
+          const startDate = dayjs(promo.startDate, 'DD/MM/YYYY');
+          const endDate = dayjs(promo.endDate, 'DD/MM/YYYY');
+
+          return {
+            id: promo.promotionId.toString(),
+            title: promo.title,
+            description: promo.description,
+            validFrom: startDate.format('YYYY-MM-DD'), // ISO format
+            validTo: endDate.format('YYYY-MM-DD'),     // ISO format
+            cta: `Save ${promo.discountPercent}%`,
+            hidden: false,
+            _startDateObj: startDate, // for sorting
+            _endDateObj: endDate,
+          };
+        });
+
         setPromotions(mappedPromotions);
       } catch (error) {
         console.error('Failed to fetch promotions:', error);
@@ -51,8 +58,8 @@ const Promotions = () => {
         description: promo.description,
         discountPercent: parseInt(promo.cta.match(/\d+/)[0], 10),
         dateRange: [
-          dayjs(promo.validFrom, 'DD-MM-YYYY'),
-          dayjs(promo.validTo, 'DD-MM-YYYY'),
+          dayjs(promo.validFrom), // already in YYYY-MM-DD
+          dayjs(promo.validTo),
         ],
       });
     } else {
@@ -61,70 +68,79 @@ const Promotions = () => {
     setIsModalOpen(true);
   };
 
-  const handleOk = async () => {
-    try {
-      const values = await form.validateFields();
-      
-      const [startDate, endDate] = values.dateRange;
+ const handleOk = async () => {
+  try {
+    const values = await form.validateFields();
+    const [startDate, endDate] = values.dateRange;
 
-      const dealerInfoStr = localStorage.getItem('dealerInfo');
-      if (!dealerInfoStr) {
-        toast.error('User info not found. Please log in again.');
-        return;
-      }
-      const dealerInfo = JSON.parse(dealerInfoStr);
-      const storeId = dealerInfo.storeId;
-
-      const promoData = {
-        title: values.title,
-        description: values.description,
-        discountPercent: parseInt(values.discountPercent, 10),
-        startDate: startDate.format('YYYY-MM-DD'),
-        endDate: endDate.format('YYYY-MM-DD'),
-        storeId: storeId,
-      };
-
-      if (editingPromo) {
-        const response = await ManageServicePromotions.editPromotion(editingPromo.id, promoData);
-        setPromotions(promotions.map(p =>
-          p.id === editingPromo.id
-            ? {
-                id: response.promotionId?.toString() || p.id,
-                title: response.title,
-                description: response.description,
-                validFrom: dayjs(response.startDate).format('DD-MM-YYYY'),
-                validTo: dayjs(response.endDate).format('DD-MM-YYYY'),
-                cta: `Save ${response.discountPercent}%`,
-                hidden: p.hidden,
-              }
-            : p
-        ));
-        toast.success('Promotion updated successfully');
-      } else {
-        const response = await ManageServicePromotions.AddPromotion(promoData);
-        setPromotions([
-          ...promotions,
-          {
-            id: response.promotionId.toString(),
-            title: response.title,
-            description: response.description,
-            validFrom: dayjs(response.startDate).format('DD-MM-YYYY'),
-            validTo: dayjs(response.endDate).format('DD-MM-YYYY'),
-            cta: `Save ${response.discountPercent}%`,
-            hidden: false,
-          },
-        ]);
-        toast.success('Promotion added successfully');
-      }
-
-      setIsModalOpen(false);
-      form.resetFields();
-    } catch (error) {
-      console.error('Failed to save promotion:', error);
-      toast.error('Failed to save promotion');
+    const dealerInfoStr = localStorage.getItem('dealerInfo');
+    if (!dealerInfoStr) {
+      toast.error('User info not found. Please log in again.');
+      return;
     }
-  };
+    const dealerInfo = JSON.parse(dealerInfoStr);
+    const storeId = dealerInfo.storeId;
 
+    // FIXED: Send DD/MM/YYYY to match API
+    const promoData = {
+      title: values.title,
+      description: values.description,
+      discountPercent: parseInt(values.discountPercent, 10),
+      startDate: startDate.format('DD/MM/YYYY'),   // CHANGED
+      endDate: endDate.format('DD/MM/YYYY'),       // CHANGED
+      storeId,
+    };
+
+    if (editingPromo) {
+      const response = await ManageServicePromotions.editPromotion(editingPromo.id, promoData);
+      const startDate = dayjs(response.startDate, 'DD/MM/YYYY');
+      const endDate = dayjs(response.endDate, 'DD/MM/YYYY');
+
+      setPromotions(promotions.map(p =>
+        p.id === editingPromo.id
+          ? {
+              id: response.promotionId?.toString() || p.id,
+              title: response.title,
+              description: response.description,
+              validFrom: startDate.format('YYYY-MM-DD'),
+              validTo: endDate.format('YYYY-MM-DD'),
+              cta: `Save ${response.discountPercent}%`,
+              hidden: p.hidden,
+              _startDateObj: startDate,
+              _endDateObj: endDate,
+            }
+          : p
+      ));
+      toast.success('Promotion updated successfully');
+    } else {
+      const response = await ManageServicePromotions.AddPromotion(promoData);
+      const startDate = dayjs(response.startDate, 'DD/MM/YYYY');
+      const endDate = dayjs(response.endDate, 'DD/MM/YYYY');
+
+      setPromotions([
+        ...promotions,
+        {
+          id: response.promotionId.toString(),
+          title: response.title,
+          description: response.description,
+          validFrom: startDate.format('YYYY-MM-DD'),
+          validTo: endDate.format('YYYY-MM-DD'),
+          cta: `Save ${response.discountPercent}%`,
+          hidden: false,
+          _startDateObj: startDate,
+          _endDateObj: endDate,
+        },
+      ]);
+      toast.success('Promotion added successfully');
+    }
+
+    setIsModalOpen(false);
+    form.resetFields();
+  } catch (error) {
+    console.error('Failed to save promotion:', error);
+    toast.error('Failed to save promotion');
+  }
+};
   const deletePromotion = async (id) => {
     try {
       await ManageServicePromotions.deletePromotion(id);
@@ -136,7 +152,6 @@ const Promotions = () => {
     }
   };
 
-  // Filter promotions based on search
   const filteredPromotions = useMemo(() => {
     if (!searchText.trim()) return promotions;
 
@@ -149,91 +164,78 @@ const Promotions = () => {
   }, [promotions, searchText]);
 
   const columns = [
-  {
-    title: 'Title',
-    dataIndex: 'title',
-    key: 'title',
-    sorter: (a, b) => (a.title || '').localeCompare(b.title || ''),
-  },
-  {
-    title: 'Description',
-    dataIndex: 'description',
-    key: 'description',
-    sorter: (a, b) => (a.description || '').localeCompare(b.description || ''),
-  },
-  {
-    title: 'Valid From',
-    dataIndex: 'validFrom',
-    key: 'validFrom',
-    sorter: (a, b) => {
-      const parseDate = (d) => {
-        if (!d) return 0;
-        const [day, month, year] = d.split('-').map(Number);
-        return new Date(year, month - 1, day).getTime();
-      };
-      return parseDate(a.validFrom) - parseDate(b.validFrom);
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title',
+      sorter: (a, b) => (a.title || '').localeCompare(b.title || ''),
     },
-  },
-  {
-    title: 'Valid To',
-    dataIndex: 'validTo',
-    key: 'validTo',
-    sorter: (a, b) => {
-      const parseDate = (d) => {
-        if (!d) return 0;
-        const [day, month, year] = d.split('-').map(Number);
-        return new Date(year, month - 1, day).getTime();
-      };
-      return parseDate(a.validTo) - parseDate(b.validTo);
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
     },
-  },
-  {
-    title: 'Discount',
-    dataIndex: 'cta',
-    key: 'cta',
-    sorter: (a, b) => {
-      const getPercent = (text) => {
-        const match = text.match(/(\d+)%/);
-        return match ? parseInt(match[1], 10) : 0;
-      };
-      return getPercent(a.cta) - getPercent(b.cta);
+    {
+      title: 'Valid From',
+      dataIndex: 'validFrom',
+      key: 'validFrom',
+      render: (text) => dayjs(text).format('DD/MM/YYYY'), // UI only: show DD/MM/YYYY
+      sorter: (a, b) => a._startDateObj - b._startDateObj,
     },
-  },
-  {
-    title: 'Actions',
-    key: 'actions',
-    render: (_, record) => (
-      <div style={{ display: 'flex', gap: 8 }}>
-        <Button
-          onClick={() => showModal(record)}
-          style={{
-            background: 'linear-gradient(135deg, #ec6e07ff 0%, #ceb24fff 100%)',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '0.875rem',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            color: 'white',
-          }}
-        >
-          Edit
-        </Button>
-        <Button
-          onClick={() => deletePromotion(record.id)}
-          style={{
-            background: 'linear-gradient(135deg, #b13d3dff 0%, #fb6161ff 100%)',
-            border: 'none',
-            borderRadius: '8px',
-            fontSize: '0.875rem',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            color: 'white',
-          }}
-        >
-          Delete
-        </Button>
-      </div>
-    ),
-  },
-];
+    {
+      title: 'Valid To',
+      dataIndex: 'validTo',
+      key: 'validTo',
+      render: (text) => dayjs(text).format('DD/MM/YYYY'), // UI only
+      sorter: (a, b) => a._endDateObj - b._endDateObj,
+    },
+    {
+      title: 'Discount',
+      dataIndex: 'cta',
+      key: 'cta',
+      sorter: (a, b) => {
+        const getPercent = (text) => {
+          const match = text.match(/(\d+)%/);
+          return match ? parseInt(match[1], 10) : 0;
+        };
+        return getPercent(a.cta) - getPercent(b.cta);
+      },
+    },
+    {
+      title: 'Actions',
+      key: 'actions',
+      render: (_, record) => (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button
+            onClick={() => showModal(record)}
+            style={{
+              background: 'linear-gradient(135deg, #ec6e07ff 0%, #ceb24fff 100%)',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              color: 'white',
+            }}
+          >
+            Edit
+          </Button>
+          <Button
+            onClick={() => deletePromotion(record.id)}
+            style={{
+              background: 'linear-gradient(135deg, #b13d3dff 0%, #fb6161ff 100%)',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.875rem',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              color: 'white',
+            }}
+          >
+            Delete
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   return (
     <>
@@ -268,7 +270,6 @@ const Promotions = () => {
         dataSource={filteredPromotions.filter(p => !p.hidden)}
         rowKey="id"
         loading={loading}
-        aria-label="Current promotions"
         scroll={{ x: 'max-content' }}
       />
 
@@ -301,7 +302,7 @@ const Promotions = () => {
             label="Discount Percent"
             rules={[{ required: true, message: 'Please enter discount percent' }]}
           >
-            <Input type="number" min={0} max={100} step={1} />
+            <Input type="number" min={0} max={100} />
           </Form.Item>
 
           <Form.Item
@@ -310,18 +311,16 @@ const Promotions = () => {
             rules={[
               { required: true, message: 'Please select date range' },
               {
-                validator: (_, value) => {
-                  if (!value || (value[0] && value[1])) {
-                    return Promise.resolve();
-                  }
-                  return Promise.reject(new Error('Please select both start and end dates'));
-                },
+                validator: (_, value) =>
+                  value?.[0] && value?.[1]
+                    ? Promise.resolve()
+                    : Promise.reject(new Error('Please select both start and end dates')),
               },
             ]}
           >
             <RangePicker
-              format="DD-MM-YYYY"
-              placeholder={['Valid From', 'Valid To']}
+              format="DD/MM/YYYY" // UI display only
+              placeholder={['Start Date', 'End Date']}
               style={{ width: '100%' }}
             />
           </Form.Item>
