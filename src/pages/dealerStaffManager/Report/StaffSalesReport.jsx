@@ -121,7 +121,8 @@ const StaffSalesReport = () => {
       // 5. LỌC ORDERS: chỉ Dealer_staff + storeId
       const validOrders = allOrders.filter(order =>
         order?.dealer?.role === 'Dealer_staff' &&
-        order?.store?.storeId === storeId
+        order?.store?.storeId === storeId 
+         && order.status === 'Completed' 
       );
 
       // 6. TẠO SET (customerId, storeId) từ AGREEMENTS
