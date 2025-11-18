@@ -1,6 +1,6 @@
 import axios from "axios";
 
-//const BASE_URL = "http://localhost:5042/api/";
+// const BASE_URL = "http://localhost:5042/api/";
  const BASE_URL = "https://localhost:7269/api/";
 // const BASE_URL =
 //   "https://68c67f69442c663bd0273020.mockapi.io";

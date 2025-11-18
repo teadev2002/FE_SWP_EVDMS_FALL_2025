@@ -7,6 +7,7 @@ import ManageQuoteService from '../../../services/ManageQuotes/ManageQuoteServic
 import ManageDealerService from '../../../services/ManageDealer/ManageDealerService';
 import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
 import ManageStorageService from '../../../services/ManageStorage/ManageStorageService';
+import ManageServicePromotions from '../../../services/ManagePromotions/ManageServicePromotions';
 
 const { Text } = Typography;
 
@@ -18,6 +19,7 @@ const AddQuotationButton = ({ customer, onSuccess }) => {
   const [loadingOptions, setLoadingOptions] = useState(false);
   const [vehicles, setVehicles] = useState([]);
   const [dealers, setDealers] = useState([]);
+  const [promotions, setPromotions] = useState([]);
   const [vehiclePriceMap, setVehiclePriceMap] = useState({});
   const [priceWithTaxDisplay, setPriceWithTaxDisplay] = useState('Choose vehicle and tax rate');
   const [form] = Form.useForm();
@@ -49,12 +51,14 @@ const AddQuotationButton = ({ customer, onSuccess }) => {
 
     setLoadingOptions(true);
     try {
-      const [vehiclesByStore, dealersAll] = await Promise.all([
+      const [vehiclesByStore, dealersAll, allPromotions] = await Promise.all([
         ManageStorageService.getStorageVehiclesByStoreId(storeId),
         ManageDealerService.getAllDealers(),
+        ManageServicePromotions.getAllPromotions(),
       ]);
 
       const dealersByStore = dealersAll.filter((dealer) => Number(dealer.storeId) === storeId);
+      const storePromotions = allPromotions.filter((p) => Number(p.storeId) === storeId);
 
       const priceMap = {};
       vehiclesByStore.forEach((vehicle) => {
@@ -75,6 +79,13 @@ const AddQuotationButton = ({ customer, onSuccess }) => {
           label: dealer.fullName,
         }))
       );
+
+      setPromotions(
+        storePromotions.map((p) => ({
+          value: p.promotionId,
+          label: `${p.title} (${p.discountPercent}% off)`,
+        }))
+      );
     } catch (error) {
       console.error('Failed to load data for quotation:', error);
       toast.error('Cannot load quotation data');
@@ -85,12 +96,28 @@ const AddQuotationButton = ({ customer, onSuccess }) => {
 
   const updatePriceWithTax = useCallback(() => {
     const values = form.getFieldsValue();
-    const { vehicleId, taxRate } = values;
+    const { vehicleId, taxRate, promotionId } = values;
 
     let display = 'Choose vehicle and tax rate';
     if (vehicleId && taxRate !== undefined) {
       const basePrice = vehiclePriceMap[vehicleId] || 0;
-      const priceWithTax = Math.round(basePrice * (1 + taxRate / 100));
+      let finalPrice = basePrice;
+
+      // Áp dụng promotion discount nếu có
+      if (promotionId) {
+        const promo = promotions.find((p) => p.value === promotionId);
+        if (promo) {
+          const match = promo.label.match(/\((\d+)%/);
+          if (match && match[1]) {
+            const discount = parseInt(match[1], 10);
+            if (!isNaN(discount)) {
+              finalPrice = basePrice * (1 - discount / 100);
+            }
+          }
+        }
+      }
+
+      const priceWithTax = Math.round(finalPrice * (1 + taxRate / 100));
       form.setFieldsValue({ priceWithTax });
       display = new Intl.NumberFormat('vi-VN', {
         style: 'currency',
@@ -102,7 +129,7 @@ const AddQuotationButton = ({ customer, onSuccess }) => {
     }
 
     setPriceWithTaxDisplay(display);
-  }, [form, vehiclePriceMap]);
+  }, [form, vehiclePriceMap, promotions]);
 
   useEffect(() => {
     if (open) {
@@ -138,6 +165,7 @@ const AddQuotationButton = ({ customer, onSuccess }) => {
         customerId: values.customerId,
         vehicleId: values.vehicleId,
         dealerId: values.dealerId,
+        promotionId: values.promotionId || null,
         taxRate: values.taxRate,
         quoteDate: values.quoteDate.format('DD/MM/YYYY'),
         status: values.status || 'Draft',
@@ -226,6 +254,16 @@ const AddQuotationButton = ({ customer, onSuccess }) => {
                 </Select.Option>
               ))}
             </Select>
+          </Form.Item>
+
+          <Form.Item name="promotionId" label="Promotion (Optional)">
+            <Select
+              allowClear
+              placeholder="Select promotion"
+              options={promotions}
+              loading={loadingOptions}
+              onChange={updatePriceWithTax}
+            />
           </Form.Item>
 
           <Form.Item label="Price with Tax (VND)">
