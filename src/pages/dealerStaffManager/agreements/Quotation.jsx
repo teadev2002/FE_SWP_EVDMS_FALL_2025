@@ -527,12 +527,6 @@ const updatePriceWithTax = () => {
 
   return (
     <div>
-     
-
-      <Title level={2} style={{ color: '#1F1F1F', marginBottom: 24 }}>
-        Quotation Management
-      </Title>
-
      <ListCusGetQuote ref={listCusGetQuoteRef} />
 
       <Row gutter={16} style={{ marginBottom: 16 }}>

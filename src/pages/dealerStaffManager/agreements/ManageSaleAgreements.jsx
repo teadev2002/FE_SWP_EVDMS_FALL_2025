@@ -745,9 +745,6 @@ const ManageSaleAgreements = () => {
 
       <Tabs activeKey={activeTab} onChange={setActiveTab}>
         <TabPane tab="Agreements" key="agreements">
-          <Title level={3} style={{ color: '#1F1F1F', marginBottom: 24 }}>
-            Sales Agreement Management
-          </Title>
 
           <Row gutter={16} style={{ marginBottom: 16 }}>
             <Col span={20}>

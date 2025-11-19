@@ -48,6 +48,17 @@ const ManageQuoteService = {
         }
       },
 
+      getListQuoteByCustomerId: async (customerId) => {
+        try {
+            const response = await apiClient.get(`Quotes/customer/${customerId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching quotes by customer ID:", error);
+            throw error;
+        }
+    },
+
+
 }
 
 export default ManageQuoteService
