@@ -793,7 +793,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-    Container, Row, Col, Card, Table, Badge, Button, Spinner, Alert, Pagination as BSPagination
+    Container, Row, Col, Card, Table, Badge, Button, Spinner, Alert,
+    Pagination as BSPagination, InputGroup, FormControl, Form // THÊM 3 COMPONENT NÀY
 } from 'react-bootstrap';
 import {
     LineChart,
@@ -805,136 +806,69 @@ import {
     Legend,
     ResponsiveContainer
 } from 'recharts';
-import '../../../styles/dealerStaffManager/DealerDashboard.scss'; // Assume a new SCSS file for this component
+import '../../../styles/dealerStaffManager/DealerDashboard.scss';
 import DealerDashboardService from '../../../services/DealerDashboardService/DealerDashboardService';
 
 const DealerDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
 
-    // Dynamic data from APIs
-    const [stats, setStats] = useState({
-        totalRevenue: 0,
-        yearRevenue: 0
-    });
-
+    const [stats, setStats] = useState({ totalRevenue: 0, yearRevenue: 0 });
     const [salesData, setSalesData] = useState({
         totalCarsSold: 0,
         bestSeller: { model: 'Toyota Camry 2024', units: 15 },
         worstSeller: { model: 'Kia Seltos 2024', units: 2 },
-        topVehicles: [],
-        bottomVehicles: []
+        topVehicles: [], bottomVehicles: []
     });
-
     const [topPerformers, setTopPerformers] = useState({
         topDealer: { name: 'Unknown', transactions: 0 },
         topCustomer: { name: 'Unknown', spent: 0 }
     });
-
     const [chartData, setChartData] = useState([]);
-
     const [recentTransactions, setRecentTransactions] = useState([]);
 
-    // Sorting and pagination states for transactions
+    // THÊM: Search + Filter
+    const [searchTerm, setSearchTerm] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+
+    // Sorting and pagination (giữ nguyên)
     const [sortBy, setSortBy] = useState('date');
     const [sortOrder, setSortOrder] = useState('desc');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
 
     const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('vi-VN', {
-            style: 'currency',
-            currency: 'VND'
-        }).format(amount);
+        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
     };
 
-    // Helper to get current storeId
     const getCurrentStoreId = () => {
         const dealerInfoStr = localStorage.getItem('dealerInfo');
-        if (!dealerInfoStr) {
-            throw new Error('No dealerInfo in localStorage');
-        }
+        if (!dealerInfoStr) throw new Error('No dealerInfo in localStorage');
         const dealerInfo = JSON.parse(dealerInfoStr);
-        const storeId = dealerInfo.storeId;
-        if (!storeId) {
-            throw new Error('No storeId found in dealerInfo');
-        }
-        return storeId;
+        if (!dealerInfo.storeId) throw new Error('No storeId found in dealerInfo');
+        return dealerInfo.storeId;
     };
 
-    // Map API orders to transaction format
     const mapToTransactions = (orders) => {
         const orderArray = Array.isArray(orders) ? orders : [orders];
         return orderArray.map((order) => ({
             id: order.orderId,
-            date: order.orderDate,
-            customer: order.customer.fullName,
-            email: order.customer.email,
-            vehicle: order.quotes[0]?.vehicle?.modelName || 'Unknown',
-            amount: order.totalPrice,
-            status: order.status
+            date: order.orderDate || 'N/A',
+            customer: order.customer?.fullName || 'Unknown',
+            email: order.customer?.email || 'N/A',
+            vehicle: order.quotes?.[0]?.vehicle?.modelName || 'Unknown',
+            amount: order.totalPrice || 0,
+            status: order.status || 'Unknown'
         }));
     };
 
-    // Sort function
-    const sortTransactions = (transactions, sortBy, sortOrder) => {
-        return [...transactions].sort((a, b) => {
-            let aVal, bVal;
-            if (sortBy === 'date') {
-                const parseDate = (dateStr) => {
-                    const [day, month, year] = dateStr.split('-');
-                    return new Date(`${year}-${month}-${day}`);
-                };
-                aVal = parseDate(a.date).getTime();
-                bVal = parseDate(b.date).getTime();
-            } else if (sortBy === 'amount') {
-                aVal = a.amount;
-                bVal = b.amount;
-            }
-            if (sortOrder === 'asc') {
-                return aVal - bVal;
-            } else {
-                return bVal - aVal;
-            }
-        });
-    };
-
-    // Memoized sorted transactions
-    const sortedTransactions = useMemo(() => {
-        return sortTransactions(recentTransactions, sortBy, sortOrder);
-    }, [recentTransactions, sortBy, sortOrder]);
-
-    // Paginated transactions
-    const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
-    const paginatedTransactions = sortedTransactions.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
-
-    // Handle sort click
-    const handleSort = (newSortBy) => {
-        if (sortBy === newSortBy) {
-            setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-        } else {
-            setSortBy(newSortBy);
-            setSortOrder('desc');
-        }
-        setCurrentPage(1);
-    };
-
-    // Status badge variant mapper
     const getStatusVariant = (status) => {
-        switch (status) {
-            case 'Completed':
-                return 'success';
-            case 'Pending':
-                return 'warning';
-            case 'Processing':
-                return 'info';
-            case 'Cancelled':
-                return 'danger';
-            default:
-                return 'secondary';
+        switch (String(status).toLowerCase()) {
+            case 'completed': return 'success';
+            case 'pending': return 'warning';
+            case 'processing': return 'info';
+            case 'cancelled': return 'danger';
+            default: return 'secondary';
         }
     };
 
@@ -944,7 +878,6 @@ const DealerDashboard = () => {
             setError('');
             try {
                 const storeId = getCurrentStoreId();
-
                 const [summary, topDealer, topCustomer, revenueByMonth, topVehicles, bottomVehicles, recentOrders] = await Promise.all([
                     DealerDashboardService.getSummary(storeId),
                     DealerDashboardService.getTopDealer(storeId),
@@ -955,49 +888,30 @@ const DealerDashboard = () => {
                     DealerDashboardService.getRecentOrders(storeId)
                 ]);
 
-                // Update stats
                 const yearRevenue = revenueByMonth.reduce((sum, item) => sum + item.revenue, 0);
-                setStats({
-                    totalRevenue: summary.totalRevenue,
-                    yearRevenue
-                });
+                setStats({ totalRevenue: summary.totalRevenue, yearRevenue });
 
-                // Update sales
-                const bestSellerFromApi = topVehicles.length > 0 ? topVehicles[0] : { modelName: 'Unknown', quantity: 0 };
-                const worstSellerFromApi = bottomVehicles.length > 0 ? bottomVehicles[0] : { modelName: 'Unknown', quantity: 0 };
+                const bestSellerFromApi = topVehicles[0] || { modelName: 'Unknown', quantity: 0 };
+                const worstSellerFromApi = bottomVehicles[0] || { modelName: 'Unknown', quantity: 0 };
                 setSalesData({
                     totalCarsSold: summary.totalVehiclesSold,
                     bestSeller: { model: bestSellerFromApi.modelName, units: bestSellerFromApi.quantity },
                     worstSeller: { model: worstSellerFromApi.modelName, units: worstSellerFromApi.quantity },
-                    topVehicles,
-                    bottomVehicles
+                    topVehicles, bottomVehicles
                 });
 
-                // Update top performers
                 setTopPerformers({
-                    topDealer: {
-                        name: topDealer.dealerName,
-                        transactions: topDealer.ordersCount
-                    },
-                    topCustomer: {
-                        name: topCustomer.customerName,
-                        spent: topCustomer.totalSpent
-                    }
+                    topDealer: { name: topDealer.dealerName, transactions: topDealer.ordersCount },
+                    topCustomer: { name: topCustomer.customerName, spent: topCustomer.totalSpent }
                 });
 
-                // Update chart data
-                setChartData(revenueByMonth.map(item => ({
-                    month: item.month,
-                    revenue: item.revenue
-                })));
-
-                // Update recent transactions (default sort will be applied via useMemo)
+                setChartData(revenueByMonth.map(item => ({ month: item.month, revenue: item.revenue })));
                 setRecentTransactions(mapToTransactions(recentOrders));
 
             } catch (err) {
                 console.error('Error fetching dashboard data:', err);
                 setError('Failed to load dashboard data.');
-                setRecentTransactions([]); // Fallback to empty on error
+                setRecentTransactions([]);
             } finally {
                 setLoading(false);
             }
@@ -1006,32 +920,68 @@ const DealerDashboard = () => {
         fetchDashboardData();
     }, []);
 
-    if (loading) {
-        return (
-            <div className="dashboard-page">
-                <Container fluid className="py-4">
-                    <div className="text-center py-5">
-                        <Spinner animation="border" />
-                        <p>Loading dashboard...</p>
-                    </div>
-                </Container>
-            </div>
-        );
-    }
+    // THAY ĐỔI: Filter + Search + Sort + Pagination
+    const filteredTransactions = useMemo(() => {
+        let result = recentTransactions;
 
-    if (error) {
-        return (
-            <div className="dashboard-page">
-                <Container fluid className="py-4">
-                    <Alert variant="danger">{error}</Alert>
-                </Container>
-            </div>
-        );
-    }
+        // Filter theo status
+        if (statusFilter !== 'all') {
+            result = result.filter(tx => String(tx.status).toLowerCase() === statusFilter.toLowerCase());
+        }
+
+        // Search theo tên hoặc email
+        if (searchTerm.trim()) {
+            const term = searchTerm.trim().toLowerCase(); // THÊM .trim() Ở ĐÂY!
+            result = result.filter(tx =>
+                tx.customer.toLowerCase().includes(term) ||
+                tx.email.toLowerCase().includes(term)
+            );
+        }
+
+        return result;
+    }, [recentTransactions, statusFilter, searchTerm]);
+
+    const sortedTransactions = useMemo(() => {
+        return [...filteredTransactions].sort((a, b) => {
+            let aVal, bVal;
+            if (sortBy === 'date') {
+                const parseDate = (d) => d && d !== 'N/A' ? new Date(d.split('-').reverse().join('-')).getTime() : 0;
+                aVal = parseDate(a.date);
+                bVal = parseDate(b.date);
+            } else if (sortBy === 'amount') {
+                aVal = a.amount;
+                bVal = b.amount;
+            }
+            return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+        });
+    }, [filteredTransactions, sortBy, sortOrder]);
+
+    const totalPages = Math.ceil(sortedTransactions.length / itemsPerPage);
+    const paginatedTransactions = sortedTransactions.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+    );
+
+    const handleSort = (newSortBy) => {
+        if (sortBy === newSortBy) {
+            setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+            setSortBy(newSortBy);
+            setSortOrder('desc');
+        }
+        setCurrentPage(1);
+    };
+
+    // Reset trang khi search/filter
+    useEffect(() => { setCurrentPage(1); }, [searchTerm, statusFilter]);
+
+    if (loading) return <div className="dashboard-page"><Container fluid className="py-4"><div className="text-center py-5"><Spinner animation="border" /><p>Loading dashboard...</p></div></Container></div>;
+    if (error) return <div className="dashboard-page"><Container fluid className="py-4"><Alert variant="danger">{error}</Alert></Container></div>;
 
     return (
         <div className="dashboard-page">
             <Container fluid className="py-4">
+                {/* === TẤT CẢ PHẦN TRÊN GIỮ NGUYÊN 100% (từ Revenue đến Yearly Overview) === */}
                 <Row className="align-items-center mb-4">
                     <Col md={6}>
                         <div className="page-header">
@@ -1046,11 +996,9 @@ const DealerDashboard = () => {
                     </Col>
                 </Row>
 
-                {/* Revenue Section - Only Total Revenue */}
+                {/* Revenue Section */}
                 <Row className="mb-5">
-                    <Col md={12} className="mb-3">
-                        <h3 className="section-title">Revenue Overview</h3>
-                    </Col>
+                    <Col md={12} className="mb-3"><h3 className="section-title">Revenue Overview</h3></Col>
                     <Col md={12} className="mb-3">
                         <Card className="stat-card total">
                             <Card.Body className="text-center">
@@ -1061,170 +1009,124 @@ const DealerDashboard = () => {
                     </Col>
                 </Row>
 
-                {/* Separator for clarity */}
                 <hr className="my-5" style={{ borderColor: '#e2e8f0', borderWidth: '2px' }} />
 
                 {/* Sales Section */}
                 <Row className="mb-5">
-                    <Col md={12} className="mb-3">
-                        <h3 className="section-title">Sales Overview</h3>
+                    <Col md={12} className="mb-3"><h3 className="section-title">Sales Overview</h3></Col>
+                    <Col md={4} className="mb-3">
+                        <Card className="stat-card sales"><Card.Body className="text-center"><div className="stat-number">{salesData.totalCarsSold}</div><div className="stat-label">Total Cars Sold</div></Card.Body></Card>
                     </Col>
                     <Col md={4} className="mb-3">
-                        <Card className="stat-card sales">
-                            <Card.Body className="text-center">
-                                <div className="stat-number">{salesData.totalCarsSold}</div>
-                                <div className="stat-label">Total Cars Sold</div>
-                            </Card.Body>
-                        </Card>
+                        <Card className="stat-card bestseller"><Card.Body className="text-center"><div className="stat-number">{salesData.bestSeller.units}</div><div className="stat-label">Best Seller<br /><small>{salesData.bestSeller.model}</small></div></Card.Body></Card>
                     </Col>
                     <Col md={4} className="mb-3">
-                        <Card className="stat-card bestseller">
-                            <Card.Body className="text-center">
-                                <div className="stat-number">{salesData.bestSeller.units}</div>
-                                <div className="stat-label">Best Seller<br /><small>{salesData.bestSeller.model}</small></div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col md={4} className="mb-3">
-                        <Card className="stat-card worstseller">
-                            <Card.Body className="text-center">
-                                <div className="stat-number">{salesData.worstSeller.units}</div>
-                                <div className="stat-label">Worst Seller<br /><small>{salesData.worstSeller.model}</small></div>
-                            </Card.Body>
-                        </Card>
+                        <Card className="stat-card worstseller"><Card.Body className="text-center"><div className="stat-number">{salesData.worstSeller.units}</div><div className="stat-label">Worst Seller<br /><small>{salesData.worstSeller.model}</small></div></Card.Body></Card>
                     </Col>
                 </Row>
 
-                {/* Top 5 Vehicles Section */}
+                {/* Top 5 & Bottom 5 Vehicles */}
                 <Row className="mb-5">
-                    <Col md={12} className="mb-3">
-                        <h3 className="section-title">Top 5 Best-Selling Vehicles</h3>
-                    </Col>
+                    <Col md={12} className="mb-3"><h3 className="section-title">Top 5 Best-Selling Vehicles</h3></Col>
                     <Col md={12}>
-                        <Card className="main-card">
-                            <Card.Body className="p-0">
-                                <Table hover responsive className="vehicle-table mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Rank</th>
-                                            <th>Model</th>
-                                            <th>Quantity Sold</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {salesData.topVehicles.map((vehicle, index) => (
-                                            <tr key={index}>
-                                                <td>{index + 1}</td>
-                                                <td><strong>{vehicle.modelName}</strong></td>
-                                                <td>{vehicle.quantity}</td>
-                                            </tr>
-                                        ))}
-                                        {salesData.topVehicles.length === 0 && (
-                                            <tr>
-                                                <td colSpan="3" className="text-center">No data available</td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </Table>
-                            </Card.Body>
-                        </Card>
+                        <Card className="main-card"><Card.Body className="p-0">
+                            <Table hover responsive className="vehicle-table mb-0">
+                                <thead><tr><th>Rank</th><th>Model</th><th>Quantity Sold</th></tr></thead>
+                                <tbody>
+                                    {salesData.topVehicles.map((v, i) => <tr key={i}><td>{i + 1}</td><td><strong>{v.modelName}</strong></td><td>{v.quantity}</td></tr>)}
+                                    {salesData.topVehicles.length === 0 && <tr><td colSpan="3" className="text-center">No data available</td></tr>}
+                                </tbody>
+                            </Table>
+                        </Card.Body></Card>
                     </Col>
                 </Row>
 
-                {/* Bottom 5 Vehicles Section */}
                 <Row className="mb-5">
-                    <Col md={12} className="mb-3">
-                        <h3 className="section-title">Top 5 Least-Selling Vehicles</h3>
-                    </Col>
+                    <Col md={12} className="mb-3"><h3 className="section-title">Top 5 Least-Selling Vehicles</h3></Col>
                     <Col md={12}>
-                        <Card className="main-card">
-                            <Card.Body className="p-0">
-                                <Table hover responsive className="vehicle-table mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>Rank</th>
-                                            <th>Model</th>
-                                            <th>Quantity Sold</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {salesData.bottomVehicles.map((vehicle, index) => (
-                                            <tr key={index}>
-                                                <td>{index + 1}</td>
-                                                <td><strong>{vehicle.modelName}</strong></td>
-                                                <td>{vehicle.quantity}</td>
-                                            </tr>
-                                        ))}
-                                        {salesData.bottomVehicles.length === 0 && (
-                                            <tr>
-                                                <td colSpan="3" className="text-center">No data available</td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </Table>
-                            </Card.Body>
-                        </Card>
+                        <Card className="main-card"><Card.Body className="p-0">
+                            <Table hover responsive className="vehicle-table mb-0">
+                                <thead><tr><th>Rank</th><th>Model</th><th>Quantity Sold</th></tr></thead>
+                                <tbody>
+                                    {salesData.bottomVehicles.map((v, i) => <tr key={i}><td>{i + 1}</td><td><strong>{v.modelName}</strong></td><td>{v.quantity}</td></tr>)}
+                                    {salesData.bottomVehicles.length === 0 && <tr><td colSpan="3" className="text-center">No data available</td></tr>}
+                                </tbody>
+                            </Table>
+                        </Card.Body></Card>
                     </Col>
                 </Row>
 
-                {/* Top Performers Section */}
+                {/* Top Performers */}
                 <Row className="mb-5">
-                    <Col md={12} className="mb-3">
-                        <h3 className="section-title">Top Performers</h3>
+                    <Col md={12} className="mb-3"><h3 className="section-title">Top Performers</h3></Col>
+                    <Col md={6} className="mb-3">
+                        <Card className="stat-card top-dealer"><Card.Body className="text-center"><div className="stat-number">{topPerformers.topDealer.transactions}</div><div className="stat-label">Top Dealer (Most Transactions)<br /><small>{topPerformers.topDealer.name}</small></div></Card.Body></Card>
                     </Col>
                     <Col md={6} className="mb-3">
-                        <Card className="stat-card top-dealer">
-                            <Card.Body className="text-center">
-                                <div className="stat-number">{topPerformers.topDealer.transactions}</div>
-                                <div className="stat-label">Top Dealer (Most Transactions)<br /><small>{topPerformers.topDealer.name}</small></div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col md={6} className="mb-3">
-                        <Card className="stat-card top-customer">
-                            <Card.Body className="text-center">
-                                <div className="stat-number">{formatCurrency(topPerformers.topCustomer.spent)}</div>
-                                <div className="stat-label">Top Customer (Highest Spend)<br /><small>{topPerformers.topCustomer.name}</small></div>
-                            </Card.Body>
-                        </Card>
+                        <Card className="stat-card top-customer"><Card.Body className="text-center"><div className="stat-number">{formatCurrency(topPerformers.topCustomer.spent)}</div><div className="stat-label">Top Customer (Highest Spend)<br /><small>{topPerformers.topCustomer.name}</small></div></Card.Body></Card>
                     </Col>
                 </Row>
 
-                {/* Year Revenue and Chart Section */}
+                {/* Yearly Overview */}
                 <Row className="mb-5">
-                    <Col md={12} className="mb-3">
-                        <h3 className="section-title">Yearly Overview</h3>
+                    <Col md={12} className="mb-3"><h3 className="section-title">Yearly Overview</h3></Col>
+                    <Col md={6} className="mb-3">
+                        <Card className="stat-card year-large"><Card.Body className="text-center"><div className="stat-number-large">{formatCurrency(stats.yearRevenue)}</div><div className="stat-label">This Year Revenue</div></Card.Body></Card>
                     </Col>
                     <Col md={6} className="mb-3">
-                        <Card className="stat-card year-large">
-                            <Card.Body className="text-center">
-                                <div className="stat-number-large">{formatCurrency(stats.yearRevenue)}</div>
-                                <div className="stat-label">This Year Revenue</div>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                    <Col md={6} className="mb-3">
-                        <Card className="chart-card">
-                            <Card.Body>
-                                <ResponsiveContainer width="100%" height={300}>
-                                    <LineChart data={chartData}>
-                                        <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="month" />
-                                        <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                                        <Tooltip formatter={(value) => [formatCurrency(value), 'Revenue']} />
-                                        <Legend />
-                                        <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6', strokeWidth: 2 }} activeDot={{ r: 6 }} />
-                                    </LineChart>
-                                </ResponsiveContainer>
-                            </Card.Body>
-                        </Card>
+                        <Card className="chart-card"><Card.Body>
+                            <ResponsiveContainer width="100%" height={300}>
+                                <LineChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis dataKey="month" />
+                                    <YAxis tickFormatter={formatCurrency} />
+                                    <Tooltip formatter={(v) => [formatCurrency(v), 'Revenue']} />
+                                    <Legend />
+                                    <Line type="monotone" dataKey="revenue" stroke="#3b82f6" strokeWidth={2} dot={{ fill: '#3b82f6' }} activeDot={{ r: 6 }} />
+                                </LineChart>
+                            </ResponsiveContainer>
+                        </Card.Body></Card>
                     </Col>
                 </Row>
 
-                {/* Transactions */}
+                {/* CHỈ THAY ĐỔI PHẦN NÀY: Transactions */}
                 <Row>
                     <Col md={12}>
                         <h3 className="section-title">Transactions</h3>
+
+                        {/* THÊM FILTER + SEARCH */}
+                        <Card className="mb-3 border">
+                            <Card.Body className="d-flex flex-wrap align-items-center gap-3">
+                                <InputGroup style={{ maxWidth: '320px' }}>
+                                    <InputGroup.Text>Search</InputGroup.Text>
+                                    <FormControl
+                                        placeholder="Customer name or email..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </InputGroup>
+
+                                <Form.Group>
+                                    <Form.Label className="me-2 mb-0">Status</Form.Label>
+                                    <Form.Select
+                                        value={statusFilter}
+                                        onChange={(e) => setStatusFilter(e.target.value)}
+                                        style={{ width: '180px' }}
+                                    >
+                                        <option value="all">All Status</option>
+                                        <option value="completed">Completed</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="processing">Processing</option>
+                                        <option value="cancelled">Cancelled</option>
+                                    </Form.Select>
+                                </Form.Group>
+
+                                <div className="ms-auto text-muted small">
+                                    {sortedTransactions.length} transaction(s)
+                                </div>
+                            </Card.Body>
+                        </Card>
+
                         <Card className="main-card">
                             <Card.Body className="p-0">
                                 <Table hover responsive className="transaction-table mb-0">
@@ -1232,60 +1134,54 @@ const DealerDashboard = () => {
                                         <tr>
                                             <th>ID</th>
                                             <th onClick={() => handleSort('date')} style={{ cursor: 'pointer' }}>
-                                                Date {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                Date {sortBy === 'date' && (sortOrder === 'asc' ? ' ↑' : '↓')}
                                             </th>
                                             <th>Customer</th>
                                             <th>Email</th>
                                             <th>Vehicle</th>
                                             <th onClick={() => handleSort('amount')} style={{ cursor: 'pointer' }}>
-                                                Amount {sortBy === 'amount' && (sortOrder === 'asc' ? '↑' : '↓')}
+                                                Amount {sortBy === 'amount' && (sortOrder === 'asc' ? ' ↑' : '↓')}
                                             </th>
                                             <th>Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {paginatedTransactions.map((tx) => (
-                                            <tr key={tx.id}>
-                                                <td>{tx.id}</td>
-                                                <td>{tx.date}</td>
-                                                <td><strong>{tx.customer}</strong></td>
-                                                <td>{tx.email}</td>
-                                                <td>{tx.vehicle}</td>
-                                                <td>{formatCurrency(tx.amount)}</td>
-                                                <td>
-                                                    <Badge bg={getStatusVariant(tx.status)}>
-                                                        {tx.status}
-                                                    </Badge>
+                                        {paginatedTransactions.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="7" className="text-center py-4 text-muted">
+                                                    No transactions match your filters.
                                                 </td>
                                             </tr>
-                                        ))}
-                                        {paginatedTransactions.length === 0 && (
-                                            <tr>
-                                                <td colSpan="7" className="text-center">No transactions available</td>
-                                            </tr>
+                                        ) : (
+                                            paginatedTransactions.map((tx) => (
+                                                <tr key={tx.id}>
+                                                    <td>{tx.id}</td>
+                                                    <td>{tx.date}</td>
+                                                    <td><strong>{tx.customer}</strong></td>
+                                                    <td>{tx.email}</td>
+                                                    <td>{tx.vehicle}</td>
+                                                    <td>{formatCurrency(tx.amount)}</td>
+                                                    <td><Badge bg={getStatusVariant(tx.status)}>{tx.status}</Badge></td>
+                                                </tr>
+                                            ))
                                         )}
                                     </tbody>
                                 </Table>
+
                                 {totalPages > 1 && (
-                                    <div className="d-flex justify-content-center mt-3">
+                                    <div className="d-flex justify-content-center py-3">
                                         <BSPagination>
-                                            <BSPagination.Prev
-                                                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                                                disabled={currentPage === 1}
-                                            />
-                                            {[...Array(totalPages)].map((_, index) => (
+                                            <BSPagination.Prev onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} />
+                                            {[...Array(totalPages)].map((_, i) => (
                                                 <BSPagination.Item
-                                                    key={index + 1}
-                                                    active={index + 1 === currentPage}
-                                                    onClick={() => setCurrentPage(index + 1)}
+                                                    key={i + 1}
+                                                    active={i + 1 === currentPage}
+                                                    onClick={() => setCurrentPage(i + 1)}
                                                 >
-                                                    {index + 1}
+                                                    {i + 1}
                                                 </BSPagination.Item>
                                             ))}
-                                            <BSPagination.Next
-                                                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                                                disabled={currentPage === totalPages}
-                                            />
+                                            <BSPagination.Next onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} />
                                         </BSPagination>
                                     </div>
                                 )}
