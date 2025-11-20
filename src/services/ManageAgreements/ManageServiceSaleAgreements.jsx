@@ -37,6 +37,15 @@ const ManageServiceSaleAgreements =  {
         throw error;
         }   
     },      
+    getSaleAgreementById: async (id) => {
+        try {
+        const response = await apiClient.get(`Agreements/${id}`);
+        return response.data;
+        } catch (error) {
+        console.error("Error fetching sale agreement by ID:", error);
+        throw error;
+        }   
+    },
     
 }
 
