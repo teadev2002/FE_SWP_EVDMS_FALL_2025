@@ -1,7 +1,6 @@
-// // fix xem dc quantity, popup phân bổ thêm auto chọn store
 // import React, { useState, useEffect } from 'react';
 // import {
-//   Table, Button, Space, Typography, Card, Input,  
+//   Table, Button, Space, Typography, Card, Input,
 //   Modal, Form, Select, InputNumber, Tag
 // } from 'antd';
 // import { SearchOutlined, EyeOutlined } from '@ant-design/icons';
@@ -36,7 +35,7 @@
 //   // Load stores
 //   useEffect(() => {
 //     if (!brandId) {
-//       toast.error('Không tìm thấy brandId trong staffInfo');
+//       toast.error('Brand ID not found in staffInfo');
 //       return;
 //     }
 //     fetchStores();
@@ -46,12 +45,12 @@
 //   const fetchStores = async () => {
 //     setLoading(true);
 //     try {
-//       const response = await ManageStoreService.getAllStores();  
+//       const response = await ManageStoreService.getAllStores();
 //       const storeList = Array.isArray(response) ? response : response.data || [];
 //       setStores(storeList);
 //       setFilteredStores(storeList);
 //     } catch (error) {
-//       toast.error('Lấy danh sách cửa hàng thất bại', error);
+//       toast.error('Failed to fetch stores', error);
 //     } finally {
 //       setLoading(false);
 //     }
@@ -83,7 +82,7 @@
 //       setQuantityCache(prev => ({ ...prev, [cacheKey]: qty }));
 //       return qty;
 //     } catch (error) {
-//       console.error('Lỗi lấy quantity:', error);
+//       console.error('Error fetching quantity:', error);
 //       setQuantityCache(prev => ({ ...prev, [cacheKey]: 0 }));
 //       return 0;
 //     }
@@ -112,7 +111,7 @@
 
 //       setVehiclesInStore(enrichedVehicles);
 //     } catch (error) {
-//       toast.error('Lấy danh sách xe thất bại', error);
+//       toast.error('Failed to fetch vehicle list', error);
 //       setVehiclesInStore([]);
 //     }
 //   };
@@ -144,7 +143,7 @@
 
 //     try {
 //       await ManageStorageService.vehicleAllocate(payload);
-//       toast.success(`Đã phân bổ thêm ${values.quantity} xe thành công!`);
+//       toast.success(`Allocated additional ${values.quantity} vehicles successfully!`);
 
 //       // Cập nhật quantity trong cache
 //       const cacheKey = `${selectedVehicle.vehicleId}_${values.storeId}`;
@@ -160,7 +159,7 @@
 
 //       setIsAllocateModalOpen(false);
 //     } catch (error) {
-//       toast.error('Phân bổ thất bại: ' + (error.message || 'Lỗi không xác định'));
+//       toast.error('Allocation failed: ' + (error.message || 'Unknown error'));
 //     }
 //   };
 
@@ -171,13 +170,13 @@
 //   // Cột bảng stores
 //   const storeColumns = [
 //     {
-//       title: 'Tên Cửa Hàng',
+//       title: 'Store Name',
 //       dataIndex: 'storeName',
 //       key: 'storeName',
 //       sorter: (a, b) => a.storeName.localeCompare(b.storeName),
 //     },
 //     {
-//       title: 'Địa Chỉ',
+//       title: 'Address',
 //       dataIndex: 'address',
 //       key: 'address',
 //       ellipsis: true,
@@ -189,7 +188,7 @@
 //       ellipsis: true,
 //     },
 //     {
-//       title: 'Hành Động',
+//       title: 'Action',
 //       key: 'action',
 //       render: (_, record) => (
 //         <Space>
@@ -199,7 +198,7 @@
 //             icon={<EyeOutlined />}
 //             onClick={() => openVehiclesModal(record)}
 //           >
-//             Xem Xe
+//             View Vehicles
 //           </Button>
 //         </Space>
 //       ),
@@ -214,41 +213,41 @@
 //       key: 'modelName',
 //     },
 //     {
-//       title: 'Năm Sản Xuất',
+//       title: 'Year',
 //       dataIndex: 'year',
 //       key: 'year',
 //     },
 //     {
-//       title: 'Màu Sắc',
+//       title: 'Color',
 //       dataIndex: 'color',
 //       key: 'color',
 //     },
 //     {
-//       title: 'Giá',
+//       title: 'Price',
 //       dataIndex: 'price',
 //       key: 'price',
 //       render: formatPrice,
 //     },
 //     {
-//       title: 'Loại Xe',
+//       title: 'Vehicle Type',
 //       dataIndex: 'vehicleType',
 //       key: 'vehicleType',
 //     },
 //     {
-//       title: 'Số Lượng',
+//       title: 'Quantity',
 //       key: 'quantityAvailable',
 //       render: (_, record) => (
-//           record.quantityAvailable
+//         record.quantityAvailable
 //       ),
 //     },
 //     {
-//       title: 'Ngày Tạo',
+//       title: 'Created Date',
 //       dataIndex: 'createDate',
 //       key: 'createDate',
 //       render: formatDate,
 //     },
 //     {
-//       title: 'Hành Động',
+//       title: 'Action',
 //       key: 'action',
 //       render: (_, record) => (
 //         <Button
@@ -256,7 +255,7 @@
 //           size="small"
 //           onClick={() => openAllocateModal(record)}
 //         >
-//           Phân Bổ Thêm
+//           Allocate More
 //         </Button>
 //       ),
 //     },
@@ -270,7 +269,7 @@
 //         style={{ borderRadius: 8, boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)' }}
 //         extra={
 //           <Search
-//             placeholder="Tìm theo tên cửa hàng, địa chỉ, email..."
+//             placeholder="Search by store name, address, email..."
 //             allowClear
 //             enterButton={<SearchOutlined />}
 //             size="large"
@@ -291,7 +290,7 @@
 
 //       {/* Modal xem xe theo store */}
 //       <Modal
-//         title={`Xe tại cửa hàng: ${selectedStore?.storeName || ''}`}
+//         title={`Vehicles at Store: ${selectedStore?.storeName || ''}`}
 //         open={isVehiclesModalOpen}
 //         onCancel={closeVehiclesModal}
 //         footer={null}
@@ -308,7 +307,7 @@
 
 //       {/* Modal Allocate – storeId mặc định là cửa hàng đang xem */}
 //       <Modal
-//         title={`Phân bổ thêm xe: ${selectedVehicle?.modelName || ''}`}
+//         title={`Allocate Additional Vehicles: ${selectedVehicle?.modelName || ''}`}
 //         open={isAllocateModalOpen}
 //         onCancel={() => setIsAllocateModalOpen(false)}
 //         footer={null}
@@ -318,7 +317,7 @@
 //           layout="vertical"
 //           onFinish={handleAllocate}
 //         >
-//           <Form.Item label="Cửa hàng">
+//           <Form.Item label="Store">
 //             <Input
 //               value={selectedStore?.storeName || ''}
 //               disabled
@@ -334,11 +333,11 @@
 //           </Form.Item>
 
 //           <Form.Item
-//             label="Số lượng phân bổ thêm"
+//             label="Additional Quantity to Allocate"
 //             name="quantity"
 //             rules={[
-//               { required: true, message: 'Vui lòng nhập số lượng' },
-//               { type: 'number', min: 1, message: 'Số lượng phải ≥ 1' }
+//               { required: true, message: 'Please enter quantity' },
+//               { type: 'number', min: 1, message: 'Quantity must be ≥ 1' }
 //             ]}
 //           >
 //             <InputNumber min={1} style={{ width: '100%' }} />
@@ -347,9 +346,9 @@
 //           <Form.Item>
 //             <Space>
 //               <Button type="primary" htmlType="submit">
-//                 Xác nhận phân bổ
+//                 Confirm Allocation
 //               </Button>
-//               <Button onClick={() => setIsAllocateModalOpen(false)}>Hủy</Button>
+//               <Button onClick={() => setIsAllocateModalOpen(false)}>Cancel</Button>
 //             </Space>
 //           </Form.Item>
 //         </Form>
@@ -360,8 +359,7 @@
 
 // export default VehicleAllocationManage;
 
-//----------------------------------------------------------------------------------//
-
+// recall vehicle
 import React, { useState, useEffect } from 'react';
 import {
   Table, Button, Space, Typography, Card, Input,
@@ -388,7 +386,8 @@ const VehicleAllocationManage = () => {
   const [isAllocateModalOpen, setIsAllocateModalOpen] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [form] = Form.useForm();
-
+const [isRecallModalOpen, setIsRecallModalOpen] = useState(false);
+const [recallForm] = Form.useForm();
   // Lấy brandId từ localStorage
   const staffInfo = JSON.parse(localStorage.getItem('staffInfo') || '{}');
   const brandId = staffInfo.brandId;
@@ -479,6 +478,71 @@ const VehicleAllocationManage = () => {
       setVehiclesInStore([]);
     }
   };
+ const handleRecall = async (values) => {
+  const quantity = values.quantity;
+  const vehicleId = selectedVehicle.vehicleId;
+  const storeId = values.storeId;
+
+  const recallPayload = {
+    vehicleId,
+    stores: [{ storeId, quantity }]
+  };
+
+  try {
+    setLoading(true);
+
+    // 1. Gọi API recall → chỉ trừ ở cửa hàng
+    await ManageStorageService.recallVehicle(recallPayload);
+
+    // 2. Cộng vào kho trung tâm – backend sẽ tự tạo nếu chưa có
+    const centralData = await ManageStorageService.filterStorageByBrandIdAndVehicleId(brandId, vehicleId);
+    const centralRecord = Array.isArray(centralData) ? centralData.find(r => r.storeId === null) : null;
+
+    if (!centralRecord || !centralRecord.storageId) {
+      toast.error('Central warehouse record not found!');
+      throw new Error('No central storage record');
+    }
+
+    const newQty = (centralRecord.quantityAvailable || 0) + quantity;
+
+    await ManageStorageService.updateStorage(centralRecord.storageId, {
+      vehicleId,
+      quantityAvailable: newQty,
+      lastUpdated: new Date().toLocaleDateString('en-GB'),
+    });
+
+    // 3. Cập nhật UI + cache cửa hàng
+    const cacheKey = `${vehicleId}_${storeId}`;
+    setQuantityCache(prev => ({
+      ...prev,
+      [cacheKey]: (prev[cacheKey] || 0) - quantity
+    }));
+
+    setVehiclesInStore(prev => prev.map(v =>
+      v.vehicleId === vehicleId
+        ? { ...v, quantityAvailable: v.quantityAvailable - quantity }
+        : v
+    ));
+
+    toast.success(`Recalled ${quantity} vehicle(s) → +${quantity} to Central Warehouse!`);
+    setIsRecallModalOpen(false);
+
+  } catch (error) {
+    console.error('Recall failed:', error);
+    toast.error('Recall failed: ' + (error.response?.data?.message || error.message));
+  } finally {
+    setLoading(false);
+  }
+};
+  const openRecallModal = (vehicle) => {
+  setSelectedVehicle(vehicle);
+  recallForm.resetFields();
+  recallForm.setFieldsValue({
+    storeId: selectedStore.storeId,
+    quantity: 1
+  });
+  setIsRecallModalOpen(true);
+};
 
   // Đóng modal xe
   const closeVehiclesModal = () => {
@@ -610,19 +674,32 @@ const VehicleAllocationManage = () => {
       key: 'createDate',
       render: formatDate,
     },
-    {
-      title: 'Action',
-      key: 'action',
-      render: (_, record) => (
-        <Button
-          type="primary"
-          size="small"
-          onClick={() => openAllocateModal(record)}
-        >
-          Allocate More
-        </Button>
-      ),
-    },
+  {
+  title: 'Action',
+  key: 'action',
+  render: (_, record) => (
+    <Space>
+      <Button
+        type="primary"
+        size="small"
+        onClick={() => openAllocateModal(record)}
+      >
+        Allocate More
+      </Button>
+
+      {/* Nút Recall mới */}
+      <Button
+        type="default"
+        danger
+        size="small"
+        onClick={() => openRecallModal(record)}
+        disabled={record.quantityAvailable <= 0} // Không cho thu hồi nếu đã hết
+      >
+        Recall
+      </Button>
+    </Space>
+  ),
+},
   ];
 
   return (
@@ -717,6 +794,68 @@ const VehicleAllocationManage = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* Modal Recall Vehicle */}
+<Modal
+  title={`Recall Vehicle: ${selectedVehicle?.modelName || ''} - ${selectedVehicle?.version || ''}`}
+  open={isRecallModalOpen}
+  onCancel={() => setIsRecallModalOpen(false)}
+  footer={null}
+>
+  <Form
+    form={recallForm}
+    layout="vertical"
+    onFinish={handleRecall}
+  >
+    <Form.Item label="From Store">
+      <Input
+        value={selectedStore?.storeName || ''}
+        disabled
+        style={{ color: '#000', fontWeight: 'bold' }}
+      />
+      <Form.Item name="storeId" noStyle rules={[{ required: true }]}>
+        <Input type="hidden" />
+      </Form.Item>
+    </Form.Item>
+
+    <Form.Item
+      label="Current Quantity at Store"
+      style={{ marginBottom: 12 }}
+    >
+      <Tag color="blue" style={{ fontSize: 16, padding: '4px 12px' }}>
+        {selectedVehicle?.quantityAvailable || 0} unit(s)
+      </Tag>
+    </Form.Item>
+
+    <Form.Item
+      label="Quantity to Recall"
+      name="quantity"
+      rules={[
+        { required: true, message: 'Please enter quantity' },
+        { type: 'number', min: 1, message: 'Minimum 1' },
+        ( ) => ({
+          validator(_, value) {
+            if (!value || value <= (selectedVehicle?.quantityAvailable || 0)) {
+              return Promise.resolve();
+            }
+            return Promise.reject(new Error(`Only ${selectedVehicle?.quantityAvailable} available to recall!`));
+          },
+        }),
+      ]}
+    >
+      <InputNumber min={1} max={selectedVehicle?.quantityAvailable} style={{ width: '100%' }} />
+    </Form.Item>
+
+    <Form.Item>
+      <Space>
+        <Button type="primary" danger htmlType="submit" loading={loading}>
+          Confirm Recall
+        </Button>
+        <Button onClick={() => setIsRecallModalOpen(false)}>Cancel</Button>
+      </Space>
+    </Form.Item>
+  </Form>
+</Modal>
     </div>
   );
 };

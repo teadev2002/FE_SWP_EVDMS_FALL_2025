@@ -57,7 +57,7 @@ vehicleAllocate: async (payload) => {
   }
 },
 
-    updateStorage: async (storageId, updatedStorage) => {
+updateStorage: async (storageId, updatedStorage) => {
         try {
             const response = await apiClient.put(`Storages/${storageId}`, updatedStorage);
             return response.data;
@@ -66,6 +66,16 @@ vehicleAllocate: async (payload) => {
             throw error;
         }
     },
+recallVehicle: async (payload) => {
+  try {
+    const response = await apiClient.post(`Storages/recall`, payload);
+    return response.data;
+  } catch (error) {
+    console.error("Error recalling vehicle:", error);
+    throw error;
+  }
+},
+
 
 
 
