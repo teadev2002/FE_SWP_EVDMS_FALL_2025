@@ -204,6 +204,20 @@ const ManageTestAppointment = {
             throw error;
         }
     },
+
+    // CẬP NHẬT LỊCH HẸN (STATUS)
+    updateAppointment: async (id, status) => {
+        try {
+            const payload = { status: status };
+            console.log(`Updating appointment ${id} to status: ${status}`);
+            const response = await apiClient.put(`TestAppointments/{id}?id=${id}`, payload);
+            console.log("✅ Appointment updated successfully:", response.data);
+            return response.data;
+        } catch (error) {
+            console.error("❌ Error updating appointment:", error.response?.data || error.message);
+            throw error;
+        }
+    },
 };
 
 export default ManageTestAppointment;
