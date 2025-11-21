@@ -660,14 +660,43 @@ const TestDriveForm = () => {
 
     const validateForm = () => {
         const newErrors = {};
-        if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required.';
-        if (!formData.phone.trim() || !/^\d{10,11}$/.test(formData.phone))
-            newErrors.phone = 'Phone number must be 10-11 digits.';
-        if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-            newErrors.email = 'Please enter a valid email.';
-        if (!formData.address.trim()) newErrors.address = 'Address is required.';
-        if (!formData.preferredVehicle) newErrors.preferredVehicle = 'Please select a vehicle.';
-        if (!formData.storeId) newErrors.storeId = 'Please select a store.';
+        const fullNameRegex = /^[\p{L}\s.'’-]+$/u;
+
+        if (!formData.fullName?.trim()) {
+            newErrors.fullName = 'Full name is required.';
+        } else if (!fullNameRegex.test(formData.fullName.trim())) {
+            newErrors.fullName = 'Full name can only contain letters and spaces.';
+        } else if (formData.fullName.trim().length < 2) {
+            newErrors.fullName = 'Full name must be at least 2 characters long.';
+        }
+
+        const phoneRegex = /^(0[3|5|7|8|9])[0-9]{8}$/;
+        if (!formData.phone?.trim()) {
+            newErrors.phone = 'Phone number is required.';
+        } else if (!phoneRegex.test(formData.phone.trim())) {
+            newErrors.phone = 'Invalid phone number. Use format: 0901234567 or 0988123456.';
+        }
+
+        const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (!formData.email?.trim()) {
+            newErrors.email = 'Email is required.';
+        } else if (!emailRegex.test(formData.email.trim())) {
+            newErrors.email = 'Please enter a valid email address.';
+        }
+
+        if (!formData.address?.trim()) {
+            newErrors.address = 'Address is required.';
+        } else if (formData.address.trim().length < 10) {
+            newErrors.address = 'Please enter a more detailed address (at least 10 characters).';
+        }
+
+        if (!formData.preferredVehicle || formData.preferredVehicle === '' || formData.preferredVehicle === '0') {
+            newErrors.preferredVehicle = 'Please select your preferred vehicle.';
+        }
+
+        if (!formData.storeId || formData.storeId === '' || formData.storeId === '0') {
+            newErrors.storeId = 'Please select a dealership location.';
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;

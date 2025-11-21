@@ -2795,8 +2795,8 @@ const TestAppointment = () => {
                                                     <th>Phone</th>
                                                     <th>Email</th>
                                                     <th>Address</th>
-                                                    <th>Status</th>
                                                     <th>Request Date</th>
+                                                    <th>Request Status</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
@@ -2807,12 +2807,12 @@ const TestAppointment = () => {
                                                         <td>{req.phone}</td>
                                                         <td>{req.email}</td>
                                                         <td>{req.address}</td>
+                                                        <td>{req.createDate}</td>
                                                         <td>
                                                             <Badge bg={getStatusVariant(req.status)}>
                                                                 {getStatusDisplay(req.status)}
                                                             </Badge>
                                                         </td>
-                                                        <td>{req.createDate}</td>
                                                         <td>
                                                             <Button
                                                                 size="sm"
@@ -2932,8 +2932,8 @@ const TestAppointment = () => {
                                                     <th>Address</th>
                                                     <th>Vehicle</th>
                                                     <th>Dealer</th>
-                                                    <th>Test Date</th>
-                                                    <th>Status</th>
+                                                    <th>Test Drive Date</th>
+                                                    <th>Test Drive Status</th>
                                                     <th>Action</th>
                                                 </tr>
                                             </thead>
