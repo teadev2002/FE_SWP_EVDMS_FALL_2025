@@ -846,7 +846,7 @@ const PaymentManagement = () => {
             orderDate: new Date().toLocaleDateString('en-GB'), // "03/11/2025" in dd/MM/yyyy format
             totalPrice: orderDetails.totalPrice || selectedOrder.totalAmount,
             status: "Processing",
-            note: "swagg 0944", // As required
+            note: ".", // As required
           };
 
           // Call updateOrder API

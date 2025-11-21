@@ -1166,21 +1166,32 @@ const CustomerProfile = () => {
       setLoading(true);
 
       if (editingCustomer) {
-        // UPDATE
-        const updateData = {
-          ...editingCustomer,
-          ...values,
-          customerId: editingCustomer.id,
-          description: values.description || null,
-          status: values.status || 'Pending',
-          storeId: storeId,
-        };
-        const updated = await ManageCustomersService.editCustomer(editingCustomer.id, updateData);
-        const mapped = { ...updated, id: updated.customerId };
-        const updatedList = customers.map(c => c.id === editingCustomer.id ? mapped : c);
-        setCustomers(updatedList);
-        toast.success('Customer updated successfully');
-      } else {
+  const updateData = {
+    customerId: editingCustomer.id,
+    fullName: values.fullName,
+    phone: values.phone,
+    email: values.email,
+    address: values.address,
+    licenseDown: values.licenseDown || null,
+    licenseUp: values.licenseUp || null,
+    status: values.status || 'Pending',
+    description: values.description || null,
+    createDate: editingCustomer.createDate,  // QUAN TRỌNG NHẤT
+    storeId: storeId,
+  };
+
+  // Nếu bạn muốn cập nhật biển số xe (nếu backend hỗ trợ)
+  if (values.licenseUp !== undefined) updateData.licenseUp = values.licenseUp || null;
+  if (values.licenseDown !== undefined) updateData.licenseDown = values.licenseDown || null;
+
+  console.log('Edit payload:', updateData); // Debug
+
+  const updated = await ManageCustomersService.editCustomer(editingCustomer.id, updateData);
+  const mapped = { ...updated, id: updated.customerId };
+  const updatedList = customers.map(c => c.id === editingCustomer.id ? mapped : c);
+  setCustomers(updatedList);
+  toast.success('Customer updated successfully');
+}else {
         // ADD NEW
         const payload = {
           fullName: values.fullName,
@@ -1297,21 +1308,21 @@ const CustomerProfile = () => {
       filterMultiple: false,
       onCell: () => ({ style: { cursor: 'pointer' } }),
     },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      key: 'status',
-      render: renderStatus,
-      filters: [
-        { text: 'Pending', value: 'Pending' },
-        { text: 'Accept', value: 'Accept' },
-        { text: 'Reject', value: 'Reject' },
-        { text: 'Cancel', value: 'Cancel' },
-      ],
-      onFilter: (value, record) => record.status === value,
-      filterMultiple: false,
-      onCell: () => ({ style: { cursor: 'pointer' } }),
-    },
+    // {
+    //   title: 'Status',
+    //   dataIndex: 'status',
+    //   key: 'status',
+    //   render: renderStatus,
+    //   filters: [
+    //     { text: 'Pending', value: 'Pending' },
+    //     { text: 'Accept', value: 'Accept' },
+    //     { text: 'Reject', value: 'Reject' },
+    //     { text: 'Cancel', value: 'Cancel' },
+    //   ],
+    //   onFilter: (value, record) => record.status === value,
+    //   filterMultiple: false,
+    //   onCell: () => ({ style: { cursor: 'pointer' } }),
+    // },
     {
       title: 'Actions',
       key: 'actions',

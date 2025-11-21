@@ -173,6 +173,7 @@ const Store = () => {
     ]),
     getItem('Dashboard', 'dealer_dashboard', <DashboardOutlined />),
     getItem('Dealer Account', 'dealer-account', <DesktopOutlined />),
+    getItem('Debt Management', 'debt-customer', <FileOutlined />),
   ];
 
   return (

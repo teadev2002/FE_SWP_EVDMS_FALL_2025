@@ -45,6 +45,16 @@ const ManageOrdersService =  {
       throw error;
     }
   },
+  getOrderByStoreId: async (storeId) => {
+    try {
+      const response = await apiClient.get(`Order/store/${storeId}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching orders by store ID:", error);
+      throw error;
+    }
+  },
+
           
 }
 
