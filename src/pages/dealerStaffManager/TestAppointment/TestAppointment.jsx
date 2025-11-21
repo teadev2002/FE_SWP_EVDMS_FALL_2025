@@ -2282,14 +2282,929 @@
 
 //---------------------------------------------------------//
 
-import React, { useState, useEffect } from 'react';
+// import React, { useState, useEffect } from 'react';
+// import {
+//     Container, Row, Col, Card, Table, Badge, Button, Modal, Form,
+//     Tabs, Tab, Spinner, Alert, InputGroup, FormControl, Pagination
+// } from 'react-bootstrap';
+// import '../../../styles/dealerStaffManager/TestAppointment.scss';
+// import ManageTestAppointment from '../../../services/ManageTestAppointment/ManageTestAppointment';
+// import { apiClient } from '../../../api/apiClient';
+
+// const TestAppointment = () => {
+//     const [activeTab, setActiveTab] = useState('requests');
+//     const [requests, setRequests] = useState([]);
+//     const [appointments, setAppointments] = useState([]);
+//     const [loading, setLoading] = useState({ requests: true, appointments: true });
+//     const [error, setError] = useState({ requests: '', appointments: '' });
+//     const [searchTerm, setSearchTerm] = useState('');
+//     const [statusFilter, setStatusFilter] = useState('all');
+//     const [sortOrder, setSortOrder] = useState('asc'); // 'asc' for oldest first, 'desc' for newest first
+//     const [currentPage, setCurrentPage] = useState(1);
+//     const [appointmentSortOrder, setAppointmentSortOrder] = useState('asc');
+//     const [appointmentCurrentPage, setAppointmentCurrentPage] = useState(1);
+//     const [showModal, setShowModal] = useState(false);
+//     const [showConfirmModal, setShowConfirmModal] = useState(false);
+//     const [selectedCustomer, setSelectedCustomer] = useState(null);
+//     const [showActionModal, setShowActionModal] = useState(false);
+//     const [selectedAppointment, setSelectedAppointment] = useState(null);
+//     const [appointmentAction, setAppointmentAction] = useState(''); // 'complete' or 'reject'
+
+//     const itemsPerPage = 10;
+
+//     const [formData, setFormData] = useState({
+//         status: '',
+//         vehicleId: '',
+//         dealerId: '',
+//         appointmentDate: ''
+//     });
+//     const [vehicles, setVehicles] = useState([]);
+//     const [dealers, setDealers] = useState([]);
+//     const [submitting, setSubmitting] = useState(false);
+
+//     // Helper để lấy storeId từ localStorage
+//     const getCurrentStoreId = () => {
+//         const dealerInfoStr = localStorage.getItem('dealerInfo');
+//         if (!dealerInfoStr) {
+//             throw new Error('No dealerInfo in localStorage');
+//         }
+//         const dealerInfo = JSON.parse(dealerInfoStr);
+//         const storeId = dealerInfo.storeId;
+//         if (!storeId) {
+//             throw new Error('No storeId found in dealerInfo');
+//         }
+//         return storeId;
+//     };
+
+//     // Helper để lấy dealerId từ localStorage
+//     // const getCurrentDealerId = () => {
+//     //     const dealerInfoStr = localStorage.getItem('dealerInfo');
+//     //     if (!dealerInfoStr) {
+//     //         throw new Error('No dealerInfo in localStorage');
+//     //     }
+//     //     const dealerInfo = JSON.parse(dealerInfoStr);
+//     //     const dealerId = dealerInfo.dealerId;
+//     //     if (!dealerId) {
+//     //         throw new Error('No dealerId found in dealerInfo');
+//     //     }
+//     //     return dealerId;
+//     // };
+
+//     const getStatusVariant = (status) => {
+//         if (!status || status === 'pending' || status === 'Pending') return 'warning';
+//         switch (status) {
+//             case 'accepted': return 'primary';
+//             case 'Accepted': return 'success';
+//             case 'completed': return 'success';
+//             case 'Completed': return 'success';
+//             case 'cancelled': return 'danger';
+//             case 'Rejected': return 'danger';
+//             case 'Draft': return 'info';
+//             default: return 'secondary';
+//         }
+//     };
+
+//     const getStatusDisplay = (status) => {
+//         switch (status) {
+//             case 'accepted': return 'Accepted';
+//             case 'Accepted': return 'Accepted';
+//             case 'completed': return 'Completed';
+//             case 'Completed': return 'Completed';
+//             case 'cancelled': return 'Cancelled';
+//             case 'Rejected': return 'Rejected';
+//             case 'Draft': return 'Draft';
+//             case 'pending': return 'Pending';
+//             case 'Pending': return 'Pending';
+//             default: return status || 'Pending';
+//         }
+//     };
+
+//     useEffect(() => {
+//         if (activeTab === 'requests') fetchRequests();
+//         if (activeTab === 'appointments') fetchAppointments();
+//         // eslint-disable-next-line react-hooks/exhaustive-deps
+//     }, [activeTab]);
+
+//     const fetchRequests = async () => {
+//         setLoading(prev => ({ ...prev, requests: true }));
+//         setError(prev => ({ ...prev, requests: '' }));
+//         try {
+//             const data = await ManageTestAppointment.getAllRequests();
+
+//             // Chỉ lọc những request có description là "Test Appointment"
+//             // KHÔNG loại bỏ Completed → vẫn hiển thị, chỉ disable nút Create sau
+//             const filtered = data.filter(c =>
+//                c.description === "Test Appointment"
+//             );
+
+//             setRequests(filtered);
+//         } catch (err) {
+//             console.error("Error fetching requests:", err);
+//             setError(prev => ({ ...prev, requests: 'Failed to load requests.' }));
+//         } finally {
+//             setLoading(prev => ({ ...prev, requests: false }));
+//         }
+//     };
+
+//     const fetchAppointments = async () => {
+//         setLoading(prev => ({ ...prev, appointments: true }));
+//         setError(prev => ({ ...prev, appointments: '' }));
+//         try {
+//             const currentStoreId = getCurrentStoreId();
+//             const data = await ManageTestAppointment.getAllAppointments(currentStoreId);
+
+//             // Lấy appointments có status là Accepted, Completed, hoặc Rejected
+//             const relevantAppointments = data.filter(apt =>
+//                 apt.status === 'Accepted' || apt.status === 'Completed' || apt.status === 'Rejected'
+//             );
+
+//             const enriched = await Promise.all(
+//                 relevantAppointments.map(async (apt) => {
+//                     let customerName = 'Unknown';
+//                     let customerPhone = 'Unknown';
+//                     let customerEmail = 'Unknown';
+//                     let customerAddress = 'Unknown';
+//                     let vehicleName = 'Unknown';
+
+//                     try {
+//                         const customer = await ManageTestAppointment.getCustomerById(apt.customerId);
+//                         customerName = customer.fullName;
+//                         customerPhone = customer.phone;
+//                         customerEmail = customer.email;
+//                         customerAddress = customer.address;
+//                     } catch { console.warn(`Customer ${apt.customerId} not found`); }
+
+//                     try {
+//                         const vehicle = await ManageTestAppointment.getVehicleById(apt.vehicleId);
+//                         vehicleName = `${vehicle.modelName} ${vehicle.version}`;
+//                     } catch { console.warn(`Vehicle ${apt.vehicleId} not found`); }
+
+//                     return {
+//                         ...apt,
+//                         customerName,
+//                         customerPhone,
+//                         customerEmail,
+//                         customerAddress,
+//                         vehicleName,
+//                         dealerName: apt.dealerName, // Direct from API
+//                         // Chuyển MM-DD-YYYY → DD/MM/YYYY nếu cần, nhưng sample là MM-DD-YYYY, code replace - with /
+//                         appointmentDate: apt.appointmentDate.replace(/-/g, '/')
+//                     };
+//                 })
+//             );
+//             setAppointments(enriched);
+//             console.log(`Accepted appointments for store ${currentStoreId}:`, enriched.length); // Debug
+//         } catch (err) {
+//             console.error("fetchAppointments error:", err);
+//             setError(prev => ({ ...prev, appointments: 'Failed to load appointments.' }));
+//         } finally {
+//             setLoading(prev => ({ ...prev, appointments: false }));
+//         }
+//     };
+
+//     const handleCreateAppointment = (customer) => {
+//         setSelectedCustomer(customer);
+//         setFormData({ status: '', vehicleId: '', dealerId: '', appointmentDate: '' });
+//         setShowModal(true);
+//         fetchVehiclesAndDealers();
+//     };
+
+//     const fetchVehiclesAndDealers = async () => {
+//         try {
+//             const currentStoreId = getCurrentStoreId();
+//             const [veh, deal] = await Promise.all([
+//                 apiClient.get('/Vehicles').then(r => r.data),
+//                 apiClient.get('/Dealers').then(r => r.data),
+//             ]);
+//             setVehicles(Array.isArray(veh) ? veh : []);
+//             const filteredDealers = Array.isArray(deal) ? deal.filter(d => d.storeId === currentStoreId) : [];
+//             setDealers(filteredDealers);
+//             console.log(`Filtered dealers for store ${currentStoreId}:`, filteredDealers.length); // Debug
+//         } catch (err) {
+//             console.error("Load vehicles/dealers error:", err);
+//         }
+//     };
+
+//     const formatDateForAPI = (dateString) => {
+//         if (!dateString) return '';
+//         const [year, month, day] = dateString.split('-');
+//         return `${day}/${month}/${year}`; // "03/11/2025"
+//     };
+
+//     const validateForm = () => {
+//         const errors = [];
+//         if (!formData.status) {
+//             errors.push('Please select a status.');
+//         }
+
+//         if (formData.status === 'Accepted') {
+//             if (!formData.vehicleId) {
+//                 errors.push('Please select a vehicle.');
+//             }
+//             if (!formData.dealerId) {
+//                 errors.push('Please select a dealer.');
+//             }
+//             if (!formData.appointmentDate) {
+//                 errors.push('Please select an appointment date.');
+//             } else {
+//                 const selectedDate = new Date(formData.appointmentDate);
+//                 const today = new Date();
+//                 today.setHours(0, 0, 0, 0);
+//                 if (selectedDate <= today) {
+//                     errors.push('Appointment date must be in the future.');
+//                 }
+//             }
+//         }
+//         return errors;
+//     };
+
+//     const handleSubmitAppointment = async (e) => {
+//         e.preventDefault();
+//         const validationErrors = validateForm();
+//         if (validationErrors.length > 0) {
+//             alert('Validation Errors:\n' + validationErrors.join('\n'));
+//             return;
+//         }
+//         const updatedFormData = {
+//             ...formData,
+//             customerName: selectedCustomer.fullName
+//         };
+
+//         if (formData.status === 'Accepted') {
+//             updatedFormData.vehicleName = vehicles.find(v => v.vehicleId === parseInt(formData.vehicleId))?.modelName || 'Unknown';
+//             updatedFormData.dealerName = dealers.find(d => d.dealerId === parseInt(formData.dealerId))?.fullName || 'Unknown';
+//             updatedFormData.formattedDate = formatDateForAPI(formData.appointmentDate);
+//         }
+
+//         setFormData(updatedFormData);
+//         setShowModal(false);
+//         setShowConfirmModal(true);
+//     };
+
+//     const confirmAndCreate = async () => {
+//         setSubmitting(true);
+//         try {
+//             if (formData.status === 'Accepted') {
+//                 await ManageTestAppointment.createAppointment({
+//                     customerId: selectedCustomer.customerId,
+//                     vehicleId: parseInt(formData.vehicleId),
+//                     dealerId: parseInt(formData.dealerId),
+//                     appointmentDate: formData.formattedDate,
+//                     status: 'Accepted'
+//                 });
+
+//                 const updatedCustomerData = {
+//                     ...selectedCustomer,
+//                     status: 'Accepted'
+//                 };
+//                 await ManageTestAppointment.updateCustomer(selectedCustomer.customerId, updatedCustomerData);
+//             } else if (formData.status === 'Rejected') {
+//                 // Khi Reject: CHỈ cập nhật customer status, KHÔNG tạo appointment
+//                 const updatedCustomerData = {
+//                     ...selectedCustomer,
+//                     status: 'Rejected'
+//                 };
+//                 await ManageTestAppointment.updateCustomer(selectedCustomer.customerId, updatedCustomerData);
+//             }
+
+//             // Refresh requests
+//             await fetchRequests();
+
+//             // Refresh appointments if in appointments tab
+//             if (activeTab === 'appointments') {
+//                 await fetchAppointments();
+//             }
+
+//             setShowConfirmModal(false);
+//             setFormData({ status: '', vehicleId: '', dealerId: '', appointmentDate: '' });
+//             setSelectedCustomer(null);
+//         } catch (err) {
+//             alert(`Failed: ${err.response?.data?.message || err.message || 'Operation failed.'}`);
+//         } finally {
+//             setSubmitting(false);
+//         }
+//     };
+
+//     // Handle Complete Appointment
+//     const handleCompleteAppointment = (appointment) => {
+//         setSelectedAppointment(appointment);
+//         setAppointmentAction('complete');
+//         setShowActionModal(true);
+//     };
+
+//     // Handle Reject Appointment
+//     const handleRejectAppointment = (appointment) => {
+//         setSelectedAppointment(appointment);
+//         setAppointmentAction('reject');
+//         setShowActionModal(true);
+//     };
+
+//     // Confirm Action on Appointment
+//     const confirmAppointmentAction = async () => {
+//         setSubmitting(true);
+//         try {
+//             const newStatus = appointmentAction === 'complete' ? 'Completed' : 'Rejected';
+
+//             // Update appointment status
+//             await ManageTestAppointment.updateAppointment(selectedAppointment.testAppointmentId, newStatus);
+
+//             // Fetch customer data and update status
+//             const customerData = await ManageTestAppointment.getCustomerById(selectedAppointment.customerId);
+//             const updatedCustomerData = {
+//                 ...customerData,
+//                 status: newStatus
+//             };
+//             await ManageTestAppointment.updateCustomer(selectedAppointment.customerId, updatedCustomerData);
+
+//             // Refresh appointments
+//             await fetchAppointments();
+
+//             setShowActionModal(false);
+//             setSelectedAppointment(null);
+//             setAppointmentAction('');
+//         } catch (err) {
+//             alert(`Failed: ${err.response?.data?.message || err.message || 'Operation failed.'}`);
+//         } finally {
+//             setSubmitting(false);
+//         }
+//     };
+
+//     // Filter and sort logic for requests
+//     const statusFilteredRequests = statusFilter === 'all'
+//         ? requests
+//         : requests.filter(r => {
+//             const status = r.status?.toLowerCase();
+//             return status === statusFilter.toLowerCase();
+//         });
+
+//     const searchFilteredRequests = statusFilteredRequests.filter(r =>
+//         r.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         r.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         r.phone.includes(searchTerm)
+//     );
+
+//     const sortedRequests = [...searchFilteredRequests].sort((a, b) => {
+//         const dateA = new Date(a.createDate);
+//         const dateB = new Date(b.createDate);
+//         if (sortOrder === 'asc') {
+//             return dateA - dateB;
+//         } else {
+//             return dateB - dateA;
+//         }
+//     });
+
+//     const totalFilteredRequests = sortedRequests.length;
+//     const paginatedRequests = sortedRequests.slice(
+//         (currentPage - 1) * itemsPerPage,
+//         currentPage * itemsPerPage
+//     );
+
+//     const totalPagesRequests = Math.ceil(totalFilteredRequests / itemsPerPage);
+
+//     const handlePageChangeRequests = (pageNumber) => {
+//         setCurrentPage(pageNumber);
+//     };
+
+//     // Filter and sort logic for appointments
+//     const searchFilteredAppointments = appointments.filter(a =>
+//         a.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+//         a.vehicleName.toLowerCase().includes(searchTerm.toLowerCase())
+//     );
+
+//     const sortedAppointments = [...searchFilteredAppointments].sort((a, b) => {
+//         // Parse appointmentDate from DD/MM/YYYY to Date
+//         const parseDate = (dateStr) => {
+//             const [day, month, year] = dateStr.split('/');
+//             return new Date(year, month - 1, day);
+//         };
+//         const dateA = parseDate(a.appointmentDate);
+//         const dateB = parseDate(b.appointmentDate);
+//         if (appointmentSortOrder === 'asc') {
+//             return dateA - dateB;
+//         } else {
+//             return dateB - dateA;
+//         }
+//     });
+
+//     const totalFilteredAppointments = sortedAppointments.length;
+//     const paginatedAppointments = sortedAppointments.slice(
+//         (appointmentCurrentPage - 1) * itemsPerPage,
+//         appointmentCurrentPage * itemsPerPage
+//     );
+
+//     const totalPagesAppointments = Math.ceil(totalFilteredAppointments / itemsPerPage);
+
+//     const handlePageChangeAppointments = (pageNumber) => {
+//         setAppointmentCurrentPage(pageNumber);
+//     };
+
+//     // Reset to first page when filters change
+//     useEffect(() => {
+//         setCurrentPage(1);
+//     }, [searchTerm, statusFilter, sortOrder]);
+
+//     useEffect(() => {
+//         setAppointmentCurrentPage(1);
+//     }, [searchTerm, appointmentSortOrder]);
+
+//     const actionOptions = [
+//         { value: 'Accepted', label: 'Accepted' },
+//         { value: 'Rejected', label: 'Rejected' }
+//     ];
+
+//     return (
+//         <div className="admin-page">
+//             <Container fluid className="py-4">
+//                 <Row className="align-items-center mb-4">
+//                     <Col md={6}>
+//                         <div className="page-header">
+//                             <h1 className="page-title">Test Drive Management</h1>
+//                             <p className="page-subtitle">Manage customer requests and test drive appointments</p>
+//                         </div>
+//                     </Col>
+//                     <Col md={6} className="text-end">
+//                         <Button variant="outline-primary" onClick={() => window.location.reload()}>
+//                             Refresh
+//                         </Button>
+//                     </Col>
+//                 </Row>
+
+//                 <Tabs activeKey={activeTab} onSelect={setActiveTab} className="mb-4" fill>
+//                     <Tab
+//                         eventKey="requests"
+//                         title={
+//                             <span>
+//                                 Requests <Badge bg="warning" text="dark">{totalFilteredRequests}</Badge>
+//                             </span>
+//                         }
+//                     >
+//                         <Card className="filter-card mb-4">
+//                             <Card.Body className="d-flex flex-wrap gap-3 align-items-center">
+//                                 <InputGroup style={{ minWidth: '250px' }}>
+//                                     <InputGroup.Text>Search</InputGroup.Text>
+//                                     <FormControl
+//                                         placeholder="Name, email, phone..."
+//                                         value={searchTerm}
+//                                         onChange={(e) => setSearchTerm(e.target.value)}
+//                                     />
+//                                 </InputGroup>
+
+//                                 <Form.Group>
+//                                     <Form.Label className="mb-1">Status</Form.Label>
+//                                     <Form.Select
+//                                         value={statusFilter}
+//                                         onChange={(e) => setStatusFilter(e.target.value)}
+//                                         style={{ minWidth: '150px' }}
+//                                     >
+//                                         <option value="all">All</option>
+//                                         <option value="Pending">Pending</option>
+//                                         <option value="Accepted">Accepted</option>
+//                                         <option value="Completed">Completed</option>
+//                                         <option value="Rejected">Rejected</option>
+//                                     </Form.Select>
+//                                 </Form.Group>
+
+//                                 <Form.Group>
+//                                     <Form.Label className="mb-1">Sort by Date</Form.Label>
+//                                     <Form.Select
+//                                         value={sortOrder}
+//                                         onChange={(e) => setSortOrder(e.target.value)}
+//                                         style={{ minWidth: '150px' }}
+//                                     >
+//                                         <option value="asc">Oldest First</option>
+//                                         <option value="desc">Newest First</option>
+//                                     </Form.Select>
+//                                 </Form.Group>
+//                             </Card.Body>
+//                         </Card>
+
+//                         {loading.requests ? (
+//                             <div className="text-center py-5"><Spinner animation="border" /></div>
+//                         ) : error.requests ? (
+//                             <Alert variant="danger">{error.requests}</Alert>
+//                         ) : totalFilteredRequests === 0 ? (
+//                             <Alert variant="info">No requests found.</Alert>
+//                         ) : (
+//                             <>
+//                                 <Card className="main-card">
+//                                     <Card.Body className="p-0">
+//                                         <Table hover responsive className="appointment-table mb-0">
+//                                             <thead>
+//                                                 <tr>
+//                                                     <th>Name</th>
+//                                                     <th>Phone</th>
+//                                                     <th>Email</th>
+//                                                     <th>Address</th>
+//                                                     <th>Request Date</th>
+//                                                     <th>Request Status</th>
+//                                                     <th>Action</th>
+//                                                 </tr>
+//                                             </thead>
+//                                             <tbody>
+//                                                 {paginatedRequests.map((req) => (
+//                                                     <tr key={req.customerId}>
+//                                                         <td><strong>{req.fullName}</strong></td>
+//                                                         <td>{req.phone}</td>
+//                                                         <td>{req.email}</td>
+//                                                         <td>{req.address}</td>
+//                                                         <td>{req.createDate}</td>
+//                                                         <td>
+//                                                             <Badge bg={getStatusVariant(req.status)}>
+//                                                                 {getStatusDisplay(req.status)}
+//                                                             </Badge>
+//                                                         </td>
+//                                                         <td>
+//                                                             <Button
+//                                                                 size="sm"
+//                                                                 variant="primary"
+//                                                                 className="d-flex align-items-center gap-1 px-3 py-2 fw-medium"
+//                                                                 style={{
+//                                                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+//                                                                     border: 'none',
+//                                                                     borderRadius: '8px',
+//                                                                     fontSize: '0.875rem',
+//                                                                     boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+//                                                                     opacity: (req.status === 'Completed' || req.status === 'completed' || req.status === 'Rejected' || req.status === 'rejected') ? 0.6 : 1,
+//                                                                     cursor: (req.status === 'Completed' || req.status === 'completed' || req.status === 'Rejected' || req.status === 'rejected') ? 'not-allowed' : 'pointer',
+//                                                                     pointerEvents: (req.status === 'Completed' || req.status === 'completed' || req.status === 'Rejected' || req.status === 'rejected') ? 'none' : 'auto'
+//                                                                 }}
+//                                                                 onMouseEnter={(e) => {
+//                                                                     if (!(req.status === 'Completed' || req.status === 'completed' || req.status === 'Rejected' || req.status === 'rejected')) {
+//                                                                         e.target.style.transform = 'translateY(-1px)';
+//                                                                     }
+//                                                                 }}
+//                                                                 onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
+//                                                                 onClick={() => handleCreateAppointment(req)}
+//                                                                 disabled={
+//                                                                     submitting ||
+//                                                                     req.status === 'Rejected' ||
+//                                                                     req.status === 'rejected' ||
+//                                                                     req.status === 'Completed' ||
+//                                                                     req.status === 'completed'
+//                                                                 }
+//                                                             >
+//                                                                 Create
+//                                                             </Button>
+//                                                         </td>
+//                                                     </tr>
+//                                                 ))}
+//                                             </tbody>
+//                                         </Table>
+//                                     </Card.Body>
+//                                 </Card>
+
+//                                 {totalPagesRequests > 1 && (
+//                                     <div className="d-flex justify-content-center mt-4">
+//                                         <Pagination>
+//                                             <Pagination.Prev
+//                                                 onClick={() => handlePageChangeRequests(currentPage - 1)}
+//                                                 disabled={currentPage === 1}
+//                                             />
+//                                             {[...Array(totalPagesRequests)].map((_, index) => (
+//                                                 <Pagination.Item
+//                                                     key={index + 1}
+//                                                     active={index + 1 === currentPage}
+//                                                     onClick={() => handlePageChangeRequests(index + 1)}
+//                                                 >
+//                                                     {index + 1}
+//                                                 </Pagination.Item>
+//                                             ))}
+//                                             <Pagination.Next
+//                                                 onClick={() => handlePageChangeRequests(currentPage + 1)}
+//                                                 disabled={currentPage === totalPagesRequests}
+//                                             />
+//                                         </Pagination>
+//                                     </div>
+//                                 )}
+//                             </>
+//                         )}
+//                     </Tab>
+
+//                     <Tab
+//                         eventKey="appointments"
+//                         title={
+//                             <span>
+//                                 Appointments <Badge bg="success">{totalFilteredAppointments}</Badge>
+//                             </span>
+//                         }
+//                     >
+//                         <Card className="filter-card mb-4">
+//                             <Card.Body className="d-flex flex-wrap gap-3 align-items-center">
+//                                 <InputGroup style={{ minWidth: '250px' }}>
+//                                     <InputGroup.Text>Search</InputGroup.Text>
+//                                     <FormControl
+//                                         placeholder="Customer, vehicle..."
+//                                         value={searchTerm}
+//                                         onChange={(e) => setSearchTerm(e.target.value)}
+//                                     />
+//                                 </InputGroup>
+
+//                                 <Form.Group>
+//                                     <Form.Label className="mb-1">Sort by Date</Form.Label>
+//                                     <Form.Select
+//                                         value={appointmentSortOrder}
+//                                         onChange={(e) => setAppointmentSortOrder(e.target.value)}
+//                                         style={{ minWidth: '150px' }}
+//                                     >
+//                                         <option value="asc">Oldest First</option>
+//                                         <option value="desc">Newest First</option>
+//                                     </Form.Select>
+//                                 </Form.Group>
+//                             </Card.Body>
+//                         </Card>
+
+//                         {loading.appointments ? (
+//                             <div className="text-center py-5"><Spinner animation="border" /></div>
+//                         ) : error.appointments ? (
+//                             <Alert variant="danger">{error.appointments}</Alert>
+//                         ) : totalFilteredAppointments === 0 ? (
+//                             <Alert variant="info">No appointments found.</Alert>
+//                         ) : (
+//                             <>
+//                                 <Card className="main-card">
+//                                     <Card.Body className="p-0">
+//                                         <Table hover responsive className="appointment-table mb-0">
+//                                             <thead>
+//                                                 <tr>
+//                                                     <th>Customer</th>
+//                                                     <th>Phone</th>
+//                                                     <th>Email</th>
+//                                                     <th>Address</th>
+//                                                     <th>Vehicle</th>
+//                                                     <th>Dealer</th>
+//                                                     <th>Test Drive Date</th>
+//                                                     <th>Test Drive Status</th>
+//                                                     <th>Action</th>
+//                                                 </tr>
+//                                             </thead>
+//                                             <tbody>
+//                                                 {paginatedAppointments.map((apt) => {
+//                                                     const isCompleted = apt.status === 'Completed';
+//                                                     const isRejected = apt.status === 'Rejected';
+//                                                     const rowStyle = isCompleted
+//                                                         ? { backgroundColor: 'rgba(40, 167, 69, 0.1)' }
+//                                                         : isRejected
+//                                                             ? { backgroundColor: 'rgba(220, 53, 69, 0.1)' }
+//                                                             : {};
+
+//                                                     return (
+//                                                         <tr key={apt.testAppointmentId} style={rowStyle}>
+//                                                             <td><strong>{apt.customerName}</strong></td>
+//                                                             <td>{apt.customerPhone}</td>
+//                                                             <td>{apt.customerEmail}</td>
+//                                                             <td>{apt.customerAddress}</td>
+//                                                             <td>{apt.vehicleName}</td>
+//                                                             <td>{apt.dealerName}</td>
+//                                                             <td>{apt.appointmentDate}</td>
+//                                                             <td>
+//                                                                 <Badge bg={getStatusVariant(apt.status)}>
+//                                                                     {getStatusDisplay(apt.status)}
+//                                                                 </Badge>
+//                                                             </td>
+//                                                             <td>
+//                                                                 <div className="d-flex gap-2">
+//                                                                     <Button
+//                                                                         size="sm"
+//                                                                         variant="success"
+//                                                                         onClick={() => handleCompleteAppointment(apt)}
+//                                                                         disabled={isCompleted || isRejected || submitting}
+//                                                                         title="Complete"
+//                                                                         style={{
+//                                                                             borderRadius: '4px',
+//                                                                             padding: '4px 8px'
+//                                                                         }}
+//                                                                     >
+//                                                                         ✓
+//                                                                     </Button>
+//                                                                     <Button
+//                                                                         size="sm"
+//                                                                         variant="danger"
+//                                                                         onClick={() => handleRejectAppointment(apt)}
+//                                                                         disabled={isCompleted || isRejected || submitting}
+//                                                                         title="Reject"
+//                                                                         style={{
+//                                                                             borderRadius: '4px',
+//                                                                             padding: '4px 8px'
+//                                                                         }}
+//                                                                     >
+//                                                                         ✗
+//                                                                     </Button>
+//                                                                 </div>
+//                                                             </td>
+//                                                         </tr>
+//                                                     );
+//                                                 })}
+//                                             </tbody>
+//                                         </Table>
+//                                     </Card.Body>
+//                                 </Card>
+
+//                                 {totalPagesAppointments > 1 && (
+//                                     <div className="d-flex justify-content-center mt-4">
+//                                         <Pagination>
+//                                             <Pagination.Prev
+//                                                 onClick={() => handlePageChangeAppointments(appointmentCurrentPage - 1)}
+//                                                 disabled={appointmentCurrentPage === 1}
+//                                             />
+//                                             {[...Array(totalPagesAppointments)].map((_, index) => (
+//                                                 <Pagination.Item
+//                                                     key={index + 1}
+//                                                     active={index + 1 === appointmentCurrentPage}
+//                                                     onClick={() => handlePageChangeAppointments(index + 1)}
+//                                                 >
+//                                                     {index + 1}
+//                                                 </Pagination.Item>
+//                                             ))}
+//                                             <Pagination.Next
+//                                                 onClick={() => handlePageChangeAppointments(appointmentCurrentPage + 1)}
+//                                                 disabled={appointmentCurrentPage === totalPagesAppointments}
+//                                             />
+//                                         </Pagination>
+//                                     </div>
+//                                 )}
+//                             </>
+//                         )}
+//                     </Tab>
+//                 </Tabs>
+//             </Container>
+
+//             <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+//                 <Modal.Header closeButton>
+//                     <Modal.Title>Manage Test Drive Request</Modal.Title>
+//                 </Modal.Header>
+//                 <Modal.Body>
+//                     <p><strong>Customer:</strong> {selectedCustomer?.fullName}</p>
+//                     <Form onSubmit={handleSubmitAppointment}>
+//                         <Form.Group className="mb-3">
+//                             <Form.Label>Status *</Form.Label>
+//                             <Form.Select
+//                                 value={formData.status}
+//                                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+//                                 required
+//                             >
+//                                 <option value="">Select status</option>
+//                                 {actionOptions.map(option => (
+//                                     <option key={option.value} value={option.value}>
+//                                         {option.label}
+//                                     </option>
+//                                 ))}
+//                             </Form.Select>
+//                         </Form.Group>
+
+//                         {formData.status === 'Accepted' && (
+//                             <>
+//                                 <Form.Group className="mb-3">
+//                                     <Form.Label>Vehicle *</Form.Label>
+//                                     <Form.Select
+//                                         value={formData.vehicleId}
+//                                         onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+//                                         required
+//                                     >
+//                                         <option value="">Select vehicle</option>
+//                                         {vehicles.map(v => (
+//                                             <option key={v.vehicleId} value={v.vehicleId}>
+//                                                 {v.modelName} {v.version}
+//                                             </option>
+//                                         ))}
+//                                     </Form.Select>
+//                                 </Form.Group>
+
+//                                 <Form.Group className="mb-3">
+//                                     <Form.Label>Dealer *</Form.Label>
+//                                     <Form.Select
+//                                         value={formData.dealerId}
+//                                         onChange={(e) => setFormData({ ...formData, dealerId: e.target.value })}
+//                                         required
+//                                     >
+//                                         <option value="">Select dealer</option>
+//                                         {dealers.map(d => (
+//                                             <option key={d.dealerId} value={d.dealerId}>
+//                                                 {d.fullName}
+//                                             </option>
+//                                         ))}
+//                                     </Form.Select>
+//                                 </Form.Group>
+
+//                                 <Form.Group className="mb-3">
+//                                     <Form.Label>Date *</Form.Label>
+//                                     <Form.Control
+//                                         type="date"
+//                                         value={formData.appointmentDate}
+//                                         onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
+//                                         min={new Date().toISOString().split('T')[0]} // Không cho chọn ngày hôm nay trở về trước
+//                                         required
+//                                     />
+//                                     <Form.Text className="text-muted">
+//                                         Will send: {formData.appointmentDate ? formatDateForAPI(formData.appointmentDate) : 'None'}
+//                                     </Form.Text>
+//                                 </Form.Group>
+//                             </>
+//                         )}
+
+//                         <div className="d-flex justify-content-end gap-2">
+//                             <Button variant="secondary" onClick={() => setShowModal(false)} disabled={submitting}>
+//                                 Cancel
+//                             </Button>
+//                             <Button
+//                                 variant="primary"
+//                                 type="submit"
+//                                 disabled={submitting}
+//                                 style={{
+//                                     background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+//                                     border: 'none',
+//                                     borderRadius: '8px'
+//                                 }}
+//                             >
+//                                 {submitting ? 'Validating...' : 'Next: Confirm'}
+//                             </Button>
+//                         </div>
+//                     </Form>
+//                 </Modal.Body>
+//             </Modal>
+
+//             {/* Confirmation Modal */}
+//             <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
+//                 <Modal.Header closeButton>
+//                     <Modal.Title>Confirm Create Test Drive Appointment</Modal.Title>
+//                 </Modal.Header>
+//                 <Modal.Body>
+//                     <p><strong>Customer:</strong> {formData.customerName}</p>
+//                     <p><strong>Status:</strong> {getStatusDisplay(formData.status)}</p>
+//                     {formData.status === 'Accepted' && (
+//                         <>
+//                             <p><strong>Vehicle:</strong> {formData.vehicleName}</p>
+//                             <p><strong>Dealer:</strong> {formData.dealerName}</p>
+//                             <p><strong>Date:</strong> {formData.formattedDate}</p>
+//                         </>
+//                     )}
+//                     <p>Do you want to {formData.status === 'Accepted' ? 'create this test drive appointment' : 'reject this request'}?</p>
+//                 </Modal.Body>
+//                 <Modal.Footer>
+//                     <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
+//                         Cancel
+//                     </Button>
+//                     <Button
+//                         variant="primary"
+//                         onClick={confirmAndCreate}
+//                         disabled={submitting}
+//                         style={{
+//                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+//                             border: 'none',
+//                             borderRadius: '8px'
+//                         }}
+//                     >
+//                         {submitting ? 'Creating...' : 'Create Appointment'}
+//                     </Button>
+//                 </Modal.Footer>
+//             </Modal>
+
+//             {/* Action Confirmation Modal */}
+//             <Modal show={showActionModal} onHide={() => setShowActionModal(false)} centered>
+//                 <Modal.Header closeButton>
+//                     <Modal.Title>
+//                         {appointmentAction === 'complete' ? 'Complete Appointment' : 'Reject Appointment'}
+//                     </Modal.Title>
+//                 </Modal.Header>
+//                 <Modal.Body>
+//                     <p><strong>Customer:</strong> {selectedAppointment?.customerName}</p>
+//                     <p><strong>Vehicle:</strong> {selectedAppointment?.vehicleName}</p>
+//                     <p><strong>Test Date:</strong> {selectedAppointment?.appointmentDate}</p>
+//                     <p className="mt-3">
+//                         {appointmentAction === 'complete'
+//                             ? 'Are you sure you want to mark this appointment as Completed?'
+//                             : 'Are you sure you want to reject this appointment?'}
+//                     </p>
+//                 </Modal.Body>
+//                 <Modal.Footer>
+//                     <Button variant="secondary" onClick={() => setShowActionModal(false)} disabled={submitting}>
+//                         Cancel
+//                     </Button>
+//                     <Button
+//                         variant={appointmentAction === 'complete' ? 'success' : 'danger'}
+//                         onClick={confirmAppointmentAction}
+//                         disabled={submitting}
+//                     >
+//                         {submitting ? 'Processing...' : 'Confirm'}
+//                     </Button>
+//                 </Modal.Footer>
+//             </Modal>
+//         </div>
+//     );
+// };
+
+// export default TestAppointment;
+
+//fix
+import React, { useState, useEffect, useRef } from 'react';
 import {
     Container, Row, Col, Card, Table, Badge, Button, Modal, Form,
     Tabs, Tab, Spinner, Alert, InputGroup, FormControl, Pagination
 } from 'react-bootstrap';
 import '../../../styles/dealerStaffManager/TestAppointment.scss';
 import ManageTestAppointment from '../../../services/ManageTestAppointment/ManageTestAppointment';
+import ManageVehicleService from '../../../services/ManageVehicleService/ManageVehicleService';
 import { apiClient } from '../../../api/apiClient';
+import { message } from 'antd';
 
 const TestAppointment = () => {
     const [activeTab, setActiveTab] = useState('requests');
@@ -2309,15 +3224,22 @@ const TestAppointment = () => {
     const [showActionModal, setShowActionModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [appointmentAction, setAppointmentAction] = useState(''); // 'complete' or 'reject'
-
+const [allVehicleModels, setAllVehicleModels] = useState([]); // Dữ liệu từ getAllVehicle
+ const hasAutoFilledVehicle = useRef(false);
     const itemsPerPage = 10;
 
-    const [formData, setFormData] = useState({
-        status: '',
-        vehicleId: '',
-        dealerId: '',
-        appointmentDate: ''
-    });
+const [formData, setFormData] = useState({
+    status: '',
+    vehicleId: '',
+    dealerId: '',
+    appointmentDate: '',
+    appointmentTime: '09:00' // Mặc định 9h sáng
+});
+const formatDateTimeForAPI = (dateStr, timeStr) => {
+    if (!dateStr || !timeStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year} ${timeStr}`; // → "25/11/2025 14:30"
+};
     const [vehicles, setVehicles] = useState([]);
     const [dealers, setDealers] = useState([]);
     const [submitting, setSubmitting] = useState(false);
@@ -2335,7 +3257,35 @@ const TestAppointment = () => {
         }
         return storeId;
     };
+const findBestMatchingVehicle = async (description) => {
+  if (!description || !description.toLowerCase().includes('test appointment')) return null;
 
+  let text = description.replace(/^test appointment\s*-?\s*/i, '').trim();
+  const yearMatch = text.match(/\((\d{4})\)$/);
+  const year = yearMatch ? parseInt(yearMatch[1], 10) : null;
+  if (year) text = text.replace(/\s*\(\d{4}\)$/, '').trim();
+
+  let bestId = null;
+  let bestScore = 0;
+  const lowerText = text.toLowerCase();
+
+  allVehicleModels.forEach(v => {
+    let score = 0;
+    const model = (v.modelName || '').toLowerCase();
+    const version = (v.version || '').toLowerCase();
+
+    if (lowerText.includes(model)) score += 30;
+    if (version && lowerText.includes(version)) score += 20;
+    if (year && v.year === year) score += 25;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestId = v.vehicleId;
+    }
+  });
+
+  return bestId;
+};
     // Helper để lấy dealerId từ localStorage
     // const getCurrentDealerId = () => {
     //     const dealerInfoStr = localStorage.getItem('dealerInfo');
@@ -2393,10 +3343,9 @@ const TestAppointment = () => {
 
             // Chỉ lọc những request có description là "Test Appointment"
             // KHÔNG loại bỏ Completed → vẫn hiển thị, chỉ disable nút Create sau
-            const filtered = data.filter(c =>
-                c.description === "Test Appointment"
-            );
-
+         const filtered = data.filter(c =>
+        c.description && c.description.includes('Test Appointment')
+);
             setRequests(filtered);
         } catch (err) {
             console.error("Error fetching requests:", err);
@@ -2461,30 +3410,64 @@ const TestAppointment = () => {
             setLoading(prev => ({ ...prev, appointments: false }));
         }
     };
+ 
+const handleCreateAppointment = async (customer) => {
+  setSelectedCustomer(customer);
+ setFormData({
+  status: '',
+  vehicleId: '',
+  dealerId: '',
+  appointmentDate: '',
+  appointmentTime: '09:00'  // ← QUAN TRỌNG: PHẢI CÓ DÒNG NÀY!
+});
+  hasAutoFilledVehicle.current = false;
+  setShowModal(true);
 
-    const handleCreateAppointment = (customer) => {
-        setSelectedCustomer(customer);
-        setFormData({ status: '', vehicleId: '', dealerId: '', appointmentDate: '' });
-        setShowModal(true);
-        fetchVehiclesAndDealers();
-    };
+  try {
+    const currentStoreId = getCurrentStoreId();
 
-    const fetchVehiclesAndDealers = async () => {
-        try {
-            const currentStoreId = getCurrentStoreId();
-            const [veh, deal] = await Promise.all([
-                apiClient.get('/Vehicles').then(r => r.data),
-                apiClient.get('/Dealers').then(r => r.data),
-            ]);
-            setVehicles(Array.isArray(veh) ? veh : []);
-            const filteredDealers = Array.isArray(deal) ? deal.filter(d => d.storeId === currentStoreId) : [];
-            setDealers(filteredDealers);
-            console.log(`Filtered dealers for store ${currentStoreId}:`, filteredDealers.length); // Debug
-        } catch (err) {
-            console.error("Load vehicles/dealers error:", err);
-        }
-    };
+    const [stockVehicles, allModels, dealersData] = await Promise.all([
+      apiClient.get('/Vehicles').then(r => r.data),
+      ManageVehicleService.getAllVehicle(),
+      apiClient.get('/Dealers').then(r => r.data),
+    ]);
 
+    const validStock = Array.isArray(stockVehicles) ? stockVehicles : [];
+    const validModels = Array.isArray(allModels) ? allModels : [];
+    const validDealers = Array.isArray(dealersData)
+      ? dealersData.filter(d => d.storeId === currentStoreId)
+      : [];
+
+    setVehicles(validStock);
+    setAllVehicleModels(validModels);
+    setDealers(validDealers);
+
+    // === AUTO-FILL XE KHI MỞ MODAL (KHÔNG cần đợi chọn "Accepted") ===
+    if (customer.description?.includes('Test Appointment')) {
+      const matchedId = await findBestMatchingVehicle(customer.description);
+
+      if (matchedId && validStock.some(v => v.vehicleId === matchedId)) {
+        hasAutoFilledVehicle.current = true;
+
+        // Dùng setTimeout để đảm bảo DOM đã render xong
+       setTimeout(() => {
+  setFormData(prev => ({ 
+    ...prev, 
+    vehicleId: matchedId.toString(),
+    appointmentTime: prev.appointmentTime || '09:00' // giữ giờ mặc định
+  }));
+  message.success('Vehicle auto-selected: ' + 
+    validModels.find(v => v.vehicleId === matchedId)?.modelName + ' ' +
+    validModels.find(v => v.vehicleId === matchedId)?.version
+  );
+}, 300); // ← Tăng lên 300ms cho chắc ăn
+      }
+    }
+  } catch (err) {
+    console.error('Load data error:', err);
+    message.error('Failed to load vehicles or dealers');
+  }
+};
     const formatDateForAPI = (dateString) => {
         if (!dateString) return '';
         const [year, month, day] = dateString.split('-');
@@ -2519,27 +3502,29 @@ const TestAppointment = () => {
     };
 
     const handleSubmitAppointment = async (e) => {
-        e.preventDefault();
-        const validationErrors = validateForm();
-        if (validationErrors.length > 0) {
-            alert('Validation Errors:\n' + validationErrors.join('\n'));
-            return;
-        }
-        const updatedFormData = {
-            ...formData,
-            customerName: selectedCustomer.fullName
-        };
+    e.preventDefault();
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+        alert('Validation Errors:\n' + validationErrors.join('\n'));
+        return;
+    }
 
-        if (formData.status === 'Accepted') {
-            updatedFormData.vehicleName = vehicles.find(v => v.vehicleId === parseInt(formData.vehicleId))?.modelName || 'Unknown';
-            updatedFormData.dealerName = dealers.find(d => d.dealerId === parseInt(formData.dealerId))?.fullName || 'Unknown';
-            updatedFormData.formattedDate = formatDateForAPI(formData.appointmentDate);
-        }
-
-        setFormData(updatedFormData);
-        setShowModal(false);
-        setShowConfirmModal(true);
+    const updatedFormData = {
+        ...formData,
+        customerName: selectedCustomer.fullName
     };
+
+    if (formData.status === 'Accepted') {
+        updatedFormData.vehicleName = vehicles.find(v => v.vehicleId === parseInt(formData.vehicleId))?.modelName || 'Unknown';
+        updatedFormData.dealerName = dealers.find(d => d.dealerId === parseInt(formData.dealerId))?.fullName || 'Unknown';
+        updatedFormData.formattedDateTime = formatDateTimeForAPI(formData.appointmentDate, formData.appointmentTime);
+        updatedFormData.displayDateTime = `${formatDateForAPI(formData.appointmentDate)} ${formData.appointmentTime}`;
+    }
+
+    setFormData(updatedFormData);
+    setShowModal(false);
+    setShowConfirmModal(true);
+};
 
     const confirmAndCreate = async () => {
         setSubmitting(true);
@@ -2549,7 +3534,7 @@ const TestAppointment = () => {
                     customerId: selectedCustomer.customerId,
                     vehicleId: parseInt(formData.vehicleId),
                     dealerId: parseInt(formData.dealerId),
-                    appointmentDate: formData.formattedDate,
+                    appointmentDate: formData.formattedDateTime,
                     status: 'Accepted'
                 });
 
@@ -3098,6 +4083,25 @@ const TestAppointment = () => {
                                         Will send: {formData.appointmentDate ? formatDateForAPI(formData.appointmentDate) : 'None'}
                                     </Form.Text>
                                 </Form.Group>
+                                <Form.Group className="mb-3">
+                                    <Form.Label>Time *</Form.Label>
+                                    <Form.Select
+                                        value={formData.appointmentTime}
+                                        onChange={(e) => setFormData({ ...formData, appointmentTime: e.target.value })}
+                                        required
+                                    >
+                                        {[
+                                            '08:00', '08:30', '09:00', '09:30', '10:00', '10:30',
+                                            '11:00', '11:30', '13:00', '13:30', '14:00', '14:30',
+                                            '15:00', '15:30', '16:00', '16:30', '17:00'
+                                        ].map(time => (
+                                            <option key={time} value={time}>{time}</option>
+                                        ))}
+                                    </Form.Select>
+                                    <Form.Text className="text-muted">
+                                        Test drive time slot (30-minute intervals)
+                                    </Form.Text>
+                                </Form.Group>
                             </>
                         )}
 
@@ -3134,7 +4138,7 @@ const TestAppointment = () => {
                         <>
                             <p><strong>Vehicle:</strong> {formData.vehicleName}</p>
                             <p><strong>Dealer:</strong> {formData.dealerName}</p>
-                            <p><strong>Date:</strong> {formData.formattedDate}</p>
+                            <p><strong>Date & Time:</strong> {formData.displayDateTime}</p>
                         </>
                     )}
                     <p>Do you want to {formData.status === 'Accepted' ? 'create this test drive appointment' : 'reject this request'}?</p>
