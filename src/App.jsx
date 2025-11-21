@@ -256,7 +256,7 @@ import StaffAccount from './pages/evmStaffAdmin/StaffAccount/StaffAccountManage.
 import StaffAccountManage from './pages/evmStaffAdmin/StaffAccount/StaffAccountManage.jsx';
 import CustomerFeedback from './pages/dealerStaffManager/customer/CustomerFeedback.jsx';
 import DashboardOverview from './pages/evmStaffAdmin/EvmDashboard/DashboardOverview.jsx';
-import DebtCustomer from './pages/dealerStaffManager/debt/debtCustomer.jsx';
+import DebtCustomer from './pages/dealerStaffManager/debt/DebtCustomer.jsx';
 function App() {
 
   const router = createBrowserRouter([

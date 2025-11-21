@@ -139,6 +139,152 @@
 // auto cap nhat sau khi add quote thanh cong
 
 // ListCusGetQuote.js
+// import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
+// import { List, Avatar, Typography, Spin, Empty, Tag, Space } from 'antd';
+// import { UserOutlined, MailOutlined } from '@ant-design/icons';
+// import { toast } from 'react-toastify';
+// import ManageCustomersService from '../../../services/ManageCustomers/ManageCustomersService';
+// import ManageQuoteService from '../../../services/ManageQuotes/ManageQuoteService';
+// import AddQuotationButton from './AddQuotationButton';
+
+// const { Title, Text } = Typography;
+
+// const ListCusGetQuote = forwardRef((props, ref) => {
+//   const [customers, setCustomers] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   const [storeId, setStoreId] = useState(null);
+
+//   // === LẤY STORE ID ===
+//   useEffect(() => {
+//     try {
+//       const { storeId } = JSON.parse(localStorage.getItem('dealerInfo') || '{}');
+//       setStoreId(storeId ? Number(storeId) : null);
+//     } catch {
+//       toast.error('Invalid dealer information.');
+//       setLoading(false);
+//     }
+//   }, []);
+
+//   // === HÀM LOAD DATA (CÓ THỂ GỌI LẠI) ===
+//   const loadData = useCallback(async () => {
+//     if (!storeId) return;
+
+//     setLoading(true);
+//     try {
+//       const customerData = await ManageCustomersService.getCustomerByStoreId(storeId);
+//       const quoteRequestCustomers = customerData
+//         .filter(c => c.description === 'Get Quote')
+//         .map(c => ({ ...c, id: c.customerId }));
+
+//       const allQuotes = await ManageQuoteService.getAllQuotations();
+//       const acceptedCustomerIds = new Set(
+//         allQuotes.filter(q => q.status === 'Accepted').map(q => q.customerId)
+//       );
+
+//       const filtered = quoteRequestCustomers.filter(c => !acceptedCustomerIds.has(c.customerId));
+//       setCustomers(filtered);
+//     } catch (error) {
+//       console.error('Failed to load data:', error);
+//       toast.error('Cannot load customer quote requests');
+//     } finally {
+//       setLoading(false);
+//     }
+//   }, [storeId]);
+
+//   const handleAfterAdd = useCallback(
+//     (customerId) => {
+//       setCustomers((prev) => prev.filter((item) => item.customerId !== customerId));
+//       loadData();
+//     },
+//     [loadData]
+//   );
+
+//   // === GỌI LẦN ĐẦU ===
+//   useEffect(() => {
+//     loadData();
+//   }, [loadData]);
+
+//   // === CHO PHÉP GỌI LẠI TỪ BÊN NGOÀI ===
+//   useImperativeHandle(ref, () => ({
+//     reload: loadData,
+//   }));
+
+//   // === UI ===
+//   if (loading) {
+//     return (
+//       <div style={{ textAlign: 'center', padding: '32px 0' }}>
+//         <Spin />
+//         <Text type="secondary" style={{ display: 'block', marginTop: 8 }}>
+//           Loading...
+//         </Text>
+//       </div>
+//     );
+//   }
+
+//   if (customers.length === 0) {
+//     return (
+//       <Empty
+//         image={Empty.PRESENTED_IMAGE_SIMPLE}
+//         description="There are no pending quote requests."
+//         style={{ margin: '24px 0' }}
+//       />
+//     );
+//   }
+
+//   return (
+//     <div style={{ boxShadow: '0 2px 8px rgba(0,0,0,0.3)', borderRadius: 8 }}>
+//       <Title level={3} style={{ margin: 0, padding: '12px 16px', textAlign: 'center', background: '#f5f5f5', borderRadius: '8px 8px 0 0' }}>
+//         Request Quote
+//       </Title>
+
+//       <List
+//         dataSource={customers}
+//         renderItem={(c) => (
+//           <List.Item
+//             key={c.id}
+//             style={{
+//               background: '#fff',
+//               borderRadius: 8,
+//               padding: '10px 12px',
+//               margin: '0 8px 8px',
+//               boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+//             }}
+//             actions={[
+//               <AddQuotationButton key="add-quote" customer={c} onSuccess={handleAfterAdd} />,
+//             ]}
+//           >
+//             <List.Item.Meta
+//               avatar={
+//                 <Avatar
+//                   size={40}
+//                   icon={<UserOutlined />}
+//                   style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}
+//                 />
+//               }
+//               title={
+//                 <Space size={4}>
+//                   <Text strong style={{ fontSize: 15 }}>{c.fullName}</Text>
+//                   {c.status === 'Pending' && <Tag color="gold" style={{ margin: 0, fontSize: 10 }}>Pending</Tag>}
+//                 </Space>
+//               }
+//               description={
+//                 <div style={{ marginTop: 2 }}>
+//                   <MailOutlined style={{ color: '#1890ff', fontSize: 11, marginRight: 4 }} />
+//                   <Text type="secondary" style={{ fontSize: 12 }}>{c.email || '—'}</Text>
+//                 </div>
+//               }
+//             />
+//           </List.Item>
+//         )}
+//       />
+//     </div>
+//   );
+// });
+
+// export default ListCusGetQuote;
+
+
+// fix
 import React, { useState, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { List, Avatar, Typography, Spin, Empty, Tag, Space } from 'antd';
 import { UserOutlined, MailOutlined } from '@ant-design/icons';
@@ -166,30 +312,36 @@ const ListCusGetQuote = forwardRef((props, ref) => {
   }, []);
 
   // === HÀM LOAD DATA (CÓ THỂ GỌI LẠI) ===
-  const loadData = useCallback(async () => {
-    if (!storeId) return;
+ const loadData = useCallback(async () => {
+  if (!storeId) return;
 
-    setLoading(true);
-    try {
-      const customerData = await ManageCustomersService.getCustomerByStoreId(storeId);
-      const quoteRequestCustomers = customerData
-        .filter(c => c.description === 'Get Quote')
-        .map(c => ({ ...c, id: c.customerId }));
+  setLoading(true);
+  try {
+    const customerData = await ManageCustomersService.getCustomerByStoreId(storeId);
 
-      const allQuotes = await ManageQuoteService.getAllQuotations();
-      const acceptedCustomerIds = new Set(
-        allQuotes.filter(q => q.status === 'Accepted').map(q => q.customerId)
-      );
+    // SỬA TẠI ĐÂY - Lọc khách có description chứa "Get Quote"
+    const quoteRequestCustomers = customerData
+      .filter(c => 
+        c.description && 
+        typeof c.description === 'string' && 
+        c.description.includes('Get Quote')  // hoặc .startsWith('Get Quote')
+      )
+      .map(c => ({ ...c, id: c.customerId }));
 
-      const filtered = quoteRequestCustomers.filter(c => !acceptedCustomerIds.has(c.customerId));
-      setCustomers(filtered);
-    } catch (error) {
-      console.error('Failed to load data:', error);
-      toast.error('Cannot load customer quote requests');
-    } finally {
-      setLoading(false);
-    }
-  }, [storeId]);
+    const allQuotes = await ManageQuoteService.getAllQuotations();
+    const acceptedCustomerIds = new Set(
+      allQuotes.filter(q => q.status === 'Accepted').map(q => q.customerId)
+    );
+
+    const filtered = quoteRequestCustomers.filter(c => !acceptedCustomerIds.has(c.customerId));
+    setCustomers(filtered);
+  } catch (error) {
+    console.error('Failed to load data:', error);
+    toast.error('Cannot load customer quote requests');
+  } finally {
+    setLoading(false);
+  }
+}, [storeId]);
 
   const handleAfterAdd = useCallback(
     (customerId) => {
