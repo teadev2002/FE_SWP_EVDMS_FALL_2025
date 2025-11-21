@@ -255,6 +255,7 @@ import DealerAccountManage from './pages/dealerStaffManager/DealerAccount/Dealer
 import StaffAccount from './pages/evmStaffAdmin/StaffAccount/StaffAccountManage.jsx';
 import StaffAccountManage from './pages/evmStaffAdmin/StaffAccount/StaffAccountManage.jsx';
 import CustomerFeedback from './pages/dealerStaffManager/customer/CustomerFeedback.jsx';
+import DashboardOverview from './pages/evmStaffAdmin/EvmDashboard/DashboardOverview.jsx';
 function App() {
 
   const router = createBrowserRouter([
@@ -394,7 +395,11 @@ function App() {
         },{
           path: "staff-account",
           element: <StaffAccountManage />,
-        }
+        },
+        {
+          path: "dashboard-overview",
+          element: <DashboardOverview />,
+        },  
       ],
     },
     {

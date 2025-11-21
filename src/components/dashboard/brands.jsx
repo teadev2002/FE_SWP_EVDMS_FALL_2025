@@ -156,7 +156,8 @@ const Brands = () => {
       getItem('Sales', 'agency-management/sales-management', <FileOutlined />),
     ]),
     getItem('Store Management', 'store-management', <FileOutlined />),
-    getItem('Staff Account', 'staff-account', <DesktopOutlined />),
+    getItem('Staff Account', 'staff-account', <UserOutlined />),
+    getItem('Dashboard Overview', 'dashboard-overview', <DesktopOutlined />),
   ];
 
   return (
