@@ -698,7 +698,8 @@ const TestDriveForm = () => {
                 licenseUp: null,
                 licenseDown: null,
                 storeId: parseInt(formData.storeId),
-                description: "Test Appointment"
+                description: "Test Appointment",
+                status: "Pending"
             };
 
             await TestDriveService.createCustomer(customerPayload);
