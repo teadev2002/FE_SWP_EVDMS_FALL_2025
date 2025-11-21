@@ -2289,6 +2289,7 @@ import {
 } from 'react-bootstrap';
 import '../../../styles/dealerStaffManager/TestAppointment.scss';
 import ManageTestAppointment from '../../../services/ManageTestAppointment/ManageTestAppointment';
+import { apiClient } from '../../../api/apiClient';
 
 const TestAppointment = () => {
     const [activeTab, setActiveTab] = useState('requests');
@@ -2305,6 +2306,9 @@ const TestAppointment = () => {
     const [showModal, setShowModal] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
+    const [showActionModal, setShowActionModal] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [appointmentAction, setAppointmentAction] = useState(''); // 'complete' or 'reject'
 
     const itemsPerPage = 10;
 
@@ -2333,25 +2337,28 @@ const TestAppointment = () => {
     };
 
     // Helper để lấy dealerId từ localStorage
-    const getCurrentDealerId = () => {
-        const dealerInfoStr = localStorage.getItem('dealerInfo');
-        if (!dealerInfoStr) {
-            throw new Error('No dealerInfo in localStorage');
-        }
-        const dealerInfo = JSON.parse(dealerInfoStr);
-        const dealerId = dealerInfo.dealerId;
-        if (!dealerId) {
-            throw new Error('No dealerId found in dealerInfo');
-        }
-        return dealerId;
-    };
+    // const getCurrentDealerId = () => {
+    //     const dealerInfoStr = localStorage.getItem('dealerInfo');
+    //     if (!dealerInfoStr) {
+    //         throw new Error('No dealerInfo in localStorage');
+    //     }
+    //     const dealerInfo = JSON.parse(dealerInfoStr);
+    //     const dealerId = dealerInfo.dealerId;
+    //     if (!dealerId) {
+    //         throw new Error('No dealerId found in dealerInfo');
+    //     }
+    //     return dealerId;
+    // };
 
     const getStatusVariant = (status) => {
-        if (!status || status === 'pending') return 'warning';
+        if (!status || status === 'pending' || status === 'Pending') return 'warning';
         switch (status) {
             case 'accepted': return 'primary';
+            case 'Accepted': return 'success';
             case 'completed': return 'success';
+            case 'Completed': return 'success';
             case 'cancelled': return 'danger';
+            case 'Rejected': return 'danger';
             case 'Draft': return 'info';
             default: return 'secondary';
         }
@@ -2360,9 +2367,14 @@ const TestAppointment = () => {
     const getStatusDisplay = (status) => {
         switch (status) {
             case 'accepted': return 'Accepted';
+            case 'Accepted': return 'Accepted';
             case 'completed': return 'Completed';
+            case 'Completed': return 'Completed';
             case 'cancelled': return 'Cancelled';
+            case 'Rejected': return 'Rejected';
             case 'Draft': return 'Draft';
+            case 'pending': return 'Pending';
+            case 'Pending': return 'Pending';
             default: return status || 'Pending';
         }
     };
@@ -2370,6 +2382,7 @@ const TestAppointment = () => {
     useEffect(() => {
         if (activeTab === 'requests') fetchRequests();
         if (activeTab === 'appointments') fetchAppointments();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [activeTab]);
 
     const fetchRequests = async () => {
@@ -2379,7 +2392,7 @@ const TestAppointment = () => {
             const data = await ManageTestAppointment.getAllRequests();
             const nonCompleted = data.filter(c => c.status !== 'completed');
             setRequests(nonCompleted);
-        } catch (err) {
+        } catch {
             setError(prev => ({ ...prev, requests: 'Failed to load requests.' }));
         } finally {
             setLoading(prev => ({ ...prev, requests: false }));
@@ -2393,8 +2406,13 @@ const TestAppointment = () => {
             const currentStoreId = getCurrentStoreId();
             const data = await ManageTestAppointment.getAllAppointments(currentStoreId);
 
+            // Lấy appointments có status là Accepted, Completed, hoặc Rejected
+            const relevantAppointments = data.filter(apt => 
+                apt.status === 'Accepted' || apt.status === 'Completed' || apt.status === 'Rejected'
+            );
+
             const enriched = await Promise.all(
-                data.map(async (apt) => {
+                relevantAppointments.map(async (apt) => {
                     let customerName = 'Unknown';
                     let customerPhone = 'Unknown';
                     let customerEmail = 'Unknown';
@@ -2407,12 +2425,12 @@ const TestAppointment = () => {
                         customerPhone = customer.phone;
                         customerEmail = customer.email;
                         customerAddress = customer.address;
-                    } catch (e) { console.warn(`Customer ${apt.customerId} not found`); }
+                    } catch { console.warn(`Customer ${apt.customerId} not found`); }
 
                     try {
                         const vehicle = await ManageTestAppointment.getVehicleById(apt.vehicleId);
                         vehicleName = `${vehicle.modelName} ${vehicle.version}`;
-                    } catch (e) { console.warn(`Vehicle ${apt.vehicleId} not found`); }
+                    } catch { console.warn(`Vehicle ${apt.vehicleId} not found`); }
 
                     return {
                         ...apt,
@@ -2428,7 +2446,7 @@ const TestAppointment = () => {
                 })
             );
             setAppointments(enriched);
-            console.log(`Appointments for store ${currentStoreId}:`, enriched.length); // Debug
+            console.log(`Accepted appointments for store ${currentStoreId}:`, enriched.length); // Debug
         } catch (err) {
             console.error("fetchAppointments error:", err);
             setError(prev => ({ ...prev, appointments: 'Failed to load appointments.' }));
@@ -2448,11 +2466,10 @@ const TestAppointment = () => {
         try {
             const currentStoreId = getCurrentStoreId();
             const [veh, deal] = await Promise.all([
-                fetch('https://localhost:7269/api/Vehicles').then(r => r.json()),
-                fetch('https://localhost:7269/api/Dealers').then(r => r.json()),
+                apiClient.get('/Vehicles').then(r => r.data),
+                apiClient.get('/Dealers').then(r => r.data),
             ]);
             setVehicles(Array.isArray(veh) ? veh : []);
-            // Filter dealers chỉ thuộc store hiện tại
             const filteredDealers = Array.isArray(deal) ? deal.filter(d => d.storeId === currentStoreId) : [];
             setDealers(filteredDealers);
             console.log(`Filtered dealers for store ${currentStoreId}:`, filteredDealers.length); // Debug
@@ -2467,13 +2484,13 @@ const TestAppointment = () => {
         return `${day}/${month}/${year}`; // "03/11/2025"
     };
 
-    // Validation function
     const validateForm = () => {
         const errors = [];
         if (!formData.status) {
-            errors.push('Please select an action.');
+            errors.push('Please select a status.');
         }
-        if (formData.status === 'completed') {
+
+        if (formData.status === 'Accepted') {
             if (!formData.vehicleId) {
                 errors.push('Please select a vehicle.');
             }
@@ -2484,7 +2501,8 @@ const TestAppointment = () => {
                 errors.push('Please select an appointment date.');
             } else {
                 const selectedDate = new Date(formData.appointmentDate);
-                const today = new Date('2025-11-12'); // Current date as per context
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
                 if (selectedDate <= today) {
                     errors.push('Appointment date must be in the future.');
                 }
@@ -2500,16 +2518,17 @@ const TestAppointment = () => {
             alert('Validation Errors:\n' + validationErrors.join('\n'));
             return;
         }
-        // Set form data for confirmation
         const updatedFormData = {
             ...formData,
             customerName: selectedCustomer.fullName
         };
-        if (formData.status === 'completed') {
+        
+        if (formData.status === 'Accepted') {
             updatedFormData.vehicleName = vehicles.find(v => v.vehicleId === parseInt(formData.vehicleId))?.modelName || 'Unknown';
             updatedFormData.dealerName = dealers.find(d => d.dealerId === parseInt(formData.dealerId))?.fullName || 'Unknown';
             updatedFormData.formattedDate = formatDateForAPI(formData.appointmentDate);
         }
+        
         setFormData(updatedFormData);
         setShowModal(false);
         setShowConfirmModal(true);
@@ -2518,34 +2537,84 @@ const TestAppointment = () => {
     const confirmAndCreate = async () => {
         setSubmitting(true);
         try {
-            // Update customer status
-            const updatedCustomerData = {
-                ...selectedCustomer,
-                status: formData.status
-            };
-            await ManageTestAppointment.updateCustomer(selectedCustomer.customerId, updatedCustomerData);
-
-            if (formData.status === 'completed') {
+            if (formData.status === 'Accepted') {
                 await ManageTestAppointment.createAppointment({
                     customerId: selectedCustomer.customerId,
                     vehicleId: parseInt(formData.vehicleId),
                     dealerId: parseInt(formData.dealerId),
                     appointmentDate: formData.formattedDate,
-                    status: 'Draft'
+                    status: 'Accepted'
                 });
+
+                const updatedCustomerData = {
+                    ...selectedCustomer,
+                    status: 'Accepted'
+                };
+                await ManageTestAppointment.updateCustomer(selectedCustomer.customerId, updatedCustomerData);
+            } else if (formData.status === 'Rejected') {
+                // Khi Reject: CHỈ cập nhật customer status, KHÔNG tạo appointment
+                const updatedCustomerData = {
+                    ...selectedCustomer,
+                    status: 'Rejected'
+                };
+                await ManageTestAppointment.updateCustomer(selectedCustomer.customerId, updatedCustomerData);
             }
 
             // Refresh requests
             await fetchRequests();
 
-            // If completed and in appointments tab, refresh
-            if (formData.status === 'completed' && activeTab === 'appointments') {
+            // Refresh appointments if in appointments tab
+            if (activeTab === 'appointments') {
                 await fetchAppointments();
             }
 
             setShowConfirmModal(false);
             setFormData({ status: '', vehicleId: '', dealerId: '', appointmentDate: '' });
             setSelectedCustomer(null);
+        } catch (err) {
+            alert(`Failed: ${err.response?.data?.message || err.message || 'Operation failed.'}`);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // Handle Complete Appointment
+    const handleCompleteAppointment = (appointment) => {
+        setSelectedAppointment(appointment);
+        setAppointmentAction('complete');
+        setShowActionModal(true);
+    };
+
+    // Handle Reject Appointment
+    const handleRejectAppointment = (appointment) => {
+        setSelectedAppointment(appointment);
+        setAppointmentAction('reject');
+        setShowActionModal(true);
+    };
+
+    // Confirm Action on Appointment
+    const confirmAppointmentAction = async () => {
+        setSubmitting(true);
+        try {
+            const newStatus = appointmentAction === 'complete' ? 'Completed' : 'Rejected';
+
+            // Update appointment status
+            await ManageTestAppointment.updateAppointment(selectedAppointment.testAppointmentId, newStatus);
+
+            // Fetch customer data and update status
+            const customerData = await ManageTestAppointment.getCustomerById(selectedAppointment.customerId);
+            const updatedCustomerData = {
+                ...customerData,
+                status: newStatus
+            };
+            await ManageTestAppointment.updateCustomer(selectedAppointment.customerId, updatedCustomerData);
+
+            // Refresh appointments
+            await fetchAppointments();
+
+            setShowActionModal(false);
+            setSelectedAppointment(null);
+            setAppointmentAction('');
         } catch (err) {
             alert(`Failed: ${err.response?.data?.message || err.message || 'Operation failed.'}`);
         } finally {
@@ -2630,23 +2699,10 @@ const TestAppointment = () => {
         setAppointmentCurrentPage(1);
     }, [searchTerm, appointmentSortOrder]);
 
-    const getActionOptions = () => {
-        const customerStatus = selectedCustomer?.status;
-        if (!customerStatus || customerStatus === 'pending') {
-            return [
-                { value: 'accepted', label: 'Accept' },
-                { value: 'cancelled', label: 'Cancel' }
-            ];
-        } else if (customerStatus === 'accepted') {
-            return [
-                { value: 'completed', label: 'Complete' },
-                { value: 'cancelled', label: 'Cancel' }
-            ];
-        }
-        return [];
-    };
-
-    const actionOptions = getActionOptions();
+    const actionOptions = [
+        { value: 'Accepted', label: 'Accepted' },
+        { value: 'Rejected', label: 'Rejected' }
+    ];
 
     return (
         <div className="admin-page">
@@ -2763,7 +2819,7 @@ const TestAppointment = () => {
                                                                 onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
                                                                 onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
                                                                 onClick={() => handleCreateAppointment(req)}
-                                                                disabled={submitting || req.status === 'cancelled'}
+                                                                disabled={submitting || req.status === 'Rejected'}
                                                             >
                                                                 Create
                                                             </Button>
@@ -2854,27 +2910,68 @@ const TestAppointment = () => {
                                                     <th>Address</th>
                                                     <th>Vehicle</th>
                                                     <th>Dealer</th>
-                                                    {/* <th>Status</th> */}
                                                     <th>Test Date</th>
+                                                    <th>Status</th>
+                                                    <th>Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                {paginatedAppointments.map((apt) => (
-                                                    <tr key={apt.testAppointmentId}>
-                                                        <td><strong>{apt.customerName}</strong></td>
-                                                        <td>{apt.customerPhone}</td>
-                                                        <td>{apt.customerEmail}</td>
-                                                        <td>{apt.customerAddress}</td>
-                                                        <td>{apt.vehicleName}</td>
-                                                        <td>{apt.dealerName}</td>
-                                                        {/* <td>
-                                                            <Badge bg={getStatusVariant(apt.status)}>
-                                                                {getStatusDisplay(apt.status)}
-                                                            </Badge>
-                                                        </td> */}
-                                                        <td>{apt.appointmentDate}</td>
-                                                    </tr>
-                                                ))}
+                                                {paginatedAppointments.map((apt) => {
+                                                    const isCompleted = apt.status === 'Completed';
+                                                    const isRejected = apt.status === 'Rejected';
+                                                    const rowStyle = isCompleted 
+                                                        ? { backgroundColor: 'rgba(40, 167, 69, 0.1)' } 
+                                                        : isRejected 
+                                                        ? { backgroundColor: 'rgba(220, 53, 69, 0.1)' }
+                                                        : {};
+                                                    
+                                                    return (
+                                                        <tr key={apt.testAppointmentId} style={rowStyle}>
+                                                            <td><strong>{apt.customerName}</strong></td>
+                                                            <td>{apt.customerPhone}</td>
+                                                            <td>{apt.customerEmail}</td>
+                                                            <td>{apt.customerAddress}</td>
+                                                            <td>{apt.vehicleName}</td>
+                                                            <td>{apt.dealerName}</td>
+                                                            <td>{apt.appointmentDate}</td>
+                                                            <td>
+                                                                <Badge bg={getStatusVariant(apt.status)}>
+                                                                    {getStatusDisplay(apt.status)}
+                                                                </Badge>
+                                                            </td>
+                                                            <td>
+                                                                <div className="d-flex gap-2">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="success"
+                                                                        onClick={() => handleCompleteAppointment(apt)}
+                                                                        disabled={isCompleted || isRejected || submitting}
+                                                                        title="Complete"
+                                                                        style={{ 
+                                                                            borderRadius: '4px',
+                                                                            padding: '4px 8px'
+                                                                        }}
+                                                                    >
+                                                                        ✓
+                                                                    </Button>
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="danger"
+                                                                        onClick={() => handleRejectAppointment(apt)}
+                                                                        disabled={isCompleted || isRejected || submitting}
+                                                                        title="Reject"
+                                                                        style={{ 
+                                                                            borderRadius: '4px',
+                                                                            padding: '4px 8px'
+                                                                        }}
+                                                                    >
+                                                                        ✗
+                                                                    </Button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
                                             </tbody>
                                         </Table>
                                     </Card.Body>
@@ -2917,13 +3014,13 @@ const TestAppointment = () => {
                     <p><strong>Customer:</strong> {selectedCustomer?.fullName}</p>
                     <Form onSubmit={handleSubmitAppointment}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Action *</Form.Label>
+                            <Form.Label>Status *</Form.Label>
                             <Form.Select
                                 value={formData.status}
                                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
                                 required
                             >
-                                <option value="">Select action</option>
+                                <option value="">Select status</option>
                                 {actionOptions.map(option => (
                                     <option key={option.value} value={option.value}>
                                         {option.label}
@@ -2932,7 +3029,7 @@ const TestAppointment = () => {
                             </Form.Select>
                         </Form.Group>
 
-                        {formData.status === 'completed' && (
+                        {formData.status === 'Accepted' && (
                             <>
                                 <Form.Group className="mb-3">
                                     <Form.Label>Vehicle *</Form.Label>
@@ -3005,19 +3102,19 @@ const TestAppointment = () => {
             {/* Confirmation Modal */}
             <Modal show={showConfirmModal} onHide={() => setShowConfirmModal(false)} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>Confirm Action</Modal.Title>
+                    <Modal.Title>Confirm Create Test Drive Appointment</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <p><strong>Customer:</strong> {formData.customerName}</p>
-                    {formData.status === 'completed' && (
+                    <p><strong>Status:</strong> {getStatusDisplay(formData.status)}</p>
+                    {formData.status === 'Accepted' && (
                         <>
                             <p><strong>Vehicle:</strong> {formData.vehicleName}</p>
                             <p><strong>Dealer:</strong> {formData.dealerName}</p>
                             <p><strong>Date:</strong> {formData.formattedDate}</p>
                         </>
                     )}
-                    <p><strong>Action:</strong> Update status to {getStatusDisplay(formData.status)} {formData.status === 'completed' ? 'and create appointment' : ''}</p>
-                    <p>Do you want to proceed?</p>
+                    <p>Do you want to {formData.status === 'Accepted' ? 'create this test drive appointment' : 'reject this request'}?</p>
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="secondary" onClick={() => setShowConfirmModal(false)}>
@@ -3032,6 +3129,37 @@ const TestAppointment = () => {
                             border: 'none',
                             borderRadius: '8px'
                         }}
+                    >
+                        {submitting ? 'Creating...' : 'Create Appointment'}
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Action Confirmation Modal */}
+            <Modal show={showActionModal} onHide={() => setShowActionModal(false)} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        {appointmentAction === 'complete' ? 'Complete Appointment' : 'Reject Appointment'}
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <p><strong>Customer:</strong> {selectedAppointment?.customerName}</p>
+                    <p><strong>Vehicle:</strong> {selectedAppointment?.vehicleName}</p>
+                    <p><strong>Test Date:</strong> {selectedAppointment?.appointmentDate}</p>
+                    <p className="mt-3">
+                        {appointmentAction === 'complete' 
+                            ? 'Are you sure you want to mark this appointment as Completed?' 
+                            : 'Are you sure you want to reject this appointment?'}
+                    </p>
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowActionModal(false)} disabled={submitting}>
+                        Cancel
+                    </Button>
+                    <Button
+                        variant={appointmentAction === 'complete' ? 'success' : 'danger'}
+                        onClick={confirmAppointmentAction}
+                        disabled={submitting}
                     >
                         {submitting ? 'Processing...' : 'Confirm'}
                     </Button>
