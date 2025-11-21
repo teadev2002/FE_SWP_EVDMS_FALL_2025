@@ -2390,9 +2390,16 @@ const TestAppointment = () => {
         setError(prev => ({ ...prev, requests: '' }));
         try {
             const data = await ManageTestAppointment.getAllRequests();
-            const nonCompleted = data.filter(c => c.status !== 'completed');
-            setRequests(nonCompleted);
-        } catch {
+
+            // Chỉ lọc những request có description là "Test Appointment"
+            // KHÔNG loại bỏ Completed → vẫn hiển thị, chỉ disable nút Create sau
+            const filtered = data.filter(c =>
+                c.description === "Test Appointment"
+            );
+
+            setRequests(filtered);
+        } catch (err) {
+            console.error("Error fetching requests:", err);
             setError(prev => ({ ...prev, requests: 'Failed to load requests.' }));
         } finally {
             setLoading(prev => ({ ...prev, requests: false }));
@@ -2407,7 +2414,7 @@ const TestAppointment = () => {
             const data = await ManageTestAppointment.getAllAppointments(currentStoreId);
 
             // Lấy appointments có status là Accepted, Completed, hoặc Rejected
-            const relevantAppointments = data.filter(apt => 
+            const relevantAppointments = data.filter(apt =>
                 apt.status === 'Accepted' || apt.status === 'Completed' || apt.status === 'Rejected'
             );
 
@@ -2522,13 +2529,13 @@ const TestAppointment = () => {
             ...formData,
             customerName: selectedCustomer.fullName
         };
-        
+
         if (formData.status === 'Accepted') {
             updatedFormData.vehicleName = vehicles.find(v => v.vehicleId === parseInt(formData.vehicleId))?.modelName || 'Unknown';
             updatedFormData.dealerName = dealers.find(d => d.dealerId === parseInt(formData.dealerId))?.fullName || 'Unknown';
             updatedFormData.formattedDate = formatDateForAPI(formData.appointmentDate);
         }
-        
+
         setFormData(updatedFormData);
         setShowModal(false);
         setShowConfirmModal(true);
@@ -2625,9 +2632,10 @@ const TestAppointment = () => {
     // Filter and sort logic for requests
     const statusFilteredRequests = statusFilter === 'all'
         ? requests
-        : statusFilter === 'pending'
-            ? requests.filter(r => !r.status || r.status === 'pending')
-            : requests.filter(r => r.status === statusFilter);
+        : requests.filter(r => {
+            const status = r.status?.toLowerCase();
+            return status === statusFilter.toLowerCase();
+        });
 
     const searchFilteredRequests = statusFilteredRequests.filter(r =>
         r.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -2749,9 +2757,10 @@ const TestAppointment = () => {
                                         style={{ minWidth: '150px' }}
                                     >
                                         <option value="all">All</option>
-                                        <option value="pending">Pending</option>
-                                        <option value="accepted">Accepted</option>
-                                        <option value="cancelled">Cancelled</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Accepted">Accepted</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Rejected">Rejected</option>
                                     </Form.Select>
                                 </Form.Group>
 
@@ -2814,12 +2823,25 @@ const TestAppointment = () => {
                                                                     border: 'none',
                                                                     borderRadius: '8px',
                                                                     fontSize: '0.875rem',
-                                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                                                                    opacity: (req.status === 'Completed' || req.status === 'completed' || req.status === 'Rejected' || req.status === 'rejected') ? 0.6 : 1,
+                                                                    cursor: (req.status === 'Completed' || req.status === 'completed' || req.status === 'Rejected' || req.status === 'rejected') ? 'not-allowed' : 'pointer',
+                                                                    pointerEvents: (req.status === 'Completed' || req.status === 'completed' || req.status === 'Rejected' || req.status === 'rejected') ? 'none' : 'auto'
                                                                 }}
-                                                                onMouseEnter={(e) => e.target.style.transform = 'translateY(-1px)'}
+                                                                onMouseEnter={(e) => {
+                                                                    if (!(req.status === 'Completed' || req.status === 'completed' || req.status === 'Rejected' || req.status === 'rejected')) {
+                                                                        e.target.style.transform = 'translateY(-1px)';
+                                                                    }
+                                                                }}
                                                                 onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
                                                                 onClick={() => handleCreateAppointment(req)}
-                                                                disabled={submitting || req.status === 'Rejected'}
+                                                                disabled={
+                                                                    submitting ||
+                                                                    req.status === 'Rejected' ||
+                                                                    req.status === 'rejected' ||
+                                                                    req.status === 'Completed' ||
+                                                                    req.status === 'completed'
+                                                                }
                                                             >
                                                                 Create
                                                             </Button>
@@ -2919,12 +2941,12 @@ const TestAppointment = () => {
                                                 {paginatedAppointments.map((apt) => {
                                                     const isCompleted = apt.status === 'Completed';
                                                     const isRejected = apt.status === 'Rejected';
-                                                    const rowStyle = isCompleted 
-                                                        ? { backgroundColor: 'rgba(40, 167, 69, 0.1)' } 
-                                                        : isRejected 
-                                                        ? { backgroundColor: 'rgba(220, 53, 69, 0.1)' }
-                                                        : {};
-                                                    
+                                                    const rowStyle = isCompleted
+                                                        ? { backgroundColor: 'rgba(40, 167, 69, 0.1)' }
+                                                        : isRejected
+                                                            ? { backgroundColor: 'rgba(220, 53, 69, 0.1)' }
+                                                            : {};
+
                                                     return (
                                                         <tr key={apt.testAppointmentId} style={rowStyle}>
                                                             <td><strong>{apt.customerName}</strong></td>
@@ -2947,7 +2969,7 @@ const TestAppointment = () => {
                                                                         onClick={() => handleCompleteAppointment(apt)}
                                                                         disabled={isCompleted || isRejected || submitting}
                                                                         title="Complete"
-                                                                        style={{ 
+                                                                        style={{
                                                                             borderRadius: '4px',
                                                                             padding: '4px 8px'
                                                                         }}
@@ -2960,7 +2982,7 @@ const TestAppointment = () => {
                                                                         onClick={() => handleRejectAppointment(apt)}
                                                                         disabled={isCompleted || isRejected || submitting}
                                                                         title="Reject"
-                                                                        style={{ 
+                                                                        style={{
                                                                             borderRadius: '4px',
                                                                             padding: '4px 8px'
                                                                         }}
@@ -3069,6 +3091,7 @@ const TestAppointment = () => {
                                         type="date"
                                         value={formData.appointmentDate}
                                         onChange={(e) => setFormData({ ...formData, appointmentDate: e.target.value })}
+                                        min={new Date().toISOString().split('T')[0]} // Không cho chọn ngày hôm nay trở về trước
                                         required
                                     />
                                     <Form.Text className="text-muted">
@@ -3147,8 +3170,8 @@ const TestAppointment = () => {
                     <p><strong>Vehicle:</strong> {selectedAppointment?.vehicleName}</p>
                     <p><strong>Test Date:</strong> {selectedAppointment?.appointmentDate}</p>
                     <p className="mt-3">
-                        {appointmentAction === 'complete' 
-                            ? 'Are you sure you want to mark this appointment as Completed?' 
+                        {appointmentAction === 'complete'
+                            ? 'Are you sure you want to mark this appointment as Completed?'
                             : 'Are you sure you want to reject this appointment?'}
                     </p>
                 </Modal.Body>
