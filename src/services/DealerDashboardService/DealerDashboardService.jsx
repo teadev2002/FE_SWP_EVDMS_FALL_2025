@@ -71,6 +71,15 @@ const DealerDashboardService = {
             throw error;
         }
     },
+    getInventory: async (storeId) => {
+        try {
+            const response = await apiClient.get(`Dashboard/inventory?storeId=${storeId}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching inventory:", error);
+            throw error;
+        }
+    },
 };
 
 export default DealerDashboardService;
