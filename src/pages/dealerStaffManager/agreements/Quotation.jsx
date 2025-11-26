@@ -1401,6 +1401,7 @@ import {
   Tag,
   Space,
   Popconfirm,
+  InputNumber,
 } from 'antd';
 import ManageQuoteService from '../../../services/ManageQuotes/ManageQuoteService';
 import ManageDealerService from '../../../services/ManageDealer/ManageDealerService';
@@ -1576,27 +1577,39 @@ setAllCustomers(
     setCurrentPage(1);
   }, [searchText, quotations]);
 
-  // === TÍNH priceWithTax KHI THAY ĐỔI vehicleId HOẶC taxRate ===
+  // === TÍNH priceWithTax KHI THAY ĐỔI vehicleId HOẶC taxRate HOẶC quantity ===
 const updatePriceWithTax = () => {
   const values = addForm.getFieldsValue();
   const vehicleId = values.vehicleId;
   const taxRate = values.taxRate;
   const promotionId = values.promotionId;
+  const quantity = values.quantity;
 
   let display = 'Choose vehicle and tax rate';
   if (vehicleId && taxRate !== undefined) {
     const basePrice = vehiclePriceMap[vehicleId] || 0;
-    let finalPrice = basePrice;
+    const qty = quantity || 1;
+    
+    // Tính tổng giá trước khi giảm giá (basePrice * quantity)
+    let totalPriceBeforeDiscount = basePrice * qty;
+    let discountAmount = 0;
 
     if (promotionId) {
       const promo = promotions.find(p => p.value === promotionId);
       if (promo) {
         const discount = parseInt(promo.label.match(/\((\d+)%/)[1], 10);
-        finalPrice = basePrice * (1 - discount / 100);
+        if (!isNaN(discount)) {
+          discountAmount = totalPriceBeforeDiscount * (discount / 100);
+        }
       }
     }
 
-    const priceWithTax = Math.round(finalPrice * (1 + taxRate / 100));
+    // Giá sau khi giảm giá
+    const priceAfterDiscount = totalPriceBeforeDiscount - discountAmount;
+    
+    // Cộng thuế vào giá sau giảm
+    const priceWithTax = Math.round(priceAfterDiscount * (1 + taxRate / 100));
+    
     addForm.setFieldsValue({ priceWithTax });
     display = formatCurrency(priceWithTax);
   } else {
@@ -1646,6 +1659,7 @@ const showAddModal = () => {
       quoteDate: dayjs(),
       status: 'Accepted',
       priceWithTax: undefined,
+      quantity: 1,
     });
     setPriceWithTaxDisplay('Choose vehicle and tax rate');
 
@@ -1741,6 +1755,7 @@ const showAddModal = () => {
           dealerId: values.dealerId,
           promotionId: values.promotionId || null,
           taxRate: values.taxRate,
+          quantity: values.quantity,
           quoteDate: values.quoteDate.format('DD/MM/YYYY'),
           status: values.status || 'Draft',
         };
@@ -2034,6 +2049,23 @@ const showAddModal = () => {
             loading={loading}
             onChange={updatePriceWithTax}
           />
+          </Form.Item>
+
+          <Form.Item
+            name="quantity"
+            label="Quantity"
+            rules={[
+              { required: true, message: 'Please enter quantity!' },
+              { type: 'number', min: 1, message: 'Quantity must be at least 1!' }
+            ]}
+            initialValue={1}
+          >
+            <InputNumber
+              placeholder="Enter quantity"
+              style={{ width: '100%' }}
+              min={1}
+              onChange={updatePriceWithTax}
+            />
           </Form.Item>
 
           {/* PRICE WITH TAX (DYNAMIC) */}
